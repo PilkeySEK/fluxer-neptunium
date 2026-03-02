@@ -98,18 +98,6 @@ impl<'a> Client<'a> {
     }
     */
 
-    /// Set the API base path.
-    /// The default is `https://api.fluxer.app/v1`.
-    pub fn set_api_base_path(&mut self, base: &'a str) {
-        self.api_client.base_path = base;
-    }
-
-    /// Set the gateway URL.
-    /// The default is `wss://gateway.fluxer.app`.
-    pub fn set_gateway_url(&mut self, url: &'a str) {
-        self.gateway_client.config.gateway_url = url;
-    }
-
     /// Start the client. Waits for events from the gateway and calls the registered event handlers.
     /// This function blocks forever unless a fatal error occurs.
     /// # Errors
@@ -298,11 +286,4 @@ impl<'a> Client<'a> {
 
         Ok(())
     }
-
-    // pub(crate) fn send_client_message(
-    //     &self,
-    //     message: ClientMessage,
-    // ) -> Result<(), tokio::sync::mpsc::error::SendError<ClientMessage>> {
-    //     self.tx.send(message)
-    // }
 }
