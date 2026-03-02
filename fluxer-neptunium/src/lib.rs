@@ -1,9 +1,7 @@
 use std::{sync::Arc, time::Duration};
 
 use fluxer_gateway::{
-    client::{
-        GatewayClient, GatewayConnectionWriteHalf, client_config::GatewayClientConfiguration,
-    },
+    client::{GatewayClient, GatewayConnectionWriteHalf},
     model::event::{
         GatewayEvent, IncomingGatewayEventData, IncomingGatewayOpCode, OutgoingGatewayEventData,
         dispatch::DispatchEvent, heartbeat::OutgoingHeartbeatEventData,
@@ -11,7 +9,7 @@ use fluxer_gateway::{
 };
 use tokio::sync::{
     Mutex,
-    mpsc::{UnboundedReceiver, UnboundedSender, unbounded_channel},
+    mpsc::{UnboundedReceiver, UnboundedSender},
 };
 
 pub use async_trait::async_trait;
@@ -20,20 +18,20 @@ pub use fluxer_gateway::client::client_config::GatewayIntents;
 use tracing::Level;
 
 mod api;
+mod client_builder;
 mod error;
 pub mod events;
+pub use client_builder::*;
 
 use crate::{
-    api::ApiClient,
+    api::{ApiClient, ApiClientMessage},
     error::NeptuniumErrorKind,
     events::{
-        Event, EventBus, EventListener, MessageCreateEventData,
+        Event, EventBus, MessageCreateEventData,
         data::{GuildDeleteEventData, ReadyEventData},
     },
 };
 
-const DEFAULT_API_URL: &str = "https://api.fluxer.app/v1";
-const USER_AGENT: &str = "Fluxer-Neptunium";
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
@@ -46,6 +44,13 @@ enum ClientMessage {
     SendMessage(OutgoingGatewayEventData),
     SendHeartbeat,
     Received(GatewayEvent<IncomingGatewayEventData, IncomingGatewayOpCode>),
+    ApiClientMessage(ApiClientMessage),
+}
+
+#[derive(Clone)]
+struct ClientInfo {
+    last_sequence_number: Arc<tokio::sync::Mutex<Option<u64>>>,
+    tx: UnboundedSender<ClientMessage>,
 }
 
 pub struct Client<'a> {
@@ -54,11 +59,12 @@ pub struct Client<'a> {
     #[expect(clippy::struct_field_names)]
     pub(crate) api_client: ApiClient<'a>,
     last_sequence_number: Option<u64>,
-    event_bus: Option<EventBus>,
+    event_bus: EventBus,
     tx: UnboundedSender<ClientMessage>,
-    rx: Option<UnboundedReceiver<ClientMessage>>,
+    rx: UnboundedReceiver<ClientMessage>,
 }
 
+/*
 impl<'a> From<GatewayClient<'a>> for Client<'a> {
     fn from(value: GatewayClient<'a>) -> Self {
         let token = value.config.token.to_string();
@@ -66,15 +72,16 @@ impl<'a> From<GatewayClient<'a>> for Client<'a> {
         Self {
             gateway_client: value,
             last_sequence_number: None,
-            event_bus: None,
+            event_bus: EventBus::new(),
             tx,
-            rx: Some(rx),
+            rx,
             api_client: Self::create_api_client(token),
         }
     }
 }
-
+*/
 impl<'a> Client<'a> {
+    /*
     /// Construct a new client given a `token` and the `GatewayIntents`
     #[must_use]
     pub fn new(token: &'a str, intents: GatewayIntents) -> Self {
@@ -83,12 +90,13 @@ impl<'a> Client<'a> {
         Self {
             gateway_client: GatewayClient::new(GatewayClientConfiguration::new(token, intents)),
             last_sequence_number: None,
-            event_bus: None,
+            event_bus: EventBus::new(),
             tx,
-            rx: Some(rx),
+            rx,
             api_client: Self::create_api_client(token_clone),
         }
     }
+    */
 
     /// Set the API base path.
     /// The default is `https://api.fluxer.app/v1`.
@@ -107,18 +115,24 @@ impl<'a> Client<'a> {
     /// # Errors
     /// Returns an error if a fatal error occurs, such as the connection closing or the gateway sending
     /// an unexpected event.
-    pub async fn start(mut self) -> Result<(), crate::error::Error> {
+    pub async fn start(self) -> Result<(), crate::error::Error> {
         tracing::event!(
             Level::DEBUG,
             "Starting fluxer neptunium client (version: {})",
             VERSION
         );
-        let tx = self.tx.clone();
-        let Some(rx) = self.rx.take() else {
-            return Err(Error::new(NeptuniumErrorKind::InvalidInternalState));
-        };
-        let (mut write, mut read) = self
-            .gateway_client
+        let Client {
+            mut gateway_client,
+            api_client,
+            last_sequence_number,
+            event_bus,
+            tx,
+            rx,
+        } = self;
+
+        let last_sequence_number = Arc::new(Mutex::new(last_sequence_number));
+
+        let (mut write, mut read) = gateway_client
             .establish_connection()
             .await
             .map_err(Into::<Error>::into)?;
@@ -133,14 +147,11 @@ impl<'a> Client<'a> {
 
         let heartbeat_interval = hello_data.heartbeat_interval;
 
-        let event_bus = self.event_bus.take().unwrap_or(EventBus::new());
-
-        let client = Arc::new(tokio::sync::Mutex::new(self));
-
         let cloned_tx = tx.clone();
         tokio::spawn(async move {
             let wait_time = rand::random_range(0..heartbeat_interval);
             tokio::time::sleep(Duration::from_millis(wait_time)).await;
+            // We ignore the error since we exit the task anyway
             let _ = cloned_tx.send(ClientMessage::SendHeartbeat);
         });
         let cloned_tx = tx.clone();
@@ -174,22 +185,26 @@ impl<'a> Client<'a> {
             tracing::warn!("Message receiver thread is stopping.");
         });
 
-        if let Err(e) = client
-            .lock()
-            .await
-            .gateway_client
-            .identify(&mut write)
-            .await
-        {
+        if let Err(e) = gateway_client.identify(&mut write).await {
             return Err(e.into());
         }
 
-        Self::handle_messages(client, tx, rx, event_bus, write).await
+        Self::handle_messages(
+            ClientInfo {
+                last_sequence_number,
+                tx,
+            },
+            api_client,
+            rx,
+            event_bus,
+            write,
+        )
+        .await
     }
 
     async fn handle_messages(
-        client: Arc<Mutex<Self>>,
-        tx: UnboundedSender<ClientMessage>,
+        client_info: ClientInfo,
+        mut api_client: ApiClient<'a>,
         mut rx: UnboundedReceiver<ClientMessage>,
         mut event_bus: EventBus,
         mut write: GatewayConnectionWriteHalf,
@@ -203,7 +218,7 @@ impl<'a> Client<'a> {
                 }
                 ClientMessage::SendHeartbeat => {
                     let message = OutgoingGatewayEventData::Heartbeat(OutgoingHeartbeatEventData {
-                        last_sequence_number: client.lock().await.last_sequence_number,
+                        last_sequence_number: *client_info.last_sequence_number.lock().await,
                     });
                     if let Err(e) = GatewayClient::send(&mut write, message).await {
                         return Err(e.into());
@@ -217,7 +232,7 @@ impl<'a> Client<'a> {
                             return Err(Error::new(NeptuniumErrorKind::UnexpectedEvent(event)));
                         }
                         IncomingGatewayEventData::Heartbeat => {
-                            let _ = tx.send(ClientMessage::SendHeartbeat);
+                            let _ = client_info.tx.send(ClientMessage::SendHeartbeat);
                         }
                         IncomingGatewayEventData::InvalidSession(data) => {
                             if !data.resumable {
@@ -230,7 +245,7 @@ impl<'a> Client<'a> {
                         IncomingGatewayEventData::Dispatch(event) => {
                             tracing::trace!("Event sequence number: {:?}", event_sequence_number);
                             if let Some(last_sequence_number) = event_sequence_number {
-                                client.lock().await.last_sequence_number =
+                                *client_info.last_sequence_number.lock().await =
                                     Some(last_sequence_number);
                             }
                             match *event {
@@ -240,7 +255,7 @@ impl<'a> Client<'a> {
                                             Event::Ready(Box::new(ReadyEventData {
                                                 dispatch_data: *data,
                                             })),
-                                            Arc::clone(&client),
+                                            client_info.clone(),
                                         )
                                         .await;
                                 }
@@ -251,7 +266,7 @@ impl<'a> Client<'a> {
                                                 id: data.id,
                                                 unavailable: data.unavailable.unwrap_or(false),
                                             }),
-                                            Arc::clone(&client),
+                                            client_info.clone(),
                                         )
                                         .await;
                                 }
@@ -262,27 +277,26 @@ impl<'a> Client<'a> {
                                             Event::MessageCreate(Box::new(
                                                 MessageCreateEventData {
                                                     dispatch_data: *data,
-                                                    client: Arc::clone(&client).into(),
+                                                    client_info: debug_ignore::DebugIgnore(
+                                                        client_info.clone(),
+                                                    ),
                                                 },
                                             )),
-                                            Arc::clone(&client),
+                                            client_info.clone(),
                                         )
                                         .await;
                                 }
+                                DispatchEvent::TypingStart(_data) => { /* TODO */ }
+                                DispatchEvent::SessionsReplace(_data) => { /* TODO */ }
                             }
                         }
                     }
                 }
+                ClientMessage::ApiClientMessage(message) => api_client.on_message(message).await,
             }
         }
 
         Ok(())
-    }
-
-    pub fn register_event_listener(&mut self, listener: impl EventListener + Send + 'static) {
-        self.event_bus
-            .get_or_insert(EventBus::new())
-            .register(Box::new(listener) as Box<dyn EventListener + Send>);
     }
 
     // pub(crate) fn send_client_message(
@@ -291,13 +305,4 @@ impl<'a> Client<'a> {
     // ) -> Result<(), tokio::sync::mpsc::error::SendError<ClientMessage>> {
     //     self.tx.send(message)
     // }
-
-    fn create_api_client(token: String) -> ApiClient<'a> {
-        ApiClient {
-            base_path: DEFAULT_API_URL,
-            user_agent: format!("{USER_AGENT}/{VERSION}"),
-            token: token.into(),
-            reqwest_client: reqwest::Client::new(),
-        }
-    }
 }

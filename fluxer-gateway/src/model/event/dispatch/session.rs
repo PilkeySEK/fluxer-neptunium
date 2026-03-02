@@ -98,3 +98,10 @@ pub struct ReadyDispatchData {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub auth_session_id_hash: Option<String>,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct SessionsReplaceDispatchData(
+    /// TODO: Look at payloads to find out what is in here (documentation says object[])
+    Vec<Value>,
+);

@@ -9,11 +9,9 @@
 //     };
 // }
 
-use std::sync::Arc;
-
 use async_trait::async_trait;
 
-use crate::Client;
+use crate::ClientInfo;
 use crate::events::data::{
     GuildCreateEventData, GuildDeleteEventData, MessageCreateEventData, ReadyEventData,
 };
@@ -26,7 +24,7 @@ pub trait EventListener {
 
     #[expect(unused)]
     #[inline]
-    async fn message_create(&mut self, ctx: &Context, data: MessageCreateEventData<'_>) {}
+    async fn message_create(&mut self, ctx: &Context, data: MessageCreateEventData) {}
 
     #[expect(unused)]
     #[inline]
@@ -37,6 +35,7 @@ pub trait EventListener {
     async fn guild_create(&mut self, ctx: &Context, data: GuildCreateEventData) {}
 }
 
-pub struct Context<'a> {
-    pub client: Arc<tokio::sync::Mutex<Client<'a>>>,
+pub struct Context {
+    #[expect(unused)]
+    pub(crate) client_info: ClientInfo,
 }

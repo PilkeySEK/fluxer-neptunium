@@ -1,13 +1,10 @@
 pub(crate) mod data;
 mod listener;
 
-use std::sync::Arc;
-
 pub use data::*;
 pub use listener::{Context, EventListener};
-use tokio::sync::Mutex;
 
-use crate::Client;
+use crate::ClientInfo;
 
 macro_rules! call_event_listeners {
     (
@@ -44,9 +41,9 @@ macro_rules! call_event_listeners {
 }
 
 #[expect(unused)]
-pub(super) enum Event<'a> {
+pub(super) enum Event {
     Ready(Box<ReadyEventData>),
-    MessageCreate(Box<MessageCreateEventData<'a>>),
+    MessageCreate(Box<MessageCreateEventData>),
     GuildDelete(GuildDeleteEventData),
     GuildCreate(GuildCreateEventData),
 }
@@ -66,10 +63,8 @@ impl EventBus {
         self.listeners.push(listener);
     }
 
-    pub async fn emit<'a>(&mut self, event: Event<'a>, client: Arc<Mutex<Client<'_>>>) {
-        let context = listener::Context {
-            client: Arc::clone(&client),
-        };
+    pub async fn emit(&mut self, event: Event, client_info: ClientInfo) {
+        let context = listener::Context { client_info };
         call_event_listeners! {
             self;
             event;
@@ -78,7 +73,7 @@ impl EventBus {
             GuildDelete => guild_delete;
             !custom
             Ready => ready (|data: Box<ReadyEventData>| { *data });
-            MessageCreate => message_create (|data: Box<MessageCreateEventData<'a>>| { *data });
+            MessageCreate => message_create (|data: Box<MessageCreateEventData>| { *data });
         }
     }
 }

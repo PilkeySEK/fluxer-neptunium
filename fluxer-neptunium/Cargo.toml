@@ -13,6 +13,8 @@ tracing = "0.1.44"
 reqwest = "0.13.2"
 zeroize = "1.8.2"
 serde_json = "1.0.149"
+serde_repr = "0.1.20"
+serde = { version = "1.0.228", features = ["derive"] }
 
 [lints.clippy]
 pedantic = "warn"

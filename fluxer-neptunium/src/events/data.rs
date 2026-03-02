@@ -1,7 +1,4 @@
-use std::{
-    ops::{Deref, DerefMut},
-    sync::Arc,
-};
+use std::ops::{Deref, DerefMut};
 
 use debug_ignore::DebugIgnore;
 use fluxer_gateway::model::{
@@ -9,7 +6,10 @@ use fluxer_gateway::model::{
     snowflake::Snowflake,
 };
 
-use crate::Client;
+use crate::{
+    ApiClientMessage, ClientInfo, ClientMessage,
+    api::messages::{MessageReference, MessageReferenceType},
+};
 
 #[derive(Clone, Debug)]
 pub struct ReadyEventData {
@@ -30,36 +30,39 @@ impl DerefMut for ReadyEventData {
 }
 
 #[derive(Clone, Debug)]
-pub struct MessageCreateEventData<'a> {
+pub struct MessageCreateEventData {
     pub dispatch_data: MessageCreateDispatchData,
-    pub(crate) client: DebugIgnore<Arc<tokio::sync::Mutex<Client<'a>>>>,
+    pub(crate) client_info: DebugIgnore<ClientInfo>,
 }
 
-impl Deref for MessageCreateEventData<'_> {
+impl Deref for MessageCreateEventData {
     type Target = MessageCreateDispatchData;
     fn deref(&self) -> &Self::Target {
         &self.dispatch_data
     }
 }
 
-impl DerefMut for MessageCreateEventData<'_> {
+impl DerefMut for MessageCreateEventData {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.dispatch_data
     }
 }
 
-impl MessageCreateEventData<'_> {
+impl MessageCreateEventData {
     // WIP
-    pub async fn reply(&self, content: String) {
-        self.client
-            .lock()
-            .await
-            .api_client
-            .send_message(
-                self.dispatch_data.message_response.channel_id.clone(),
+    pub fn reply(&self, content: String) {
+        let _ = self.client_info.tx.send(ClientMessage::ApiClientMessage(
+            ApiClientMessage::SendMessage {
+                channel_id: self.dispatch_data.message_response.channel_id.clone(),
                 content,
-            )
-            .await;
+                reference: Some(MessageReference {
+                    channel_id: self.message_response.channel_id.clone(),
+                    message_id: self.message_response.id.clone(),
+                    guild_id: None,
+                    r#type: MessageReferenceType::Reply,
+                }),
+            },
+        ));
     }
 }
 

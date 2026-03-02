@@ -3,9 +3,9 @@ use crate::{
     model::event::{
         GatewayEventPayload, IncomingGatewayOpCode,
         dispatch::{
-            channel::MessageCreateDispatchData,
+            channel::{MessageCreateDispatchData, TypingStartDispatchData},
             guild::{GuildCreateDispatchData, GuildDeleteDispatchData},
-            session::ReadyDispatchData,
+            session::{ReadyDispatchData, SessionsReplaceDispatchData},
         },
     },
 };
@@ -25,6 +25,8 @@ pub enum DispatchEvent {
     GuildDelete(GuildDeleteDispatchData),
     GuildCreate(Box<GuildCreateDispatchData>),
     MessageCreate(Box<MessageCreateDispatchData>),
+    TypingStart(TypingStartDispatchData),
+    SessionsReplace(SessionsReplaceDispatchData),
 }
 
 impl TryFrom<GatewayEventPayload<IncomingGatewayOpCode>> for DispatchEvent {
@@ -76,6 +78,26 @@ impl TryFrom<GatewayEventPayload<IncomingGatewayOpCode>> for DispatchEvent {
                 Self::MessageCreate(Box::new(serde_json::from_value(d).map_err(|e| {
                     GatewayClientError::new(GatewayClientErrorType::DeserializeError(e))
                 })?))
+            }
+            "TYPING_START" => {
+                let Some(d) = value.d else {
+                    return Err(GatewayClientError::new(
+                        crate::client::GatewayClientErrorType::NoDataFieldInPayload,
+                    ));
+                };
+                Self::TypingStart(serde_json::from_value(d).map_err(|e| {
+                    GatewayClientError::new(GatewayClientErrorType::DeserializeError(e))
+                })?)
+            }
+            "SESSIONS_REPLACE" => {
+                let Some(d) = value.d else {
+                    return Err(GatewayClientError::new(
+                        crate::client::GatewayClientErrorType::NoDataFieldInPayload,
+                    ));
+                };
+                Self::SessionsReplace(serde_json::from_value(d).map_err(|e| {
+                    GatewayClientError::new(GatewayClientErrorType::DeserializeError(e))
+                })?)
             }
             _ => {
                 return Err(GatewayClientError::new(
