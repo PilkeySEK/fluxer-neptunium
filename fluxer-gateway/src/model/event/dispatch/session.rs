@@ -100,8 +100,13 @@ pub struct ReadyDispatchData {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SessionsReplaceDispatchDataEntry {
+    pub afk: bool,
+    pub mobile: bool,
+    pub session_id: String,
+    pub status: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(transparent)]
-pub struct SessionsReplaceDispatchData(
-    /// TODO: Look at payloads to find out what is in here (documentation says object[])
-    Vec<Value>,
-);
+pub struct SessionsReplaceDispatchData(pub Vec<SessionsReplaceDispatchDataEntry>);
