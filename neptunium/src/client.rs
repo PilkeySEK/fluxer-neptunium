@@ -176,6 +176,11 @@ impl Client {
                     handler.on_ready(Context {}, data.clone()).await;
                 }
             }
+            DispatchEvent::MessageCreate(data) => {
+                for handler in &mut self.event_handlers {
+                    handler.on_message(Context {}, data.clone()).await;
+                }
+            }
             event => {
                 tracing::warn!("Not yet handling this event: {event:?}");
             }

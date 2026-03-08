@@ -12,17 +12,17 @@ pub mod settings;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct UserPartial {
-    avatar: Option<ImageHash>,
-    avatar_color: Option<HexColor32>,
+    pub avatar: Option<ImageHash>,
+    pub avatar_color: Option<HexColor32>,
     #[serde(default)]
-    bot: bool,
+    pub bot: bool,
     // TODO: Maybe store as u16 instead
-    discriminator: String,
-    flags: PublicUserFlags,
-    global_name: Option<String>,
-    id: Id<UserMarker>,
+    pub discriminator: String,
+    pub flags: PublicUserFlags,
+    pub global_name: Option<String>,
+    pub id: Id<UserMarker>,
     #[serde(default)]
-    system: bool,
-    /// Note that this is not unique (because Fluxer has discriminators too)
-    username: String,
+    pub system: bool,
+    /// Note that this is not unique (because Fluxer has discriminators)
+    pub username: String,
 }

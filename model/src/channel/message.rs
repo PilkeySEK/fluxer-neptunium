@@ -1,3 +1,5 @@
+use std::ops::{Deref, DerefMut};
+
 use bitflags::bitflags;
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
@@ -77,30 +79,43 @@ pub struct Message {
     pub referenced_message: Option<MessageBase>,
 }
 
+impl Deref for Message {
+    type Target = MessageBase;
+    fn deref(&self) -> &Self::Target {
+        &self.base
+    }
+}
+
+impl DerefMut for Message {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.base
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct MessageReactionEmoji {
     #[serde(default)]
-    animated: bool,
+    pub animated: bool,
     /// `None` when the emoji is a unicode emoji.
     #[serde(skip_serializing_if = "Option::is_none")]
-    id: Option<Id<EmojiMarker>>,
+    pub id: Option<Id<EmojiMarker>>,
     /// Either the name of the emoji or the unicode character for standard emojis.
-    name: String,
+    pub name: String,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct MessageReaction {
-    count: u32,
-    emoji: MessageReactionEmoji,
+    pub count: u32,
+    pub emoji: MessageReactionEmoji,
     #[serde(default)]
-    me: bool,
+    pub me: bool,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct MessageSticker {
-    animated: bool,
-    id: Id<StickerMarker>,
-    name: String,
+    pub animated: bool,
+    pub id: Id<StickerMarker>,
+    pub name: String,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
