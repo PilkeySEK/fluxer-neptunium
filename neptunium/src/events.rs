@@ -7,6 +7,7 @@ use fluxer_model::gateway::payload::incoming::{
 use crate::events::context::Context;
 
 pub mod context;
+pub mod extensions;
 
 #[expect(unused)]
 #[async_trait]
@@ -21,4 +22,11 @@ pub trait EventHandler: Send {
     async fn on_guild_delete(&mut self, ctx: Context, data: &GuildDelete) {}
     #[inline]
     async fn on_typing_start(&mut self, ctx: Context, data: &TypingStart) {}
+}
+
+pub(crate) mod prelude {
+    pub use fluxer_model::gateway::payload::incoming::guild_create::GuildCreate;
+    pub use fluxer_model::gateway::payload::incoming::message_create::MessageCreate;
+    pub use fluxer_model::gateway::payload::incoming::ready::Ready;
+    pub use fluxer_model::gateway::payload::incoming::typing_start::TypingStart;
 }

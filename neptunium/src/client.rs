@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::{sync::Arc, time::Duration};
 
 use fluxer_gateway::shard::{EventReceiveError, Shard, config::ShardConfig};
 use fluxer_model::gateway::{
@@ -7,13 +7,17 @@ use fluxer_model::gateway::{
         OutgoingGatewayMessage, heartbeat::Heartbeat, identify::ConnectionProperties,
     },
 };
-use tokio::sync::mpsc::{UnboundedSender, unbounded_channel};
+use tokio::sync::{
+    //Mutex,
+    mpsc::{UnboundedSender, unbounded_channel},
+};
 
 use crate::{
     client::error::{ClientErrorKind, Error},
     events::{EventHandler, context::Context},
 };
 
+pub mod api_info;
 pub mod error;
 
 enum ClientMessage {
@@ -24,15 +28,28 @@ pub struct Client {
     shard: Shard,
     event_handlers: Vec<Box<dyn EventHandler>>,
     last_sequence_number: Option<u64>,
+    context: Context,
 }
 
 impl Client {
+    pub const DEFAULT_API_BASE_PATH: &str = "https://api.fluxer.app/v1";
+    pub const USER_AGENT: &str = "Fluxer-Neptunium";
+
     #[must_use]
     pub fn new(shard_config: ShardConfig) -> Self {
+        let token_clone = shard_config.token.clone();
         Self {
             shard: Shard::new(shard_config),
             event_handlers: Vec::new(),
             last_sequence_number: None,
+            context: Context {
+                api_info: Arc::new(api_info::ApiInfo {
+                    token: token_clone,
+                    base_path: Self::DEFAULT_API_BASE_PATH.to_owned(),
+                    client: reqwest::Client::default(),
+                    user_agent: format!("{}/{}", Self::USER_AGENT, crate::VERSION),
+                }),
+            },
         }
     }
 
@@ -173,27 +190,27 @@ impl Client {
         match event {
             DispatchEvent::Ready(data) => {
                 for handler in &mut self.event_handlers {
-                    handler.on_ready(Context {}, &data).await;
+                    handler.on_ready(self.context.clone(), &data).await;
                 }
             }
             DispatchEvent::MessageCreate(data) => {
                 for handler in &mut self.event_handlers {
-                    handler.on_message(Context {}, &data).await;
+                    handler.on_message(self.context.clone(), &data).await;
                 }
             }
             DispatchEvent::GuildCreate(data) => {
                 for handler in &mut self.event_handlers {
-                    handler.on_guild_create(Context {}, &data).await;
+                    handler.on_guild_create(self.context.clone(), &data).await;
                 }
             }
             DispatchEvent::GuildDelete(data) => {
                 for handler in &mut self.event_handlers {
-                    handler.on_guild_delete(Context {}, &data).await;
+                    handler.on_guild_delete(self.context.clone(), &data).await;
                 }
             }
             DispatchEvent::TypingStart(data) => {
                 for handler in &mut self.event_handlers {
-                    handler.on_typing_start(Context {}, &data).await;
+                    handler.on_typing_start(self.context.clone(), &data).await;
                 }
             }
         }

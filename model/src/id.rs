@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use serde::{
     Deserialize, Serialize,
     de::{Unexpected, Visitor},
@@ -16,6 +18,12 @@ pub mod marker;
 pub struct Id<T: IdMarker> {
     _marker: core::marker::PhantomData<T>,
     value: u64,
+}
+
+impl<T: IdMarker> Display for Id<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.value.fmt(f)
+    }
 }
 
 impl<T: IdMarker> Id<T> {

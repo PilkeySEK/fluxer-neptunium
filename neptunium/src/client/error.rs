@@ -33,6 +33,10 @@ impl std::fmt::Display for Error {
                 None => f.write_fmt(format_args!("Connection closed, no close frame present")),
             },
             ClientErrorKind::SessionInvalidated => f.write_str("Session invalidated"),
+            ClientErrorKind::HttpRequestError(e) => f.write_fmt(format_args!("HTTP error: {e}")),
+            ClientErrorKind::HttpStatusNot200(response) => f.write_fmt(format_args!(
+                "HTTP error: The server did not respond 200 OK: {response:?}"
+            )),
         }
     }
 }
@@ -45,6 +49,8 @@ pub enum ClientErrorKind {
     UnexpectedEventReceived(Box<GatewayEvent>),
     ConnectionClosed(Option<CloseFrame>),
     SessionInvalidated,
+    HttpRequestError(reqwest::Error),
+    HttpStatusNot200(reqwest::Response),
 }
 
 impl From<tungstenite::Error> for Error {
@@ -66,6 +72,14 @@ impl From<EventReceiveError> for Error {
                 }
                 EventReceiveError::Closed(frame) => ClientErrorKind::ConnectionClosed(frame),
             },
+        }
+    }
+}
+
+impl From<reqwest::Error> for Error {
+    fn from(value: reqwest::Error) -> Self {
+        Self {
+            kind: ClientErrorKind::HttpRequestError(value),
         }
     }
 }
