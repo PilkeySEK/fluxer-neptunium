@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use fluxer_gateway::shard::{Shard, config::ShardConfig};
+use fluxer_gateway::shard::{EventReceiveError, Shard, config::ShardConfig};
 use fluxer_model::gateway::{
     event::gateway::GatewayEvent,
     payload::outgoing::{
@@ -99,10 +99,18 @@ impl Client {
                 message = self.shard.next_event() => {
                     let message = match message {
                         Ok(message) => message,
-                        Err(e) => {
-                            tracing::warn!("Failed to receive next event: {e:?}");
+                        Err(EventReceiveError::ParseError(e)) => {
+                            tracing::warn!("Failed to parse: {}", e);
                             continue;
-                        },
+                        }
+                        Err(EventReceiveError::TungsteniteError(e)) => {
+                            tracing::error!("Network Error: {}", e);
+                            return Err(Error::new(error::ClientErrorKind::NetworkError(e)));
+                        }
+                        Err(EventReceiveError::UnsupportedMessageEncoding) => {
+                            tracing::error!("Unsupported message encoding, can't continue.");
+                            return Err(Error::new(error::ClientErrorKind::UnsupportedMessageEncoding));
+                        }
                     };
                     tracing::trace!("Received message: {message:?}");
                 }
