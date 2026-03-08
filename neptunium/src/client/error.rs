@@ -1,6 +1,6 @@
 use fluxer_gateway::shard::EventReceiveError;
 use fluxer_model::gateway::event::gateway::GatewayEvent;
-use tokio_tungstenite::tungstenite;
+use tokio_tungstenite::tungstenite::{self, protocol::CloseFrame};
 
 #[derive(Debug)]
 pub struct Error {
@@ -25,6 +25,13 @@ impl std::fmt::Display for Error {
             ClientErrorKind::UnsupportedMessageEncoding => {
                 f.write_str("Unsupported message encoding")
             }
+            ClientErrorKind::ConnectionClosed(frame) => match frame {
+                Some(frame) => f.write_fmt(format_args!(
+                    "Connection closed: code={}, reason=\"{}\"",
+                    frame.code, frame.reason
+                )),
+                None => f.write_fmt(format_args!("Connection closed, no close frame present")),
+            },
         }
     }
 }
@@ -35,6 +42,7 @@ pub enum ClientErrorKind {
     ParseError(serde_json::Error),
     UnsupportedMessageEncoding,
     UnexpectedEventReceived(Box<GatewayEvent>),
+    ConnectionClosed(Option<CloseFrame>),
 }
 
 impl From<tungstenite::Error> for Error {
@@ -54,6 +62,7 @@ impl From<EventReceiveError> for Error {
                 EventReceiveError::UnsupportedMessageEncoding => {
                     ClientErrorKind::UnsupportedMessageEncoding
                 }
+                EventReceiveError::Closed(frame) => ClientErrorKind::ConnectionClosed(frame),
             },
         }
     }

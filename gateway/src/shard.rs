@@ -11,7 +11,7 @@ use futures_util::{
 };
 use tokio_tungstenite::{
     connect_async,
-    tungstenite::{self, Message},
+    tungstenite::{self, Message, protocol::CloseFrame},
 };
 
 #[derive(Debug)]
@@ -45,6 +45,7 @@ pub enum EventReceiveError {
     TungsteniteError(Error),
     ParseError(serde_json::Error),
     UnsupportedMessageEncoding,
+    Closed(Option<CloseFrame>),
 }
 
 impl Shard {
@@ -91,11 +92,14 @@ impl Shard {
     /// # Errors
     /// Returns an error if receiving the event fails.
     pub async fn next_event(&mut self) -> Result<GatewayEvent, EventReceiveError> {
-        let Message::Text(message) = self
+        let message = self
             .next_message()
             .await
-            .map_err(EventReceiveError::TungsteniteError)?
-        else {
+            .map_err(EventReceiveError::TungsteniteError)?;
+        if let Message::Close(frame) = message {
+            return Err(EventReceiveError::Closed(frame));
+        }
+        let Message::Text(message) = message else {
             return Err(EventReceiveError::UnsupportedMessageEncoding);
         };
         serde_json::from_str(message.as_str()).map_err(EventReceiveError::ParseError)

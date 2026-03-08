@@ -111,6 +111,11 @@ impl Client {
                             tracing::error!("Unsupported message encoding, can't continue.");
                             return Err(Error::new(error::ClientErrorKind::UnsupportedMessageEncoding));
                         }
+                        Err(EventReceiveError::Closed(frame)) => {
+                            let error = Error::new(error::ClientErrorKind::ConnectionClosed(frame));
+                            tracing::debug!("{error}");
+                            return Err(error);
+                        }
                     };
                     tracing::trace!("Received message: {message:?}");
                 }
