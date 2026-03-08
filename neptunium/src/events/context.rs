@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
-use crate::client::api_info::ApiInfo;
+use neptunium_http::client::HttpClient;
 
 #[derive(Clone, Debug)]
 pub struct Context {
-    pub(crate) api_info: Arc<ApiInfo>,
+    pub(crate) api_client: Arc<HttpClient>,
 }

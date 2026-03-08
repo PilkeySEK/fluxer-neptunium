@@ -3,6 +3,8 @@ pub mod events;
 pub use async_trait::async_trait;
 pub use tokio::main;
 
+pub use neptunium_http as http;
+
 const VERSION: &str = unwrap_or(option_env!("CARGO_PKG_VERSION"), "unknown");
 
 const fn unwrap_or(option: Option<&'static str>, default: &'static str) -> &'static str {

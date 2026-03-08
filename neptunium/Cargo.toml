@@ -7,6 +7,7 @@ edition = "2024"
 tokio = { version = "1.50.0", features = ["full"] }
 fluxer-gateway = { path = "../gateway" }
 fluxer-model = { path = "../model" }
+neptunium-http = { path = "../http" }
 tokio-tungstenite = "0.28.0"
 serde_json = "1.0.149"
 rand = "0.10.0"

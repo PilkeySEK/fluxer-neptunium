@@ -7,6 +7,7 @@ use fluxer_model::gateway::{
         OutgoingGatewayMessage, heartbeat::Heartbeat, identify::ConnectionProperties,
     },
 };
+use neptunium_http::client::HttpClient;
 use tokio::sync::{
     //Mutex,
     mpsc::{UnboundedSender, unbounded_channel},
@@ -32,23 +33,20 @@ pub struct Client {
 }
 
 impl Client {
-    pub const DEFAULT_API_BASE_PATH: &str = "https://api.fluxer.app/v1";
     pub const USER_AGENT: &str = "Fluxer-Neptunium";
 
     #[must_use]
     pub fn new(shard_config: ShardConfig) -> Self {
-        let token_clone = shard_config.token.clone();
+        let token_clone = (*shard_config.token).clone();
+        let mut api_client = HttpClient::new(token_clone);
+        api_client.set_user_agent(format!("{}/{}", Self::USER_AGENT, crate::VERSION));
+
         Self {
             shard: Shard::new(shard_config),
             event_handlers: Vec::new(),
             last_sequence_number: None,
             context: Context {
-                api_info: Arc::new(api_info::ApiInfo {
-                    token: token_clone,
-                    base_path: Self::DEFAULT_API_BASE_PATH.to_owned(),
-                    client: reqwest::Client::default(),
-                    user_agent: format!("{}/{}", Self::USER_AGENT, crate::VERSION),
-                }),
+                api_client: Arc::new(api_client),
             },
         }
     }

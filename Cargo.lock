@@ -307,6 +307,7 @@ dependencies = [
  "async-trait",
  "fluxer-gateway",
  "fluxer-model",
+ "neptunium-http",
  "rand 0.10.0",
  "reqwest",
  "serde_json",
@@ -858,6 +859,17 @@ dependencies = [
  "security-framework",
  "security-framework-sys",
  "tempfile",
+]
+
+[[package]]
+name = "neptunium-http"
+version = "0.1.0"
+dependencies = [
+ "fluxer-model",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "zeroize",
 ]
 
 [[package]]
