@@ -2,7 +2,7 @@ use std::{sync::Arc, time::Duration};
 
 use fluxer_gateway::shard::{EventReceiveError, Shard, config::ShardConfig};
 use fluxer_model::gateway::{
-    event::{dispatch::DispatchEvent, gateway::GatewayEvent},
+    event::{dispatch::DispatchEvent, gateway::GatewayEvent, invalid_session::InvalidSessionEvent},
     payload::outgoing::{
         OutgoingGatewayMessage, heartbeat::Heartbeat, identify::ConnectionProperties,
     },
@@ -165,7 +165,7 @@ impl Client {
             GatewayEvent::Hello(hello) => {
                 tracing::warn!("Received `Hello` event more than one time. Received: {hello:?}");
             }
-            GatewayEvent::InvalidateSession { resumable } => {
+            GatewayEvent::InvalidSession(InvalidSessionEvent { resumable }) => {
                 if resumable {
                     todo!(
                         "Session was invalidated and resumable is set to true, but this has not been implemented yet."

@@ -48,10 +48,10 @@ impl Default for CreateMessageBody {
     }
 }
 
-impl From<&str> for CreateMessageBody {
-    fn from(value: &str) -> Self {
+impl<T: Into<String>> From<T> for CreateMessageBody {
+    fn from(value: T) -> Self {
         Self {
-            content: Some(value.to_owned()),
+            content: Some(value.into()),
             embeds: vec![],
             attachments: vec![],
             message_reference: None,
