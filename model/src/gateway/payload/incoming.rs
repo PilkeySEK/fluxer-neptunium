@@ -1,5 +1,6 @@
 pub mod guild_create;
 pub mod guild_delete;
+pub mod guild_emojis_update;
 pub mod hello;
 pub mod message_create;
 pub mod message_reaction_add;

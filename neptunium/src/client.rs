@@ -230,6 +230,9 @@ impl Client {
             DispatchEvent::MessageReactionRemoveAll(data) => {
                 call_event_handlers!(self.event_handlers, self.context, data => on_reaction_remove_all)
             }
+            DispatchEvent::GuildEmojisUpdate(data) => {
+                call_event_handlers!(self.event_handlers, self.context, data => on_guild_emojis_update)
+            }
         }
         Ok(())
     }
