@@ -1,6 +1,8 @@
-use std::collections::HashMap;
-
 use serde::{Deserialize, Serialize};
+
+use crate::responses::meta::limits::InstanceDiscoveryDocumentLimits;
+
+pub mod limits;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct InstanceDiscoveryDocumentEndpoints {
@@ -31,8 +33,16 @@ pub struct InstanceDiscoveryDocumentEndpoints {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 #[serde(rename_all = "lowercase", tag = "provider")]
 pub enum InstanceDiscoveryDocumentCaptchaConfig {
-    HCaptcha { hcaptcha_site_key: String },
-    Turnstile { turnstile_site_key: String },
+    HCaptcha {
+        hcaptcha_site_key: String,
+        /// Field may still be present.
+        turnstile_site_key: Option<String>,
+    },
+    Turnstile {
+        turnstile_site_key: String,
+        /// Field may still be present.
+        hcaptcha_site_key: Option<String>,
+    },
     None,
 }
 
@@ -43,7 +53,11 @@ pub struct InstanceDiscoveryDocumentFeatures {
     pub voice_enabled: bool,
     pub stripe_enabled: bool,
     pub self_hosted: bool,
-    pub manual_review_enabled: bool,
+    // TODO: Check what's up with https://github.com/fluxerapp/fluxer/blob/03813bbe17db008452f0f1be3090a7d2970a5447/packages/api/src/instance/InstanceController.tsx#L86
+    /// This is documented as "required" in the documentation, but appears to be missing.
+    pub manual_review_enabled: Option<bool>,
+    /// Undocumented so far.
+    pub presigned_attachment_uploads: bool,
 }
 
 /// Single sign-on configuration.
@@ -64,35 +78,6 @@ pub enum InstanceDiscoveryDocumentGifProviders {
 
 pub struct InstanceDiscoveryDocumentGifProvider {
     pub provider: InstanceDiscoveryDocumentGifProviders,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct InstanceDiscoveryDocumentLimitsRuleFilters {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub traits: Option<Vec<String>>,
-    #[serde(skip_serializing_if = "Option::is_none", rename = "guildFeatures")]
-    pub guild_features: Option<Vec<String>>,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct InstanceDiscoveryDocumentLimitsRule {
-    /// Unique identifier for this limits rule.
-    pub id: String,
-    pub overrides: HashMap<String, i64>,
-    pub filters: InstanceDiscoveryDocumentLimitsRuleFilters,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct InstanceDiscoveryDocumentLimits {
-    /// Wire format version. Is always `2`.
-    pub version: u32,
-    /// Available trait definitions, e.g. "premium".
-    #[serde(rename = "traitDefinitions")]
-    pub trait_definitions: Vec<String>,
-    pub rules: Vec<InstanceDiscoveryDocumentLimitsRule>,
-    /// Hash of the default limit values for cache invalidation.
-    #[serde(rename = "defaultHash")]
-    pub default_hash: String,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -134,7 +119,7 @@ pub struct InstanceDiscoveryDocumentOauth2 {
     pub scopes_supported: Vec<String>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug)]
 pub struct InstanceDiscoveryDocumentResponse {
     /// Version of the API server code.
     pub api_code_version: u64,
@@ -152,4 +137,5 @@ pub struct InstanceDiscoveryDocumentResponse {
     /// OAuth2 endpoint for federation.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub oauth2: Option<InstanceDiscoveryDocumentOauth2>,
+    pub limits: InstanceDiscoveryDocumentLimits,
 }
