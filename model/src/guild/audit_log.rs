@@ -1,16 +1,25 @@
 use serde::Deserialize;
 
-use crate::{guild::audit_log::{change::AuditLogChange, event_type::AuditLogEventType, optional_entry_info::AuditLogOptionalEntryInfo}, id::{Id, marker::{AuditLogEntryMarker, GenericMarker, GuildMarker, UserMarker}}};
+use crate::{
+    guild::audit_log::{
+        change::AuditLogChange, event_type::AuditLogActionType,
+        optional_entry_info::AuditLogOptionalEntryInfo,
+    },
+    id::{
+        Id,
+        marker::{AuditLogEntryMarker, GenericMarker, GuildMarker, UserMarker},
+    },
+};
 
 pub mod change;
 pub mod change_key;
-pub mod optional_entry_info;
 pub mod event_type;
+pub mod optional_entry_info;
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct AuditLogEntry {
     /// Type of event to cause the entry.
-    pub action_type: AuditLogEventType,
+    pub action_type: AuditLogActionType,
     /// List of changes included in the entry.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub changes: Vec<AuditLogChange>,

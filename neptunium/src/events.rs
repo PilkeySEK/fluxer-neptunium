@@ -2,7 +2,13 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 use fluxer_model::gateway::payload::incoming::{
-    audit_log_entry_create::GuildAuditLogEntryCreate, guild_create::GuildCreate, guild_delete::GuildDelete, guild_emojis_update::GuildEmojisUpdate, message_create::MessageCreate, message_reaction_add::MessageReactionAdd, message_reaction_remove::MessageReactionRemove, message_reaction_remove_all::MessageReactionRemoveAll, message_reaction_remove_emoji::MessageReactionRemoveEmoji, ready::Ready, typing_start::TypingStart
+    audit_log_entry_create::GuildAuditLogEntryCreate, guild_create::GuildCreate,
+    guild_delete::GuildDelete, guild_emojis_update::GuildEmojisUpdate,
+    message_create::MessageCreate, message_reaction_add::MessageReactionAdd,
+    message_reaction_remove::MessageReactionRemove,
+    message_reaction_remove_all::MessageReactionRemoveAll,
+    message_reaction_remove_emoji::MessageReactionRemoveEmoji, ready::Ready,
+    typing_start::TypingStart,
 };
 
 use crate::events::context::Context;

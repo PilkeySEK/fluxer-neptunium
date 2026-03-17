@@ -1,14 +1,9 @@
 use serde::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter, Result as FmtResult};
 
-/// Type of [`AuditLogChange`].
-///
-/// For additional information refer to [Discord Docs/Audit Log Change Key][1].
-///
-/// [`AuditLogChange`]: super::AuditLogChange
-/// [1]: https://discord.com/developers/docs/resources/audit-log#audit-log-change-object-audit-log-change-key
+// See https://github.com/fluxerapp/fluxer/blob/91ba0b096f6f39c717ebdadf48e39c394db21c8d/fluxer_app/src/components/modals/guild_tabs/GuildAuditLogTab.tsx#L100 ??
+
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize)]
-#[non_exhaustive]
 #[serde(rename_all = "snake_case")]
 pub enum AuditLogChangeKey {
     /// AFK voice channel for a guild.

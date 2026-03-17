@@ -1,6 +1,9 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
-use crate::id::{Id, marker::{ChannelMarker, GenericMarker, MessageMarker}};
+use crate::id::{
+    Id,
+    marker::{ChannelMarker, GenericMarker, MessageMarker},
+};
 
 // Source: https://github.com/fluxerapp/fluxer/blob/d91388b979e7709575f929218dd053e081aa684e/packages/api/src/guild/services/GuildService.tsx#L90
 /// Additional information for certain [`AuditLogEventType`]s.
