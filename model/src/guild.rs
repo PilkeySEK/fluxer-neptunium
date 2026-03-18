@@ -46,6 +46,7 @@ pub struct GuildProperties {
     pub name: String,
     pub nsfw_level: NsfwLevel,
     pub owner_id: Id<UserMarker>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub permissions: Option<String>,
     pub rules_channel_id: Option<Id<ChannelMarker>>,
     /// Hash of the guild splash screen
@@ -57,6 +58,15 @@ pub struct GuildProperties {
     pub system_channel_id: Option<Id<ChannelMarker>>,
     pub vanity_url_code: Option<String>,
     pub verification_level: GuildVerificationLevel,
+}
+
+// TODO: Find out what the difference between GuildResponse and Guild is, it's weird idk
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct GuildResponse {
+    #[serde(flatten)]
+    pub properties: GuildProperties,
+    pub guild_id: Id<GuildMarker>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]

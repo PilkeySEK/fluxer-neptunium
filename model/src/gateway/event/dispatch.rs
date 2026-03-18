@@ -30,7 +30,7 @@ use crate::{
         },
         user_events::user_note_update::UserNoteUpdate,
     },
-    guild::{Guild, member::GuildMember},
+    guild::{GuildResponse, member::GuildMember},
     id::{Id, marker::ChannelMarker},
     user::settings::{FavoriteMeme, UserGuildSettings, UserSettings},
 };
@@ -62,7 +62,7 @@ pub enum DispatchEvent {
     FavoriteMemeDelete(FavoriteMemeDelete),
     AuthSessionChange(AuthSessionChange),
     PresenceUpdate(PresenceUpdate),
-    GuildUpdate(Guild),
+    GuildUpdate(GuildResponse),
     /// Sent when a user joins a guild.
     GuildMemberAdd(GuildMember),
     GuildMemberUpdate(GuildMember),

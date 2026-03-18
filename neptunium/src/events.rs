@@ -31,7 +31,7 @@ use fluxer_model::{
         },
         user_events::user_note_update::UserNoteUpdate,
     },
-    guild::{Guild, member::GuildMember},
+    guild::{GuildResponse, member::GuildMember},
     id::{Id, marker::ChannelMarker},
     user::settings::{FavoriteMeme, UserGuildSettings, UserSettings},
 };
@@ -67,7 +67,7 @@ pub trait EventHandler: Send {
     async fn on_favorite_meme_delete(&self, ctx: Context, data: Arc<FavoriteMemeDelete>) {}
     async fn on_auth_session_change(&self, ctx: Context, data: Arc<AuthSessionChange>) {}
     async fn on_presence_update(&self, ctx: Context, data: Arc<PresenceUpdate>) {}
-    async fn on_guild_update(&self, ctx: Context, data: Arc<Guild>) {}
+    async fn on_guild_update(&self, ctx: Context, data: Arc<GuildResponse>) {}
     async fn on_guild_member_add(&self, ctx: Context, data: Arc<GuildMember>) {}
     async fn on_guild_member_update(&self, ctx: Context, data: Arc<GuildMember>) {}
     async fn on_guild_member_remove(&self, ctx: Context, data: Arc<GuildMemberRemove>) {}
