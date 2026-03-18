@@ -8,6 +8,7 @@ use crate::{
 
 pub mod flags;
 pub mod read_state;
+pub mod relationship;
 pub mod settings;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]

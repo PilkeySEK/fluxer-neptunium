@@ -18,14 +18,20 @@ use crate::{
 pub mod message;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct ChannelPartialRecipient {
+    pub username: String,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct PermissionOverwrite {
-    allow: Permissions,
-    deny: Permissions,
+    pub allow: Permissions,
+    pub deny: Permissions,
     /// Can be either a role ID or a user ID
-    id: Id<GenericMarker>,
+    pub id: Id<GenericMarker>,
+    // TODO: Find out what this means
     /// The type of entity this overwrite applies to. Must be either 0 or 1.
     #[serde(rename = "type")]
-    r#type: u8,
+    pub r#type: u8,
 }
 
 // https://github.com/fluxerapp/fluxer/blob/03813bbe17db008452f0f1be3090a7d2970a5447/packages/constants/src/ChannelConstants.tsx#L22
@@ -45,46 +51,58 @@ pub enum ChannelType {
 pub struct Channel {
     /// The bitrate of the voice channel in bits per second
     #[serde(skip_serializing_if = "Option::is_none")]
-    bitrate: Option<i32>,
+    pub bitrate: Option<i32>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    guild_id: Option<Id<GuildMarker>>,
+    pub guild_id: Option<Id<GuildMarker>>,
     /// The icon hash of the channel (for group DMs)
     #[serde(skip_serializing_if = "Option::is_none")]
-    icon: Option<String>,
-    id: Id<ChannelMarker>,
+    pub icon: Option<String>,
+    pub id: Id<ChannelMarker>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    last_message_id: Option<Id<MessageMarker>>,
+    pub last_message_id: Option<Id<MessageMarker>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    last_pin_timestamp: Option<Timestamp<Iso8601>>,
+    pub last_pin_timestamp: Option<Timestamp<Iso8601>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    name: Option<String>,
+    pub name: Option<String>,
     /// Custom nicknames for users in this channel (for group DMs)
     #[serde(skip_serializing_if = "Option::is_none")]
-    nicks: Option<HashMap<Id<UserMarker>, String>>,
+    pub nicks: Option<HashMap<Id<UserMarker>, String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    nsfw: Option<bool>,
+    pub nsfw: Option<bool>,
     /// The ID of the owner of the channel (for group DMs)
     #[serde(skip_serializing_if = "Option::is_none")]
-    owner_id: Option<Id<UserMarker>>,
+    pub owner_id: Option<Id<UserMarker>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    parent_id: Option<Id<ChannelMarker>>,
+    pub parent_id: Option<Id<ChannelMarker>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    permission_overwrites: Option<Vec<PermissionOverwrite>>,
+    pub permission_overwrites: Option<Vec<PermissionOverwrite>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    position: Option<i32>,
+    pub position: Option<i32>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    rate_limit_per_user: Option<i32>,
+    pub rate_limit_per_user: Option<i32>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    recipients: Option<Vec<UserPartial>>,
+    pub recipients: Option<Vec<UserPartial>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    rtc_region: Option<Id<VoiceRegionMarker>>,
+    pub rtc_region: Option<Id<VoiceRegionMarker>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    topic: Option<String>,
+    pub topic: Option<String>,
     // TODO: figure out what this number means (its the type of the channel)
     #[serde(rename = "type")]
-    r#type: i32,
+    pub r#type: i32,
     #[serde(skip_serializing_if = "Option::is_none")]
-    url: Option<String>,
+    pub url: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    user_limit: Option<i32>,
+    pub user_limit: Option<i32>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct ChannelPartial {
+    pub id: Id<ChannelMarker>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub recipients: Option<Vec<ChannelPartialRecipient>>,
+    // TODO: figure out what this number means (its the type of the channel)
+    #[serde(rename = "type")]
+    pub r#type: i32,
 }

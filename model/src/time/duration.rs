@@ -5,7 +5,7 @@ use crate::time::duration::representation::DurationRepr;
 pub mod representation;
 
 /// Represents a duration. The representation represents the behavior of this type when being serialized or deserialized.
-#[derive(Debug, Clone)]
+#[derive(Copy, Debug, Clone)]
 pub struct Duration<Repr: DurationRepr> {
     value: Repr,
 }

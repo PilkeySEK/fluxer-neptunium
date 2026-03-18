@@ -16,3 +16,6 @@ async-trait = "0.1.89"
 zeroize = "1.8.2"
 reqwest = "0.13.2"
 serde_path_to_error = "0.1.20"
+
+[lints.clippy]
+pedantic = "warn"

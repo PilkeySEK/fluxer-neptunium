@@ -8,6 +8,7 @@ pub struct Context {
 }
 
 impl Context {
+    #[must_use]
     pub fn get_http_client(&self) -> &Arc<HttpClient> {
         &self.http_client
     }

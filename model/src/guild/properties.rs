@@ -78,6 +78,7 @@ pub enum GuildVerificationLevel {
 }
 
 bitflags! {
+    /// Serializes/Deserializes as a string.
     #[derive(Copy, Clone, Debug)]
     pub struct GuildOperations: u32 {
         const PUSH_NOTIFICATIONS = 1 << 0;
@@ -95,7 +96,7 @@ impl Serialize for GuildOperations {
     where
         S: serde::Serializer,
     {
-        self.bits().serialize(serializer)
+        self.bits().to_string().serialize(serializer)
     }
 }
 
@@ -104,7 +105,11 @@ impl<'de> Deserialize<'de> for GuildOperations {
     where
         D: serde::Deserializer<'de>,
     {
-        Ok(Self::from_bits_truncate(u32::deserialize(deserializer)?))
+        Ok(Self::from_bits_truncate(
+            String::deserialize(deserializer)?
+                .parse()
+                .map_err(serde::de::Error::custom)?,
+        ))
     }
 }
 

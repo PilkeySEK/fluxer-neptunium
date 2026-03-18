@@ -4,16 +4,16 @@ use serde::{Deserialize, Serialize};
 /// There is one representation implemented by this crate:
 /// - `Seconds`: The duration in seconds as an integer.
 pub trait DurationRepr:
-    for<'de> Deserialize<'de> + Serialize + Into<std::time::Duration> + Clone
+    for<'de> Deserialize<'de> + Serialize + Into<std::time::Duration> + Clone + Copy
 {
 }
 
-#[derive(Clone, Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct Seconds {
     inner: std::time::Duration,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct UnixMillis {
     inner: std::time::Duration,
 }

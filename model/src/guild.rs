@@ -27,10 +27,10 @@ pub mod properties;
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct GuildProperties {
     pub afk_channel_id: Option<Id<ChannelMarker>>,
-    pub afk_timeout: i32,
+    pub afk_timeout: u32,
     pub banner: Option<String>,
-    pub banner_height: Option<i32>,
-    pub banner_width: Option<i32>,
+    pub banner_height: Option<u32>,
+    pub banner_width: Option<u32>,
     pub default_message_notifications: DefaultMessageNotifications,
     pub disabled_operations: GuildOperations,
     pub embed_splash: Option<String>,
@@ -78,4 +78,32 @@ pub struct Guild {
     pub online_count: i32,
     pub id: Id<GuildMarker>,
     pub member_count: i32,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct GuildPartial {
+    pub id: Id<GuildMarker>,
+    pub name: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub icon: Option<ImageHash>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub banner: Option<ImageHash>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub banner_width: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub banner_height: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub splash: Option<ImageHash>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub splash_width: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub splash_height: Option<u32>,
+    pub splash_card_alignment: SplashCardAlignment,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub embed_splash: Option<ImageHash>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub embed_splash_width: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub embed_splash_height: Option<u32>,
+    pub features: Vec<GuildFeatureFlag>,
 }
