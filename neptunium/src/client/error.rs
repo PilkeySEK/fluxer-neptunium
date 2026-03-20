@@ -1,6 +1,9 @@
 use fluxer_gateway::shard::EventReceiveError;
 use fluxer_model::gateway::event::gateway::GatewayEvent;
-use neptunium_http::{endpoints::ExecuteEndpointRequestError, responses::error::ApiErrorResponse};
+use neptunium_http::{
+    endpoints::ExecuteEndpointRequestError,
+    responses::error::{ApiErrorResponse, ApiRateLimitedResponse},
+};
 use tokio_tungstenite::tungstenite::{self, protocol::CloseFrame};
 
 #[derive(Debug)]
@@ -52,7 +55,9 @@ impl std::fmt::Display for Error {
             ClientErrorKind::HttpForbidden(err) => {
                 f.write_fmt(format_args!("API Error: Forbidden: {err:?}"))
             }
-            ClientErrorKind::HttpRateLimited => f.write_str("API Error: Rate Limited"),
+            ClientErrorKind::HttpRateLimited(err) => {
+                f.write_fmt(format_args!("API Error: Rate Limited: {err:?}"))
+            }
             ClientErrorKind::HttpInternalServerError(err) => {
                 f.write_fmt(format_args!("API Error: Internal Server Error: {err:?}"))
             }
@@ -77,7 +82,7 @@ impl From<ExecuteEndpointRequestError> for Error {
             ExecuteEndpointRequestError::NotFound(err) => ClientErrorKind::HttpNotFound(err),
             ExecuteEndpointRequestError::BadRequest(err) => ClientErrorKind::HttpBadRequest(err),
             ExecuteEndpointRequestError::Forbidden(err) => ClientErrorKind::HttpForbidden(err),
-            ExecuteEndpointRequestError::RateLimited => ClientErrorKind::HttpRateLimited,
+            ExecuteEndpointRequestError::RateLimited(err) => ClientErrorKind::HttpRateLimited(err),
             ExecuteEndpointRequestError::InternalServerError(err) => {
                 ClientErrorKind::HttpInternalServerError(err)
             }
@@ -103,7 +108,7 @@ pub enum ClientErrorKind {
     SessionInvalidated,
     HttpRequestError(reqwest::Error),
     HttpStatusNotOk(reqwest::Response),
-    HttpRateLimited,
+    HttpRateLimited(ApiRateLimitedResponse),
     HttpBadRequest(ApiErrorResponse),
     HttpUnauthorized(ApiErrorResponse),
     HttpForbidden(ApiErrorResponse),

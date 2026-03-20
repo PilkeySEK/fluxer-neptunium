@@ -1,3 +1,4 @@
+use fluxer_model::time::duration::{Duration, representation::Seconds};
 use serde::Deserialize;
 
 use crate::responses::error::{
@@ -23,4 +24,13 @@ pub struct ApiErrorResponse {
     pub message: String,
     #[serde(default = "Vec::new")]
     pub errors: Vec<ApiErrorEntry>,
+}
+
+#[derive(Deserialize, Clone, Debug)]
+pub struct ApiRateLimitedResponse {
+    /// Is always `RateLimited`.
+    pub code: ApiErrorCode,
+    pub message: String,
+    pub retry_after: Duration<Seconds>,
+    pub global: bool,
 }

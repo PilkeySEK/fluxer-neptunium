@@ -91,7 +91,13 @@ impl HttpClient {
                 )))
             }
             StatusCode::TOO_MANY_REQUESTS => {
-                Err(Box::new(ExecuteEndpointRequestError::RateLimited))
+                let body = String::from_utf8(response.bytes().await?.to_vec())
+                    .map_err(|e| Box::new(ExecuteEndpointRequestError::NonUtf8Bytes(e)))?;
+                let mut deserializer = Deserializer::from_str(&body);
+                let api_error = serde_path_to_error::deserialize(&mut deserializer)?;
+                Err(Box::new(ExecuteEndpointRequestError::RateLimited(
+                    api_error,
+                )))
             }
             _ => Err(Box::new(ExecuteEndpointRequestError::ResponseNotOk(
                 response,

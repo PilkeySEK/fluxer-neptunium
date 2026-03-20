@@ -2,7 +2,10 @@ use std::string::FromUtf8Error;
 
 use serde::de::DeserializeOwned;
 
-use crate::{requests::Request, responses::error::ApiErrorResponse};
+use crate::{
+    requests::Request,
+    responses::error::{ApiErrorResponse, ApiRateLimitedResponse},
+};
 
 // pub mod messages;
 
@@ -60,7 +63,7 @@ pub enum ExecuteEndpointRequestError {
     // and waiting until the rate limit expires so that the
     // user doesn't need to worry about this.
     /// 429 Too Many Requests.
-    RateLimited,
+    RateLimited(ApiRateLimitedResponse),
     /// 400 Bad Request.
     BadRequest(ApiErrorResponse),
     /// 401 Unauthorized.
