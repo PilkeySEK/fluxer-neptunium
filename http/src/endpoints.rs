@@ -11,6 +11,8 @@ pub mod channel;
 pub mod guild;
 pub mod invites;
 pub mod meta;
+#[cfg(feature = "user_api")]
+pub mod saved_media;
 
 impl<T: DeserializeOwned> ResponseBody for T {
     fn deserialize(bytes: Vec<u8>) -> Result<Self, Box<ExecuteEndpointRequestError>> {

@@ -1,7 +1,7 @@
 use bon::Builder;
 use neptunium_model::id::{
-    AttachmentId, Id,
-    marker::{ChannelMarker, MessageMarker},
+    Id,
+    marker::{AttachmentMarker, ChannelMarker, MessageMarker},
 };
 use reqwest::Method;
 
@@ -11,7 +11,7 @@ use crate::{endpoints::Endpoint, request::Request};
 pub struct DeleteMessageAttachment {
     pub channel_id: Id<ChannelMarker>,
     pub message_id: Id<MessageMarker>,
-    pub attachment_id: AttachmentId,
+    pub attachment_id: Id<AttachmentMarker>,
 }
 
 impl Endpoint for DeleteMessageAttachment {

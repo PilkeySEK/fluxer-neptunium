@@ -25,6 +25,7 @@ marker! {
     AuditLogEntryMarker,
     PackMarker,
     RelationshipMarker,
+    AttachmentMarker,
 }
 
 pub trait IdMarker: Copy + Clone + std::hash::Hash + PartialEq + Eq + std::fmt::Debug {}

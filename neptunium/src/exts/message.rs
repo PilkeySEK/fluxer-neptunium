@@ -1,7 +1,12 @@
+// TODO: Add some of the saved_media API here.
+
 use async_trait::async_trait;
 use neptunium_model::{
     channel::message::Message,
-    id::{AttachmentId, Id, marker::UserMarker},
+    id::{
+        Id,
+        marker::{AttachmentMarker, UserMarker},
+    },
 };
 
 use crate::{client::error::Error, events::context::Context};
@@ -83,7 +88,7 @@ pub trait MessageExt {
     async fn delete_attachment(
         &self,
         ctx: &Context,
-        attachment_id: AttachmentId,
+        attachment_id: Id<AttachmentMarker>,
     ) -> Result<(), Error>;
 
     async fn pin(&self, ctx: &Context) -> Result<(), Error>;
@@ -272,7 +277,7 @@ impl MessageExt for Message {
     async fn delete_attachment(
         &self,
         ctx: &Context,
-        attachment_id: AttachmentId,
+        attachment_id: Id<AttachmentMarker>,
     ) -> Result<(), Error> {
         Ok(ctx
             .http_client

@@ -10,9 +10,6 @@ use crate::id::marker::IdMarker;
 
 pub mod marker;
 
-mod non_snowflake;
-pub use non_snowflake::*;
-
 /// "Snowflake" is a format for uniquely identifiable descriptors (IDs). These IDs are guaranteed to be unique across all of Fluxer, except
 /// in some unique scenarios in which child objects share their parent's ID. Snowflakes are always returned as a String in the HTTP and Gateway API,
 /// but are stored internally as a `u64` in this struct.

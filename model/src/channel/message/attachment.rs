@@ -2,7 +2,7 @@ use bitflags::bitflags;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    id::AttachmentId,
+    id::{Id, marker::AttachmentMarker},
     time::{
         duration::{Duration, representation::Seconds},
         timestamp::{Timestamp, representations::Iso8601},
@@ -64,7 +64,7 @@ pub struct MessageAttachment {
     /// The height of the attachment in pixels (for images/videos).
     #[serde(skip_serializing_if = "Option::is_none")]
     height: Option<u32>,
-    id: AttachmentId,
+    id: Id<AttachmentMarker>,
     #[serde(default)]
     nsfw: bool,
     /// The base64 encoded placeholder image for lazy loading.
