@@ -136,7 +136,7 @@ impl<'de, T: IdMarker> Deserialize<'de> for Id<T> {
 
 impl<T: IdMarker> From<OffsetDateTime> for Id<T> {
     fn from(value: OffsetDateTime) -> Self {
-        let millis = value.unix_timestamp() + i64::from(value.millisecond());
+        let millis = (value.unix_timestamp() * 1000) + i64::from(value.millisecond());
         let millis = millis - Self::FLUXER_EPOCH;
         Self {
             // We assume that the millis will not be negative and won't be too large to fit in the snowflake.
