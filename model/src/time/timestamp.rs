@@ -12,13 +12,32 @@ pub struct Timestamp<Repr: TimestampRepr> {
 }
 
 impl<Repr: TimestampRepr> Timestamp<Repr> {
-    pub fn new(value: Repr) -> Self {
-        Self { value }
+    pub fn new(value: impl Into<Repr>) -> Self {
+        Self {
+            value: value.into(),
+        }
     }
 
     /// Get the inner value.
     pub fn get(self) -> Repr {
         self.value
+    }
+}
+
+impl<Repr: TimestampRepr + From<OffsetDateTime>> From<OffsetDateTime> for Timestamp<Repr> {
+    fn from(value: OffsetDateTime) -> Self {
+        Self {
+            value: Repr::from(value),
+        }
+    }
+}
+
+impl<Repr: TimestampRepr + TryFrom<i64>> TryFrom<i64> for Timestamp<Repr> {
+    type Error = <Repr as TryFrom<i64>>::Error;
+    fn try_from(value: i64) -> Result<Self, Self::Error> {
+        Ok(Self {
+            value: Repr::try_from(value)?,
+        })
     }
 }
 

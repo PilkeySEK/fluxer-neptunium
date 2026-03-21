@@ -25,6 +25,12 @@ impl From<Iso8601> for OffsetDateTime {
     }
 }
 
+impl From<OffsetDateTime> for Iso8601 {
+    fn from(value: OffsetDateTime) -> Self {
+        Self { inner: value }
+    }
+}
+
 impl<'de> Deserialize<'de> for Iso8601 {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
@@ -56,6 +62,22 @@ impl TimestampRepr for UnixMillis {}
 impl From<UnixMillis> for OffsetDateTime {
     fn from(value: UnixMillis) -> Self {
         value.inner
+    }
+}
+
+impl From<OffsetDateTime> for UnixMillis {
+    fn from(value: OffsetDateTime) -> Self {
+        Self { inner: value }
+    }
+}
+
+impl TryFrom<i64> for UnixMillis {
+    type Error = time::error::ComponentRange;
+    fn try_from(value: i64) -> Result<Self, Self::Error> {
+        Ok(Self {
+            inner: OffsetDateTime::from_unix_timestamp(value / 1000)?
+                + time::Duration::milliseconds(value % 1000),
+        })
     }
 }
 

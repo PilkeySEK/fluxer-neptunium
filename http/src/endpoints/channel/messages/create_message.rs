@@ -25,9 +25,11 @@ use crate::{
 #[derive(Builder, Serialize, Clone, Debug)]
 pub struct CreateMessageBody {
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(into)]
     pub content: Option<String>,
     #[builder(default = vec![])]
     pub embeds: Vec<MessageEmbed>,
+    #[builder(default = vec![])]
     pub attachments: Vec<AttachmentRequest>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub message_reference: Option<MessageReference>,

@@ -19,3 +19,7 @@ serde_path_to_error = "0.1.20"
 
 [lints.clippy]
 pedantic = "warn"
+
+[features]
+default = []
+user_api = ["neptunium-http/user_api"]

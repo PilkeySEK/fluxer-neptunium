@@ -8,6 +8,7 @@ use crate::{
 
 pub mod limits;
 
+#[derive(Copy, Clone, Debug)]
 pub struct InstanceDiscoveryDocument;
 
 impl Endpoint for InstanceDiscoveryDocument {

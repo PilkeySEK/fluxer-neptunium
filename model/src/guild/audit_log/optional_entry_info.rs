@@ -14,9 +14,9 @@ pub struct AuditLogOptionalEntryInfo {
     /// Channel in which the entities were targeted.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub channel_id: Option<Id<ChannelMarker>>,
-    /// Number of entities that were targeted.
+    /// Number of entities that were targeted, as a string.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub count: Option<u64>,
+    pub count: Option<String>,
     /// Specified number of days' worth of inactivity members must have in order
     /// to be kicked.
     #[serde(skip_serializing_if = "Option::is_none")]

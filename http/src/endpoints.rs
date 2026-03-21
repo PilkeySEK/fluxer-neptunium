@@ -31,8 +31,8 @@ pub trait ResponseBody: Sized {
     fn deserialize(bytes: Vec<u8>) -> Result<Self, Box<ExecuteEndpointRequestError>>;
 }
 
-// #[async_trait]
-pub trait Endpoint {
+// Trait bounds to make sure all endpoints implement these, they aren't technically required.
+pub trait Endpoint: Clone + std::fmt::Debug {
     type Response: ResponseBody;
     fn into_request(self) -> Request;
     // async fn deserialize_response(

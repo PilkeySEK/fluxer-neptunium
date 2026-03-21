@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use bon::Builder;
 use reqwest::{
     Error, Method, Response,
@@ -14,6 +16,7 @@ pub struct Request {
     pub path: String,
     #[builder(default = true)]
     pub use_authorization_token: bool,
+    pub params: Option<HashMap<String, String>>,
 }
 
 impl Request {
@@ -33,6 +36,9 @@ impl Request {
         }
         if let Some(body) = self.body {
             request = request.body(body);
+        }
+        if let Some(params) = self.params {
+            request = request.query(&params);
         }
 
         request.send().await
