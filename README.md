@@ -6,8 +6,43 @@ The `fluxer-api` crate has moved to https://github.com/PilkeySEK/fluxer-api !
 
 # API Coverage
 There is a lot to do
-- **Gateway:** ~100% (yippe!)
+- **Gateway:**
+  - **Bot Gateway:** 100% (make an issue if something is missing)
+  - **User Gateway:** Most things are the same, but I haven't looked at it exactly, likely more than 90% (PASSIVE_UPDATES missing, which is non-bot users only)
 - **HTTP API:** Not a lot... I'm working on it
+
+This is the current support for different APIs (Categories named after [The official Fluxer API documentation sections](https://docs.fluxer.app/api-reference/instance/get-instance-discovery-document)):
+
+✅ = Fully supported
+
+🟡 = Partially supported / In progress
+
+❌ = Not (yet) supported
+
+- Instance ✅
+- Admin ❌
+- OAuth2 ❌
+- Auth ❌
+- Channels ✅
+- Invites ✅
+- Saved Media ✅
+- Webhooks 🟡
+- Discovery ❌
+- Donations ❌
+- Gateway (API gateway info endpoint) ❌
+- Gifts ❌
+- Guilds 🟡
+- KLIPY ❌
+- Packs ❌
+- Premium ❌
+- Read States ❌
+- Reports ❌
+- Search ❌
+- Billing ❌
+- Tenor ❌
+- Users ❌
+- Connections ❌
+- Themes ❌
 
 # Woah new stuff
 So, basically, while trying to cover parts of the API, I am sometimes discovering not yet documented features. Most of them are just not *documented*, but actually do exist in the fluxer code, which is fine. But, some others, like the GUILD_AUDIT_LOG_ENTRY_CREATE (related structs in `model/src/guild/audit_log`) dispatch event are not even in the fluxer codebase yet and instead only in the private `fluxer-v2` repository which is only available to Fluxer visionaries. I'm sadly not a visionary, so I don't fully know the structure of this event. I'm still including it for the future, but you shouldn't rely on it currently (if you happen to be insane enough to use this project seriously).
