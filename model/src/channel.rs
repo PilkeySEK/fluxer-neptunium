@@ -56,16 +56,22 @@ pub struct ChannelPartialRecipient {
     pub username: String,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize_repr, Deserialize_repr, Copy, Clone, Debug)]
+#[repr(u8)]
+pub enum PermissionOverwriteEntity {
+    Role = 0,
+    Member = 1,
+}
+
+#[derive(Serialize, Deserialize, Copy, Clone, Debug)]
 pub struct PermissionOverwrite {
     pub allow: Permissions,
     pub deny: Permissions,
     /// Can be either a role ID or a user ID
     pub id: Id<GenericMarker>,
-    // TODO: Find out what this means
-    /// The type of entity this overwrite applies to. Must be either 0 or 1.
+    /// The type of entity this overwrite applies to.
     #[serde(rename = "type")]
-    pub r#type: u8,
+    pub r#type: PermissionOverwriteEntity,
 }
 
 // https://github.com/fluxerapp/fluxer/blob/03813bbe17db008452f0f1be3090a7d2970a5447/packages/constants/src/ChannelConstants.tsx#L22

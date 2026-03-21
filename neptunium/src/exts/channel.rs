@@ -1,19 +1,25 @@
 use async_trait::async_trait;
 use neptunium_http::endpoints::channel::{
-    CallEligibilityStatus, ChannelSettingsUpdates, DeleteChannel, FetchChannel,
-    GetCallEligibilityStatus, RingCallRecipients, StopRingingCallRecipients, UpdateCallRegion,
-    UpdateChannelSettings,
+    delete_channel::DeleteChannel,
+    delete_permission_overwrite::DeletePermissionOverwrite,
+    fetch_channel::FetchChannel,
+    get_call_eligibility_status::{CallEligibilityStatus, GetCallEligibilityStatus},
     messages::{
         bulk_delete_messages::BulkDeleteMessages,
         create_message::{CreateMessage, CreateMessageBody},
         list_channel_messages::{ListChannelMessages, ListChannelMessagesParams},
     },
+    ring_call_recipients::RingCallRecipients,
+    set_permission_overwrite::{PermissionOverwriteUpdate, SetPermissionOverwrite},
+    stop_ringing_call_recipients::StopRingingCallRecipients,
+    update_call_region::UpdateCallRegion,
+    update_channel_settings::{ChannelSettingsUpdates, UpdateChannelSettings},
 };
 use neptunium_model::{
     channel::{Channel, VoiceRegion, message::Message},
     id::{
         Id,
-        marker::{MessageMarker, UserMarker},
+        marker::{GenericMarker, MessageMarker, UserMarker},
     },
 };
 
@@ -75,6 +81,16 @@ pub trait ChannelExt {
         ctx: &Context,
         message: CreateMessageBody,
     ) -> Result<Message, Error>;
+    async fn set_permission_overwrite(
+        &self,
+        ctx: &Context,
+        update: PermissionOverwriteUpdate,
+    ) -> Result<(), Error>;
+    async fn delete_permission_overwrite(
+        &self,
+        ctx: &Context,
+        overwrite_id: Id<GenericMarker>,
+    ) -> Result<(), Error>;
 }
 
 #[async_trait]
@@ -229,6 +245,32 @@ impl<T: ChannelTrait> ChannelExt for T {
                     .message(message)
                     .build(),
             )
+            .await?)
+    }
+    async fn set_permission_overwrite(
+        &self,
+        ctx: &Context,
+        update: PermissionOverwriteUpdate,
+    ) -> Result<(), Error> {
+        Ok(ctx
+            .get_http_client()
+            .execute(SetPermissionOverwrite {
+                channel_id: self.get_channel_id(),
+                overwrite: update,
+            })
+            .await?)
+    }
+    async fn delete_permission_overwrite(
+        &self,
+        ctx: &Context,
+        overwrite_id: Id<GenericMarker>,
+    ) -> Result<(), Error> {
+        Ok(ctx
+            .get_http_client()
+            .execute(DeletePermissionOverwrite {
+                channel_id: self.get_channel_id(),
+                overwrite_id,
+            })
             .await?)
     }
 }
