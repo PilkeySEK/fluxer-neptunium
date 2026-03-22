@@ -1,6 +1,9 @@
 use std::sync::Arc;
 
-use neptunium_http::client::HttpClient;
+use neptunium_http::{
+    client::HttpClient,
+    endpoints::gateway::get_gateway_information::{GatewayInformation, GetGatewayInformation},
+};
 use neptunium_model::{
     channel::Channel,
     gateway::payload::outgoing::presence_update::PresenceUpdateOutgoing,
@@ -39,5 +42,13 @@ impl Context {
     /// or the API returned unexpected data that could not be parsed.
     pub async fn fetch_channel(&self, channel_id: Id<ChannelMarker>) -> Result<Channel, Error> {
         channel_id.fetch(self).await
+    }
+
+    /// Get the gateway information from the API.
+    /// # Errors
+    /// Returns an error if there was a network error, the API did not return OK,
+    /// or the API returned unexpected data that could not be parsed.
+    pub async fn get_gateway_information(&self) -> Result<GatewayInformation, Error> {
+        Ok(self.http_client.execute(GetGatewayInformation).await?)
     }
 }

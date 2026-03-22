@@ -14,7 +14,7 @@ pub struct Seconds {
 }
 
 #[derive(Copy, Clone, Debug)]
-pub struct UnixMillis {
+pub struct Millis {
     inner: std::time::Duration,
 }
 
@@ -46,9 +46,9 @@ impl Serialize for Seconds {
     }
 }
 
-impl DurationRepr for UnixMillis {}
+impl DurationRepr for Millis {}
 
-impl<'de> Deserialize<'de> for UnixMillis {
+impl<'de> Deserialize<'de> for Millis {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: serde::Deserializer<'de>,
@@ -59,7 +59,7 @@ impl<'de> Deserialize<'de> for UnixMillis {
     }
 }
 
-impl Serialize for UnixMillis {
+impl Serialize for Millis {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer,
@@ -69,8 +69,8 @@ impl Serialize for UnixMillis {
     }
 }
 
-impl From<UnixMillis> for std::time::Duration {
-    fn from(value: UnixMillis) -> Self {
+impl From<Millis> for std::time::Duration {
+    fn from(value: Millis) -> Self {
         value.inner
     }
 }

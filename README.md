@@ -32,7 +32,7 @@ This is the current support for different APIs (Categories named after [The offi
 - Webhooks ☑️ (GitHub, Sentry, and Slack webhooks are not yet implemented)
 - Discovery ❌
 - Donations ❌
-- Gateway (API gateway info endpoint) ❌
+- Gateway (API gateway info endpoint) ✅
 - Gifts ❌
 - Guilds 🟡
 - KLIPY ❌

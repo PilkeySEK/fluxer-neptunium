@@ -8,6 +8,7 @@ use crate::{
 };
 
 pub mod channel;
+pub mod gateway;
 pub mod guild;
 pub mod invites;
 pub mod meta;
