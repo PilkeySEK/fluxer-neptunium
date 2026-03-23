@@ -26,30 +26,30 @@ This is the current support for different APIs (Categories named after [The offi
 
 ❌ = Not (yet) supported
 
-- Instance ✅
-- Admin ❌
-- OAuth2 ❌
-- Auth ❌
-- Channels ✅
-- Invites ✅
-- Saved Media ✅
-- Webhooks ☑️ (GitHub, Sentry, and Slack webhooks are not yet implemented)
-- Discovery ❌
-- Donations ❌
-- Gateway (API gateway info endpoint) ✅
-- Gifts ❌
-- Guilds 🟡
-- KLIPY ❌
-- Packs ❌
-- Premium ❌
-- Read States ❌
-- Reports ❌
-- Search ❌
-- Billing ❌
-- Tenor ❌
-- Users ❌
-- Connections ❌
-- Themes ❌
+- ✅ Instance
+- ❌ Admin
+- ❌ OAuth2
+- ❌ Auth
+- ✅ Channels
+- ✅ Invites
+- ✅ Saved Media
+- ☑️ Webhooks (GitHub, Sentry, and Slack webhook executions are not yet implemented)
+- ❌ Discovery
+- ❌ Donations
+- ✅ Gateway (API gateway info endpoint)
+- ❌ Gifts
+- 🟡 Guilds
+- ❌ KLIPY
+- ❌ Packs
+- ❌ Premium
+- ❌ Read States
+- ❌ Reports
+- ❌ Search
+- ❌ Billing
+- ❌ Tenor
+- ❌ Users
+- ❌ Connections
+- ❌ Themes
 
 # Woah new stuff
 So, basically, while trying to cover parts of the API, I am sometimes discovering not yet documented features. Most of them are just not *documented*, but actually do exist in the fluxer code, which is fine. But, some others, like the GUILD_AUDIT_LOG_ENTRY_CREATE (related structs in `model/src/guild/audit_log`) dispatch event are not even in the fluxer codebase yet and instead only in the private `fluxer-v2` repository which is only available to Fluxer visionaries. I'm sadly not a visionary, so I don't fully know the structure of this event. I'm still including it for the future, but you shouldn't rely on it currently (if you happen to be insane enough to use this project seriously).
