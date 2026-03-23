@@ -18,6 +18,7 @@ use crate::{
 };
 
 pub mod audit_log;
+pub mod bans;
 pub mod default_message_notification_level;
 pub mod explicit_content_filter;
 pub mod member;
@@ -34,6 +35,7 @@ pub struct GuildProperties {
     pub banner_width: Option<u32>,
     pub default_message_notifications: DefaultMessageNotifications,
     pub disabled_operations: GuildOperations,
+    /// Base64-encoded image data for the embedded invite splash.
     pub embed_splash: Option<String>,
     pub embed_splash_height: Option<i32>,
     pub embed_splash_width: Option<i32>,
@@ -50,7 +52,7 @@ pub struct GuildProperties {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub permissions: Option<String>,
     pub rules_channel_id: Option<Id<ChannelMarker>>,
-    /// Hash of the guild splash screen
+    /// Base64-encoded image data for the guild splash screen.
     pub splash: Option<String>,
     pub splash_card_alignment: SplashCardAlignment,
     pub splash_height: Option<i32>,

@@ -1,14 +1,18 @@
 use serde::Deserialize;
 
 use crate::{
-    guild::audit_log::{
-        change::AuditLogChange, event_type::AuditLogActionType,
-        optional_entry_info::AuditLogOptionalEntryInfo,
+    guild::{
+        audit_log::{
+            change::AuditLogChange, event_type::AuditLogActionType,
+            optional_entry_info::AuditLogOptionalEntryInfo,
+        },
+        webhook::AuditLogWebhook,
     },
     id::{
         Id,
         marker::{AuditLogEntryMarker, GenericMarker, GuildMarker, UserMarker},
     },
+    user::UserPartial,
 };
 
 pub mod change;
@@ -46,4 +50,12 @@ pub struct AuditLogEntry {
     ///
     /// [user]: crate::user::User
     pub user_id: Option<Id<UserMarker>>,
+}
+
+#[derive(Deserialize, Clone, Debug)]
+pub struct GuildAuditLogs {
+    pub audit_log_entries: Vec<AuditLogEntry>,
+    // TODO: Is this actually UserPartial?
+    pub users: Vec<UserPartial>,
+    pub webhooks: Vec<AuditLogWebhook>,
 }
