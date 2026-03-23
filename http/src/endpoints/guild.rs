@@ -1,6 +1,9 @@
 pub mod ban_guild_member;
+pub mod channels;
 #[cfg(feature = "user_api")]
 pub mod create_guild;
+#[cfg(feature = "user_api")]
+pub mod delete_guild;
 pub mod emoji;
 pub mod get_guild_information;
 pub mod list_guild_audit_logs;

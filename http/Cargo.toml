@@ -16,6 +16,7 @@ serde_json = "1.0.149"
 serde_path_to_error = "0.1.20"
 tracing = "0.1.44"
 zeroize = "1.8.2"
+serde_repr = "0.1.20"
 
 [lints.clippy]
 pedantic = "warn"
@@ -23,4 +24,4 @@ new-without-default = "allow"
 
 [features]
 default = []
-user_api = []
+user_api = ["neptunium-model/user_api"]

@@ -22,4 +22,4 @@ pedantic = "warn"
 
 [features]
 default = []
-user_api = ["neptunium-http/user_api"]
+user_api = ["neptunium-http/user_api", "neptunium-model/user_api"]

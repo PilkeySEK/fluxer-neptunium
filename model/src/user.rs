@@ -6,6 +6,8 @@ use crate::{
     user::flags::PublicUserFlags,
 };
 
+#[cfg(feature = "user_api")]
+pub mod auth;
 pub mod flags;
 pub mod read_state;
 pub mod relationship;
