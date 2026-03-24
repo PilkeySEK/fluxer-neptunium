@@ -11,10 +11,16 @@ struct Handler;
 
 #[async_trait]
 impl EventHandler for Handler {
-    async fn on_message_create(&self, ctx: Context, message: Arc<MessageCreate>) {
+    async fn on_message_create(
+        &self,
+        ctx: Context,
+        message: Arc<MessageCreate>,
+    ) -> Result<(), EventError> {
         if !message.author.bot && message.content == "n?ping" {
-            message.reply(&ctx, "Pong!").await.unwrap();
+            message.reply(&ctx, "Pong!").await?;
         }
+
+        Ok(())
     }
 }
 

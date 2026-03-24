@@ -346,6 +346,7 @@ name = "fluxer-neptunium"
 version = "0.1.0"
 dependencies = [
  "async-trait",
+ "bon",
  "neptunium-gateway",
  "neptunium-http",
  "neptunium-model",

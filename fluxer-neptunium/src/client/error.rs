@@ -6,6 +6,8 @@ use neptunium_http::{
 use neptunium_model::gateway::event::gateway::GatewayEvent;
 use tokio_tungstenite::tungstenite::{self, protocol::CloseFrame};
 
+use crate::events::EventError;
+
 #[derive(Debug)]
 pub struct Error {
     kind: ClientErrorKind,
@@ -38,7 +40,7 @@ impl std::fmt::Display for Error {
                     "Connection closed: code={}, reason=\"{}\"",
                     frame.code, frame.reason
                 )),
-                None => f.write_fmt(format_args!("Connection closed, no close frame present")),
+                _ => f.write_fmt(format_args!("Connection closed, no close frame present")),
             },
             ClientErrorKind::SessionInvalidated => f.write_str("Session invalidated"),
             ClientErrorKind::HttpRequestError(e) => f.write_fmt(format_args!("HTTP error: {e}")),
@@ -67,6 +69,7 @@ impl std::fmt::Display for Error {
             ClientErrorKind::HttpInvalidResponse(s) => {
                 f.write_fmt(format_args!("API Error: Invalid response: {s}"))
             }
+            ClientErrorKind::EventError(err) => f.write_fmt(format_args!("Event error: {err}")),
         }
     }
 }
@@ -118,6 +121,9 @@ pub enum ClientErrorKind {
     HttpNotFound(ApiErrorResponse),
     HttpInternalServerError(ApiErrorResponse),
     HttpInvalidResponse(String),
+    // TODO: Currently this needs to be Boxed because else it would be an infinite cycle
+    // of Error<->EventError
+    EventError(Box<EventError>),
 }
 
 impl From<tungstenite::Error> for Error {

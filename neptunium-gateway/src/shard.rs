@@ -151,4 +151,21 @@ impl Shard {
         }))
         .await
     }
+
+    /// Close the shard connection. This also closes the underlying websocket.
+    /// If no connection has been opened yet, immediately returns `Ok`.
+    /// # Errors
+    /// Returns an error if closing the websocket failed.
+    #[expect(clippy::missing_panics_doc)]
+    pub async fn close(&mut self) -> Result<(), Error> {
+        if let Some(connection) = self.connection.take() {
+            connection
+                .rx
+                .reunite(connection.tx)
+                .unwrap()
+                .close(None)
+                .await?;
+        }
+        Ok(())
+    }
 }
