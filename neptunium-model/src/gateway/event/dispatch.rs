@@ -50,7 +50,7 @@ use crate::{
         },
         webhooks_events::webhooks_update::WebhooksUpdate,
     },
-    guild::{GuildResponse, member::GuildMember},
+    guild::{Guild, member::GuildMember},
     id::{Id, marker::ChannelMarker},
     invites::InviteWithMetadata,
     user::{
@@ -82,7 +82,7 @@ pub enum DispatchEvent {
     AuthSessionChange(AuthSessionChange),
     PresenceUpdate(PresenceUpdateIncoming),
     GuildCreate(GuildCreate),
-    GuildUpdate(GuildResponse),
+    GuildUpdate(Guild),
     GuildDelete(GuildDelete),
     /// Sent when a user joins a guild.
     GuildMemberAdd(GuildMember),

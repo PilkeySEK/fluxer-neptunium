@@ -52,7 +52,7 @@ use neptunium_model::{
         },
         webhooks_events::webhooks_update::WebhooksUpdate,
     },
-    guild::{GuildResponse, member::GuildMember},
+    guild::{Guild, member::GuildMember},
     id::{Id, marker::ChannelMarker},
     invites::InviteWithMetadata,
     user::{
@@ -186,11 +186,7 @@ pub trait EventHandler: Send {
     ) -> Result<(), EventError> {
         Ok(())
     }
-    async fn on_guild_update(
-        &self,
-        ctx: Context,
-        data: Arc<GuildResponse>,
-    ) -> Result<(), EventError> {
+    async fn on_guild_update(&self, ctx: Context, data: Arc<Guild>) -> Result<(), EventError> {
         Ok(())
     }
     async fn on_guild_delete(

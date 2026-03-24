@@ -1,7 +1,7 @@
 use bon::Builder;
 use neptunium_model::{
     guild::{
-        GuildResponse,
+        Guild,
         properties::{
             DefaultMessageNotifications, GuildExplicitContentFilter, GuildFeatureFlag,
             GuildMfaLevel, GuildVerificationLevel, NsfwLevel, SplashCardAlignment,
@@ -59,28 +59,6 @@ pub struct UpdateGuildSettingsBody {
     pub features: Option<Vec<GuildFeatureFlag>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub message_history_cutoff: Option<Timestamp<Iso8601>>,
-    // #[serde(skip_serializing_if = "Option::is_none")]
-    // pub banner_height: Option<u32>,
-    // #[serde(skip_serializing_if = "Option::is_none")]
-    // pub banner_width: Option<u32>,
-    // #[serde(skip_serializing_if = "Option::is_none")]
-    // pub disabled_operations: Option<GuildOperations>,
-    // #[serde(skip_serializing_if = "Option::is_none")]
-    // pub embed_splash_height: Option<i32>,
-    // #[serde(skip_serializing_if = "Option::is_none")]
-    // pub embed_splash_width: Option<i32>,
-    // #[serde(skip_serializing_if = "Option::is_none")]
-    // pub owner_id: Option<Id<UserMarker>>,
-    // #[serde(skip_serializing_if = "Option::is_none")]
-    // pub permissions: Option<String>,
-    // #[serde(skip_serializing_if = "Option::is_none")]
-    // pub rules_channel_id: Option<Id<ChannelMarker>>,
-    // #[serde(skip_serializing_if = "Option::is_none")]
-    // pub splash_height: Option<i32>,
-    // #[serde(skip_serializing_if = "Option::is_none")]
-    // pub splash_width: Option<i32>,
-    // #[serde(skip_serializing_if = "Option::is_none")]
-    // pub vanity_url_code: Option<String>,
 }
 
 #[derive(Builder, Clone, Debug)]
@@ -90,7 +68,7 @@ pub struct UpdateGuildSettings {
 }
 
 impl Endpoint for UpdateGuildSettings {
-    type Response = GuildResponse;
+    type Response = Guild;
 
     fn into_request(self) -> crate::request::Request {
         Request::builder()

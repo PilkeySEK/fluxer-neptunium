@@ -12,6 +12,7 @@ use neptunium_http::endpoints::{
         get_guild_information::GetGuildInformation,
         list_guild_audit_logs::{ListGuildAuditLogs, ListGuildAuditLogsParams},
         list_guild_bans::ListGuildBans,
+        toggle_detached_banner::ToggleDetachedBanner,
         unban_guild_member::UnbanGuildMember,
     },
     invites::list_guild_invites::ListGuildInvites,
@@ -19,7 +20,7 @@ use neptunium_http::endpoints::{
 };
 use neptunium_model::{
     channel::Channel,
-    guild::{GuildResponse, audit_log::GuildAuditLogs, bans::GuildBanListEntry, webhook::Webhook},
+    guild::{Guild, audit_log::GuildAuditLogs, bans::GuildBanListEntry, webhook::Webhook},
     id::{Id, marker::UserMarker},
     invites::InviteWithMetadata,
 };
@@ -30,7 +31,7 @@ use crate::{client::error::Error, events::context::Context, internal::traits::gu
 pub trait GuildExt {
     async fn list_invites(&self, ctx: &Context) -> Result<Vec<InviteWithMetadata>, Error>;
     async fn list_webhooks(&self, ctx: &Context) -> Result<Vec<Webhook>, Error>;
-    async fn fetch(&self, ctx: &Context) -> Result<GuildResponse, Error>;
+    async fn fetch(&self, ctx: &Context) -> Result<Guild, Error>;
     async fn list_audit_logs(
         &self,
         ctx: &Context,
@@ -62,6 +63,7 @@ pub trait GuildExt {
         ctx: &Context,
         auth: neptunium_model::user::auth::SudoVerification,
     ) -> Result<(), Error>;
+    async fn toggle_detached_banner(&self, ctx: &Context, detached: bool) -> Result<Guild, Error>;
 }
 
 #[async_trait]
@@ -84,7 +86,7 @@ impl<T: GuildTrait> GuildExt for T {
             .await?)
     }
 
-    async fn fetch(&self, ctx: &Context) -> Result<GuildResponse, Error> {
+    async fn fetch(&self, ctx: &Context) -> Result<Guild, Error> {
         Ok(ctx
             .get_http_client()
             .execute(GetGuildInformation {
@@ -192,6 +194,16 @@ impl<T: GuildTrait> GuildExt for T {
             .execute(DeleteGuild {
                 guild_id: self.get_guild_id(),
                 auth,
+            })
+            .await?)
+    }
+
+    async fn toggle_detached_banner(&self, ctx: &Context, detached: bool) -> Result<Guild, Error> {
+        Ok(ctx
+            .get_http_client()
+            .execute(ToggleDetachedBanner {
+                guild_id: self.get_guild_id(),
+                enabled: detached,
             })
             .await?)
     }

@@ -2,7 +2,7 @@ use bon::Builder;
 use neptunium_model::{
     guild::properties::GuildEmoji,
     id::{Id, marker::GuildMarker},
-    user::UserPartial,
+    user::PartialUser,
 };
 use reqwest::Method;
 use serde::Deserialize;
@@ -13,7 +13,7 @@ use crate::{endpoints::Endpoint, request::Request};
 pub struct ListGuildEmojisResponseEntry {
     #[serde(flatten)]
     pub emoji: GuildEmoji,
-    pub user: UserPartial,
+    pub user: PartialUser,
 }
 
 #[derive(Builder, Copy, Clone, Debug)]

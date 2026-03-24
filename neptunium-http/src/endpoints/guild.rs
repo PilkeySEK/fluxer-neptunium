@@ -8,5 +8,6 @@ pub mod emoji;
 pub mod get_guild_information;
 pub mod list_guild_audit_logs;
 pub mod list_guild_bans;
+pub mod toggle_detached_banner;
 pub mod unban_guild_member;
 pub mod update_guild_settings;

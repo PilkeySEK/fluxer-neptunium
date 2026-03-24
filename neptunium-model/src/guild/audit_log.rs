@@ -12,7 +12,7 @@ use crate::{
         Id,
         marker::{AuditLogEntryMarker, GenericMarker, GuildMarker, UserMarker},
     },
-    user::UserPartial,
+    user::PartialUser,
 };
 
 pub mod change;
@@ -56,6 +56,6 @@ pub struct AuditLogEntry {
 pub struct GuildAuditLogs {
     pub audit_log_entries: Vec<AuditLogEntry>,
     // TODO: Is this actually UserPartial?
-    pub users: Vec<UserPartial>,
+    pub users: Vec<PartialUser>,
     pub webhooks: Vec<AuditLogWebhook>,
 }

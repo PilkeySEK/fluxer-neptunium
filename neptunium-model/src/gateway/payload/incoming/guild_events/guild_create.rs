@@ -1,4 +1,4 @@
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 
 use crate::{
     channel::Channel,
@@ -7,7 +7,7 @@ use crate::{
     time::timestamp::{Timestamp, representations::Iso8601},
 };
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug)]
 pub struct GuildCreate {
     #[serde(flatten)]
     pub guild: Guild,

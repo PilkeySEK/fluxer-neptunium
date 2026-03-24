@@ -1,5 +1,5 @@
 use bon::Builder;
-use neptunium_model::guild::GuildResponse;
+use neptunium_model::guild::Guild;
 use reqwest::Method;
 use serde::Serialize;
 
@@ -20,7 +20,7 @@ pub struct CreateGuild {
 }
 
 impl Endpoint for CreateGuild {
-    type Response = GuildResponse;
+    type Response = Guild;
 
     fn into_request(self) -> crate::request::Request {
         Request::builder()

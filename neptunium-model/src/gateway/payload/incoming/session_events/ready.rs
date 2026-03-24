@@ -11,7 +11,7 @@ use crate::{
     },
     time::timestamp::{Timestamp, representations::Iso8601},
     user::{
-        UserPartial,
+        PartialUser,
         flags::PublicUserFlags,
         read_state::ReadState,
         settings::{FavoriteMeme, UserGuildSettings, UserSettings},
@@ -128,7 +128,7 @@ pub struct Ready {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub relationships: Option<Vec<Value>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub users: Option<Vec<UserPartial>>,
+    pub users: Option<Vec<PartialUser>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub presences: Option<Vec<Presence>>,
     #[serde(skip_serializing_if = "Option::is_none")]

@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     id::{Id, marker::EmojiMarker},
     time::timestamp::{Timestamp, representations::Iso8601},
-    user::UserPartial,
+    user::PartialUser,
 };
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -36,7 +36,7 @@ pub struct CustomStatus {
 /// Represents a user's presence (online status and activity).
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Presence {
-    user: UserPartial,
+    user: PartialUser,
     status: PresenceStatus,
     mobile: bool,
     afk: bool,

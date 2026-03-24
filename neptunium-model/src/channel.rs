@@ -11,7 +11,7 @@ use crate::{
         marker::{ChannelMarker, GenericMarker, GuildMarker, MessageMarker, UserMarker},
     },
     time::timestamp::{Timestamp, representations::Iso8601},
-    user::UserPartial,
+    user::PartialUser,
 };
 
 pub mod message;
@@ -123,7 +123,7 @@ pub struct Channel {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub rate_limit_per_user: Option<i32>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub recipients: Option<Vec<UserPartial>>,
+    pub recipients: Option<Vec<PartialUser>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub rtc_region: Option<VoiceRegion>,
     #[serde(skip_serializing_if = "Option::is_none")]

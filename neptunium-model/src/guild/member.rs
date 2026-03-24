@@ -5,7 +5,7 @@ use crate::{
     id::{Id, marker::RoleMarker},
     misc::{HexColor32, ImageHash},
     time::timestamp::{Timestamp, representations::Iso8601},
-    user::UserPartial,
+    user::PartialUser,
 };
 
 bitflags! {
@@ -51,5 +51,5 @@ pub struct GuildMember {
     #[serde(skip_serializing_if = "Option::is_none")]
     profile_flags: Option<GuildMemberProfileFlags>,
     roles: Vec<Id<RoleMarker>>,
-    user: UserPartial,
+    user: PartialUser,
 }

@@ -2,11 +2,11 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     id::{Id, marker::GuildMarker},
-    user::UserPartial,
+    user::PartialUser,
 };
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct GuildBanRemove {
     pub guild_id: Id<GuildMarker>,
-    pub user: UserPartial,
+    pub user: PartialUser,
 }

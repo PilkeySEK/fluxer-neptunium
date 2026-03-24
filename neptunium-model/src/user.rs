@@ -14,7 +14,7 @@ pub mod relationship;
 pub mod settings;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct UserPartial {
+pub struct PartialUser {
     pub avatar: Option<ImageHash>,
     pub avatar_color: Option<HexColor32>,
     #[serde(default)]
@@ -26,6 +26,6 @@ pub struct UserPartial {
     pub id: Id<UserMarker>,
     #[serde(default)]
     pub system: bool,
-    /// Note that this is not unique (because Fluxer has discriminators)
+    /// Note that this is not unique (because Fluxer has discriminators).
     pub username: String,
 }

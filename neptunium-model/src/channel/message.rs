@@ -13,7 +13,7 @@ use crate::{
         },
     },
     time::timestamp::{Timestamp, representations::Iso8601},
-    user::UserPartial,
+    user::PartialUser,
 };
 
 pub mod attachment;
@@ -128,7 +128,7 @@ pub struct MessageSticker {
 pub struct MessageBase {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub attachments: Option<Vec<MessageAttachment>>,
-    pub author: UserPartial,
+    pub author: PartialUser,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub call: Option<MessageCall>,
     pub channel_id: Id<ChannelMarker>,
@@ -143,7 +143,7 @@ pub struct MessageBase {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub mention_roles: Option<Vec<Id<RoleMarker>>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub mentions: Option<Vec<UserPartial>>,
+    pub mentions: Option<Vec<PartialUser>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub message_reference: Option<MessageReference>,
     /// Snapshots of forwarded messages.

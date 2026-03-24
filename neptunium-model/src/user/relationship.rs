@@ -4,7 +4,7 @@ use serde_repr::{Deserialize_repr, Serialize_repr};
 use crate::{
     id::{Id, marker::RelationshipMarker},
     time::timestamp::{Timestamp, representations::Iso8601},
-    user::UserPartial,
+    user::PartialUser,
 };
 
 #[derive(Serialize_repr, Deserialize_repr, Copy, Clone, Debug, PartialEq, Eq)]
@@ -25,5 +25,5 @@ pub struct Relationship {
     pub since: Option<Timestamp<Iso8601>>,
     #[serde(rename = "type")]
     pub r#type: RelationshipType,
-    pub user: UserPartial,
+    pub user: PartialUser,
 }

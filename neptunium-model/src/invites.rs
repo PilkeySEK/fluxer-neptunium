@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     channel::ChannelPartial,
-    guild::GuildPartial,
+    guild::PartialGuild,
     id::{
         Id,
         marker::{PackMarker, UserMarker},
@@ -11,7 +11,7 @@ use crate::{
         duration::{Duration, representation::Seconds},
         timestamp::{Timestamp, representations::Iso8601},
     },
-    user::UserPartial,
+    user::PartialUser,
 };
 
 #[derive(Serialize, Deserialize, Copy, Clone, Debug)]
@@ -32,7 +32,7 @@ pub struct PackInfo {
     pub creator_id: Id<UserMarker>,
     pub created_at: Timestamp<Iso8601>,
     pub updated_at: Timestamp<Iso8601>,
-    pub creator: UserPartial,
+    pub creator: PartialUser,
 }
 
 #[derive(Serialize, Deserialize, Copy, Clone, Debug)]
@@ -58,13 +58,13 @@ pub struct GuildInviteMetadata {
     pub max_age: Duration<Seconds>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug)]
 pub struct GuildInvite {
     pub code: String,
-    pub guild: GuildPartial,
+    pub guild: PartialGuild,
     pub channel: ChannelPartial,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub inviter: Option<UserPartial>,
+    pub inviter: Option<PartialUser>,
     /// The approximate total member count of the guild.
     pub member_count: u64,
     /// The approximate online member count of the guild.
@@ -80,7 +80,7 @@ pub struct GroupDmInvite {
     pub code: String,
     pub channel: ChannelPartial,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub inviter: Option<UserPartial>,
+    pub inviter: Option<PartialUser>,
     /// The approximate total member count of the group DM.
     pub member_count: u64,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -94,7 +94,7 @@ pub struct PackInvite {
     pub code: String,
     pub pack: PackInfo,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub inviter: Option<UserPartial>,
+    pub inviter: Option<PartialUser>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub expires_at: Option<Timestamp<Iso8601>>,
     #[serde(rename = "temporary")]

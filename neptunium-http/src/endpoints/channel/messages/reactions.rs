@@ -6,7 +6,7 @@ use neptunium_model::{
         Id,
         marker::{ChannelMarker, EmojiMarker, MessageMarker, UserMarker},
     },
-    user::UserPartial,
+    user::PartialUser,
 };
 use percent_encoding::{NON_ALPHANUMERIC, utf8_percent_encode};
 use reqwest::Method;
@@ -51,7 +51,7 @@ pub struct ListReactions<'a> {
 }
 
 impl Endpoint for ListReactions<'_> {
-    type Response = Vec<UserPartial>;
+    type Response = Vec<PartialUser>;
     fn into_request(self) -> crate::request::Request {
         Request::builder()
             .method(Method::GET)
