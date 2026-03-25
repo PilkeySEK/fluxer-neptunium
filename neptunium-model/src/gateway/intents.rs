@@ -4,11 +4,8 @@ use serde::{Deserialize, Serialize};
 // TODO: Find out which of these actually exist in Fluxer
 // Source of these bitflags: https://docs.discord.com/developers/events/gateway#gateway-intents
 bitflags! {
-    /// Intents are bitwise values sent to the gateway when Identifying, which correlate
-    /// to a set of events. An application will only receive events for which the corresponding
-    /// intents were set.
     #[derive(Copy, Clone, Debug, PartialEq, Eq)]
-    pub struct Intents: u64 {
+    pub struct GatewayEventFlags: u64 {
         /// Correlates to the following events:
         /// - `GUILD_CREATE`
         /// - `GUILD_UPDATE`
@@ -128,7 +125,7 @@ bitflags! {
     }
 }
 
-impl<'de> Deserialize<'de> for Intents {
+impl<'de> Deserialize<'de> for GatewayEventFlags {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: serde::Deserializer<'de>,
@@ -137,7 +134,7 @@ impl<'de> Deserialize<'de> for Intents {
     }
 }
 
-impl Serialize for Intents {
+impl Serialize for GatewayEventFlags {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer,

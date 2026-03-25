@@ -1,5 +1,5 @@
 use bon::Builder;
-use neptunium_model::gateway::{intents::Intents, shard::ShardInfo};
+use neptunium_model::gateway::{intents::GatewayEventFlags, shard::ShardInfo};
 use zeroize::Zeroizing;
 
 #[derive(Debug, Builder)]
@@ -10,7 +10,7 @@ pub struct ShardConfig {
     pub gateway_url: String,
     #[builder(into)]
     pub token: Zeroizing<String>,
-    pub intents: Intents,
+    pub ignored_events: Option<GatewayEventFlags>,
 }
 
 impl ShardConfig {

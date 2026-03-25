@@ -4,7 +4,7 @@ use serde_repr::{Deserialize_repr, Serialize_repr};
 use zeroize::Zeroizing;
 
 use crate::{
-    gateway::{intents::Intents, shard::ShardInfo},
+    gateway::{intents::GatewayEventFlags, shard::ShardInfo},
     id::{
         Id,
         marker::{ApplicationMarker, EmojiMarker},
@@ -205,13 +205,18 @@ pub struct ConnectionProperties {
 pub struct Identify {
     pub token: Zeroizing<String>,
     pub properties: ConnectionProperties,
-    pub compress: bool,
-    /// Value between 50 and 250.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub large_threshold: Option<u8>,
+    // Doesn't appear to exist - https://github.com/fluxerapp/fluxer/blob/5da26d4ed5ef9f3fe8bef993c0f10ea4f4ee9c1d/fluxer_gateway/src/gateway/gateway_handler.erl#L466
+    // pub compress: bool,
+    // /// Value between 50 and 250.
+    // #[serde(skip_serializing_if = "Option::is_none")]
+    // pub large_threshold: Option<u8>,
+    // Also doesn't appear to exist, but I'll be keeping this for the future.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub shard: Option<ShardInfo>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub presence: Option<UpdatePresence>,
-    pub intents: Intents,
+    // TODO: Check whether this is actually `Intents`...
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ignored_events: Option<GatewayEventFlags>,
+    // TODO: There might be a "flags" field, have to check...
 }

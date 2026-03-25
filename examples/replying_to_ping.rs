@@ -2,7 +2,8 @@ use std::{env, sync::Arc};
 
 use fluxer_neptunium::{
     model::gateway::{
-        intents::Intents, payload::incoming::message_events::message_create::MessageCreate,
+        intents::GatewayEventFlags,
+        payload::incoming::message_events::message_create::MessageCreate,
     },
     prelude::*,
 };
@@ -30,7 +31,7 @@ async fn main() {
     let mut client = Client::new(
         ShardConfig::builder()
             .token(token)
-            .intents(Intents::GUILDS | Intents::GUILD_MESSAGES)
+            .ignored_events(GatewayEventFlags::GUILDS | GatewayEventFlags::GUILD_MESSAGES)
             .build(),
     );
 

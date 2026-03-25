@@ -143,11 +143,9 @@ impl Shard {
         self.send_gateway_message(OutgoingGatewayMessage::Identify(Identify {
             token: self.config.token.clone(),
             properties: connection_properties,
-            compress: false,
-            large_threshold: None,
             shard: Some(self.config.shard_info),
             presence: None,
-            intents: self.config.intents,
+            ignored_events: self.config.ignored_events,
         }))
         .await
     }
