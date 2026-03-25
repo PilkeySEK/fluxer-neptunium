@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use serde_repr::{Deserialize_repr, Serialize_repr};
@@ -7,13 +9,14 @@ use crate::{
     gateway::presence::Presence,
     id::{
         Id,
-        marker::{ChannelMarker, GuildMarker, UserMarker},
+        marker::{ChannelMarker, GuildMarker, RelationshipMarker, UserMarker},
     },
     time::timestamp::{Timestamp, representations::Iso8601},
     user::{
         PartialUser,
         flags::PublicUserFlags,
         read_state::ReadState,
+        relationship::RelationshipType,
         settings::{FavoriteMeme, UserGuildSettings, UserSettings},
     },
 };
@@ -62,7 +65,7 @@ pub struct UserPrivateResponse {
     pub acls: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub authenticator_types: Option<Vec<UserAuthenticatorTypes>>,
-    pub avater: Option<String>,
+    pub avatar: Option<String>,
     pub avatar_color: Option<i32>,
     pub banner: Option<String>,
     pub banner_color: Option<i32>,
@@ -118,6 +121,24 @@ pub enum UserPremiumTypes {
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Clone, Debug)]
+pub struct RtcRegion {
+    pub emoji: String,
+    pub id: String,
+    pub name: String,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct RelationshipReadyResponse {
+    pub id: Id<RelationshipMarker>,
+    /// A custom nickname set for the related user.
+    pub nickname: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub since: Option<Timestamp<Iso8601>>,
+    #[serde(rename = "type")]
+    pub r#type: RelationshipType,
+}
+
+#[derive(serde::Serialize, serde::Deserialize, Clone, Debug)]
 pub struct Ready {
     pub version: u64,
     pub session_id: String,
@@ -126,7 +147,7 @@ pub struct Ready {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub private_channels: Option<Vec<Channel>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub relationships: Option<Vec<Value>>,
+    pub relationships: Option<Vec<RelationshipReadyResponse>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub users: Option<Vec<PartialUser>>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -140,7 +161,7 @@ pub struct Ready {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub read_states: Option<Vec<ReadState>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub notes: Option<Value>,
+    pub notes: Option<HashMap<Id<UserMarker>, String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub country_code: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -149,4 +170,13 @@ pub struct Ready {
     pub favorite_memes: Option<Vec<FavoriteMeme>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub auth_session_id_hash: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub rtc_regions: Option<Vec<RtcRegion>>,
+    // TODO: Check whether latitude and longitude are actually optional
+    #[cfg(feature = "user_api")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub latitude: Option<String>,
+    #[cfg(feature = "user_api")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub longitude: Option<String>,
 }

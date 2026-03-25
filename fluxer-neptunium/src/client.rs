@@ -56,7 +56,11 @@ impl Client {
     #[must_use]
     pub fn new_with_config(shard_config: ShardConfig, client_config: ClientConfig) -> Self {
         let token_clone = (*shard_config.token).clone();
+        #[cfg(not(feature = "user_api"))]
         let mut api_client = HttpClient::new(token_clone);
+        #[cfg(feature = "user_api")]
+        let mut api_client = HttpClient::new(token_clone, client_config.token_type);
+
         if let Some(api_base_url) = client_config.api_base_url {
             api_client.set_api_base_url(api_base_url);
         }

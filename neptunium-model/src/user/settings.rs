@@ -223,21 +223,15 @@ impl<'de> Deserialize<'de> for GuildFolderFlags {
 
 // In the Fluxer source, this is called `GuildFolderIconSchema`.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(rename_all = "snake_case")]
 pub enum GuildFoldersItemIcon {
-    #[serde(rename = "FOLDER")]
     #[default]
     Folder,
-    #[serde(rename = "STAR")]
     Star,
-    #[serde(rename = "HEART")]
     Heart,
-    #[serde(rename = "BOOKMARK")]
     Bookmark,
-    #[serde(rename = "GAME_CONTROLLER")]
     GameController,
-    #[serde(rename = "SHIELD")]
     Shield,
-    #[serde(rename = "MUSIC_NOTE")]
     MusicNote,
 }
 
@@ -247,7 +241,7 @@ pub struct GuildFoldersItem {
     pub color: Option<HexColor32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub flags: Option<GuildFolderFlags>,
-    pub guild_ids: Option<Id<GuildMarker>>,
+    pub guild_ids: Option<Vec<Id<GuildMarker>>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub icon: Option<GuildFoldersItemIcon>,
     /// The unique identifier for the folder (-1 means uncategorized)
@@ -371,7 +365,8 @@ pub struct UserSettings {
     pub group_dm_add_permission_flags: GroupDmAddPermissionFlags,
     pub guild_folders: Vec<GuildFoldersItem>,
     pub incoming_call_flags: IncomingCallFlags,
-    pub inline_attached_media: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub inline_attached_media: Option<bool>,
     pub inline_embed_media: bool,
     pub locale: Locale,
     pub message_display_compact: bool,
@@ -386,7 +381,7 @@ pub struct UserSettings {
     pub status_resets_to: Option<PresenceStatus>,
     pub theme: String,
     pub time_format: TimeFormatTypes,
-    pub trusted_domains: Option<String>,
+    pub trusted_domains: Option<Vec<String>>,
 }
 
 #[derive(Serialize_repr, Deserialize_repr, Copy, Clone, Debug)]

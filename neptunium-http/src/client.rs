@@ -1,27 +1,39 @@
 use reqwest::StatusCode;
 use serde_json::Deserializer;
-use zeroize::Zeroizing;
 
 use crate::{
     DEFAULT_API_BASE_URL, DEFAULT_USER_AGENT, VERSION,
     endpoints::{Endpoint, ExecuteEndpointRequestError, ResponseBody},
 };
 
+/// Bot tokens have `Bot ` prefix, user tokens do not.
+#[cfg(feature = "user_api")]
+#[derive(Copy, Clone, Debug, Default)]
+pub enum TokenType {
+    #[default]
+    Bot,
+    User,
+}
+
 #[derive(Debug)]
 pub struct HttpClient {
     pub(crate) api_base_url: String,
-    pub(crate) token: Zeroizing<String>,
+    pub(crate) token: zeroize::Zeroizing<String>,
+    #[cfg(feature = "user_api")]
+    pub(crate) token_type: TokenType,
     pub(crate) reqwest_client: reqwest::Client,
     pub(crate) user_agent: String,
 }
 
 impl HttpClient {
     #[must_use]
-    pub fn new(token: String) -> Self {
+    pub fn new(token: String, #[cfg(feature = "user_api")] token_type: TokenType) -> Self {
         Self {
             api_base_url: DEFAULT_API_BASE_URL.to_owned(),
             reqwest_client: reqwest::Client::default(),
-            token: Zeroizing::new(token),
+            token: zeroize::Zeroizing::new(token),
+            #[cfg(feature = "user_api")]
+            token_type,
             user_agent: format!("{DEFAULT_USER_AGENT}/{VERSION}"),
         }
     }

@@ -128,6 +128,15 @@ impl<'de, T: IdMarker> Deserialize<'de> for Id<T> {
             }
         }
 
+        // let value = serde_json::Value::deserialize(deserializer)?;
+        //
+        // let Ok(string) = serde_json::from_value::<String>(value.clone()) else {
+        //     println!("Deserialization error while deserializing id: {:?}", value);
+        //     panic!();
+        // };
+        //
+        // Ok(Self::new(string.parse().unwrap()))
+
         deserializer.deserialize_any(IdVisitor {
             _marker: PhantomData,
         })

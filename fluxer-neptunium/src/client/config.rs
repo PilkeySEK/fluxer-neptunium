@@ -5,7 +5,11 @@ use neptunium_http::DEFAULT_API_BASE_URL;
 pub struct ClientConfig {
     #[builder(into)]
     pub api_base_url: Option<String>,
+    #[builder(default = false)]
     pub always_propagate_event_errors: bool,
+    #[builder(default)]
+    #[cfg(feature = "user_api")]
+    pub token_type: neptunium_http::client::TokenType,
 }
 
 impl Default for ClientConfig {
@@ -13,6 +17,8 @@ impl Default for ClientConfig {
         Self {
             api_base_url: Some(DEFAULT_API_BASE_URL.to_owned()),
             always_propagate_event_errors: false,
+            #[cfg(feature = "user_api")]
+            token_type: neptunium_http::client::TokenType::default(),
         }
     }
 }
