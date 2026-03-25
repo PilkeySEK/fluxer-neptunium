@@ -1,11 +1,7 @@
 use std::{env, sync::Arc};
 
 use fluxer_neptunium::{
-    model::gateway::{
-        intents::GatewayEventFlags,
-        payload::incoming::message_events::message_create::MessageCreate,
-    },
-    prelude::*,
+    model::gateway::payload::incoming::message_events::message_create::MessageCreate, prelude::*,
 };
 
 struct Handler;
@@ -28,12 +24,7 @@ impl EventHandler for Handler {
 #[tokio::main]
 async fn main() {
     let token = env::var("FLUXER_TOKEN").unwrap();
-    let mut client = Client::new(
-        ShardConfig::builder()
-            .token(token)
-            .ignored_events(GatewayEventFlags::GUILDS | GatewayEventFlags::GUILD_MESSAGES)
-            .build(),
-    );
+    let mut client = Client::new(ShardConfig::builder().token(token).build());
 
     client.register_event_handler(Handler);
 

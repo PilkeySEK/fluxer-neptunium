@@ -17,6 +17,8 @@ Examples can be found in the [examples/](./examples) directory, with a .png for 
 
 Run an example using `FLUXER_TOKEN="<token>" cargo run --example <example>`, replacing `<token>` with the bot token and `<example>` with the example name. To run the replying-to-ping example, use `FLUXER_TOKEN="<token>" cargo run --example replying-to-ping`.
 
+To run the `user-bot` example, you need to specify `FLUXER_USER_TOKEN` instead.
+
 # Coverage
 Note that many of the APIs are user-only, so not interesting for bots. While this crate aims to support everything in the API eventually, it is mainly intended to be used for bots, which is why the bot-usable APIs are prioritized.
 - **Gateway:**
