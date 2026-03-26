@@ -1,6 +1,6 @@
 [package]
 name = "neptunium-http"
-version = "0.2.4"
+version = "0.2.5"
 edition = "2024"
 license = "MIT OR Apache-2.0"
 description = "Interacting with the Fluxer HTTP API."
@@ -12,7 +12,7 @@ publish = true
 [dependencies]
 async-trait = "0.1.89"
 bon = "3.9.0"
-neptunium-model = { path = "../neptunium-model", version = "0.2.4" }
+neptunium-model = { path = "../neptunium-model", version = "0.2.5" }
 futures = { version = "0.3.32", features = ["alloc"] }
 percent-encoding = "2.3.2"
 rand = "0.10.0"
