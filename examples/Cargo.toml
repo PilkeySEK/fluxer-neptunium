@@ -8,7 +8,7 @@ version = "0.0.0"
 [dev-dependencies]
 # The tokio features don't need to be ["full"], but this is the most simple solution.
 tokio = { version = "1.50.0", features = ["full"] }
-fluxer-neptunium = { path = "../fluxer-neptunium", version = "0.2.0", features = ["user_api"] }
+fluxer-neptunium = { path = "../fluxer-neptunium", version = "0.2.1", features = ["user_api"] }
 
 [[example]]
 name = "replying-to-ping"
