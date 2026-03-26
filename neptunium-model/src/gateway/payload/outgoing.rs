@@ -1,21 +1,23 @@
 use serde::{Serialize, ser::SerializeStruct};
 
-use crate::gateway::{
-    event::op_code::OpCode,
-    payload::outgoing::{
-        heartbeat::Heartbeat, identify::Identify, presence_update::PresenceUpdateOutgoing,
-    },
-};
+use crate::gateway::event::op_code::OpCode;
 
-pub mod heartbeat;
-pub mod identify;
-pub mod presence_update;
+mod heartbeat;
+mod identify;
+mod presence_update;
+mod resume;
+
+pub use heartbeat::*;
+pub use identify::*;
+pub use presence_update::*;
+pub use resume::*;
 
 #[derive(Clone, Debug)]
 pub enum OutgoingGatewayMessage {
     Identify(Identify),
     Heartbeat(Heartbeat),
     PresenceUpdate(PresenceUpdateOutgoing),
+    Resume(Resume),
 }
 
 impl Serialize for OutgoingGatewayMessage {
@@ -29,12 +31,14 @@ impl Serialize for OutgoingGatewayMessage {
             Self::Identify(_) => OpCode::Identify,
             Self::Heartbeat(_) => OpCode::Heartbeat,
             Self::PresenceUpdate(_) => OpCode::PresenceUpdate,
+            Self::Resume(_) => OpCode::Resume,
         } as u8;
         s.serialize_field("op", &op)?;
         match self {
             Self::Heartbeat(d) => s.serialize_field("d", d),
             Self::Identify(d) => s.serialize_field("d", d),
             Self::PresenceUpdate(d) => s.serialize_field("d", d),
+            Self::Resume(d) => s.serialize_field("d", d),
         }?;
 
         s.end()

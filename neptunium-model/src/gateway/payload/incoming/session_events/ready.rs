@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use serde_repr::{Deserialize_repr, Serialize_repr};
+use zeroize::Zeroizing;
 
 use crate::{
     channel::Channel,
@@ -141,7 +142,7 @@ pub struct RelationshipReadyResponse {
 #[derive(serde::Serialize, serde::Deserialize, Clone, Debug)]
 pub struct Ready {
     pub version: u64,
-    pub session_id: String,
+    pub session_id: Zeroizing<String>,
     pub user: UserPrivateResponse,
     pub guilds: Vec<GuildReadyResponse>,
     #[serde(skip_serializing_if = "Option::is_none")]

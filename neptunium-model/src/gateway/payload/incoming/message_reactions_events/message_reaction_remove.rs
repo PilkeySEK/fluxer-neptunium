@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    gateway::payload::outgoing::identify::Emoji,
+    gateway::payload::outgoing::Emoji,
     guild::member::GuildMember,
     id::{
         Id,

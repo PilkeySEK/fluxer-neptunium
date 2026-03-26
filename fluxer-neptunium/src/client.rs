@@ -5,11 +5,11 @@ use neptunium_http::client::HttpClient;
 use neptunium_model::gateway::{
     event::{dispatch::DispatchEvent, gateway::GatewayEvent, invalid_session::InvalidSessionEvent},
     payload::outgoing::{
-        OutgoingGatewayMessage, heartbeat::Heartbeat, identify::ConnectionProperties,
-        presence_update::PresenceUpdateOutgoing,
+        ConnectionProperties, Heartbeat, OutgoingGatewayMessage, PresenceUpdateOutgoing,
     },
 };
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender, unbounded_channel};
+use zeroize::Zeroizing;
 
 use crate::{
     client::error::{ClientErrorKind, Error},
@@ -28,6 +28,13 @@ pub(crate) enum ClientMessage {
     PropagateEventError(EventError),
 }
 
+#[derive(Clone, Debug)]
+struct ResumeInfo {
+    session_id: Zeroizing<String>,
+    // Doesn't appear to be a thing
+    // resume_url: String,
+}
+
 pub struct Client {
     shard: Shard,
     event_handlers: Vec<Arc<dyn EventHandler + Sync + 'static>>,
@@ -36,6 +43,7 @@ pub struct Client {
     tx: UnboundedSender<ClientMessage>,
     rx: UnboundedReceiver<ClientMessage>,
     always_propagate_event_errors: bool,
+    resume_info: Option<ResumeInfo>,
 }
 
 impl Deref for Client {
@@ -79,6 +87,7 @@ impl Client {
             tx,
             rx,
             always_propagate_event_errors: client_config.always_propagate_event_errors,
+            resume_info: None,
         }
     }
 
@@ -192,14 +201,13 @@ impl Client {
                         }
                     };
                     tracing::trace!("Received message: {message:?}");
-                    self.handle_event(message).map_err(|e| *e)?;
+                    self.handle_event(message).await.map_err(|e| *e)?;
                 }
             }
         }
     }
 
-    /// Does not block because it spawns a new task for each event handler.
-    fn handle_event(&mut self, event: GatewayEvent) -> Result<(), Box<self::error::Error>> {
+    async fn handle_event(&mut self, event: GatewayEvent) -> Result<(), Box<self::error::Error>> {
         match event {
             GatewayEvent::Heartbeat => {
                 let _ = self.tx.send(ClientMessage::Heartbeat);
@@ -210,14 +218,18 @@ impl Client {
             }
             GatewayEvent::InvalidSession(InvalidSessionEvent { resumable }) => {
                 if resumable {
-                    todo!(
-                        "Session was invalidated and resumable is set to true, but this has not been implemented yet."
-                    )
+                    tracing::debug!(
+                        "Resuming after gateway has sent a `InvalidSession` gateway event with resumable set to `true`."
+                    );
+                    self.resume().await?;
                 } else {
                     return Err(Box::new(Error::new(ClientErrorKind::SessionInvalidated)));
                 }
             }
-            GatewayEvent::Reconnect => todo!("Reconnecting is not yet implemented"),
+            GatewayEvent::Reconnect => {
+                tracing::debug!("Resuming after gateway has sent a `Reconnect` gateway event.");
+                self.resume().await?;
+            }
             GatewayEvent::Dispatch(payload) => {
                 // TODO: Maybe check if the current sequence number is bigger than the received one because that shouldn't happen? Or something...
                 self.last_sequence_number = Some(payload.sequence_number);
@@ -227,7 +239,22 @@ impl Client {
         Ok(())
     }
 
-    /// Does not block because it spawns a new task for each event handler.
+    async fn resume(&mut self) -> Result<(), Box<Error>> {
+        let Some(resume_info) = &self.resume_info else {
+            tracing::warn!("Resuming was requested but there is no resume info.");
+            return Err(Box::new(Error::new(
+                ClientErrorKind::UnexpectedEventReceived(Box::new(GatewayEvent::Reconnect)),
+            )));
+        };
+        self.shard
+            .resume(
+                resume_info.session_id.clone(),
+                self.last_sequence_number.unwrap_or(0),
+            )
+            .await
+            .map_err(|e| Box::new(Error::new(ClientErrorKind::NetworkError(e))))
+    }
+
     #[expect(clippy::too_many_lines, clippy::unnecessary_wraps)]
     fn handle_dispatch_event(
         &mut self,
@@ -260,6 +287,9 @@ impl Client {
 
         match event {
             DispatchEvent::Ready(data) => {
+                self.resume_info = Some(ResumeInfo {
+                    session_id: data.session_id.clone(),
+                });
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_ready);
             }
             DispatchEvent::Resumed(()) => {

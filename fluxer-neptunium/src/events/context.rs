@@ -9,7 +9,7 @@ use neptunium_http::{
 };
 use neptunium_model::{
     channel::Channel,
-    gateway::payload::outgoing::presence_update::PresenceUpdateOutgoing,
+    gateway::payload::outgoing::PresenceUpdateOutgoing,
     guild::Guild,
     id::{Id, marker::ChannelMarker},
 };
@@ -32,6 +32,7 @@ impl Context {
         &self.http_client
     }
 
+    // TODO: Make this be async and block
     /// Update the presence by sending a gateway request. Due to
     /// how the crate is structured currently, this does not block.
     pub fn update_presence(&self, data: PresenceUpdateOutgoing) {

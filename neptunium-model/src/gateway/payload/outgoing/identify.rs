@@ -30,6 +30,7 @@ pub struct Timestamps {
     pub end: Option<u64>,
 }
 
+// TODO: Why is this here??
 #[derive(serde::Serialize, serde::Deserialize, Clone, Debug)]
 pub struct Emoji {
     pub name: String,

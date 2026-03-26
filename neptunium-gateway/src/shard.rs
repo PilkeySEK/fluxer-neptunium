@@ -4,10 +4,7 @@ use futures_util::{
 };
 use neptunium_model::gateway::{
     event::gateway::GatewayEvent,
-    payload::outgoing::{
-        OutgoingGatewayMessage,
-        identify::{ConnectionProperties, Identify},
-    },
+    payload::outgoing::{ConnectionProperties, Identify, OutgoingGatewayMessage, Resume},
 };
 use tokio_tungstenite::{
     connect_async,
@@ -30,6 +27,7 @@ struct ShardConnection {
 }
 
 pub use tungstenite::Error;
+use zeroize::Zeroizing;
 
 use crate::shard::config::ShardConfig;
 pub mod config;
@@ -164,6 +162,29 @@ impl Shard {
                 .close(None)
                 .await?;
         }
+
         Ok(())
+    }
+
+    /// Reopens the existing connection (if there is one) and resumes.
+    /// # Resuming
+    /// Upon sending the `Resume` event, the gateway will replay all events after the specified
+    /// `last_sequence_number`, and finally send a `Resumed` dispatch event to signal that the replaying
+    /// is finished and all messages from that point onward are new.
+    /// # Errors
+    /// Returns an error if sending the resume message failed. **Does not** error if closing the websocket failed.
+    pub async fn resume(
+        &mut self,
+        session_id: Zeroizing<String>,
+        last_sequence_number: u64,
+    ) -> Result<(), Error> {
+        let _ = self.close().await;
+
+        self.send_gateway_message(OutgoingGatewayMessage::Resume(Resume {
+            token: self.config.token.clone(),
+            session_id,
+            seq: last_sequence_number,
+        }))
+        .await
     }
 }
