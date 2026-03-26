@@ -4,9 +4,12 @@ use bitflags::bitflags;
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 
-use crate::id::{
-    Id,
-    marker::{EmojiMarker, GuildMarker, StickerMarker, UserMarker},
+use crate::{
+    id::{
+        Id,
+        marker::{EmojiMarker, StickerMarker},
+    },
+    user::PartialUser,
 };
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
@@ -16,6 +19,7 @@ pub struct GuildEmoji {
     pub animated: bool,
 }
 
+/*
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct GuildSticker {
     pub guild_id: Id<GuildMarker>,
@@ -25,6 +29,28 @@ pub struct GuildSticker {
     pub format_type: i32,
     pub tags: Option<Vec<String>>,
     pub creator_id: Id<UserMarker>,
+}
+*/
+
+// GuildStickerResponse
+#[derive(Deserialize, Clone, Debug)]
+pub struct GuildSticker {
+    pub id: Id<StickerMarker>,
+    pub name: String,
+    pub description: String,
+    pub tags: Vec<String>,
+    pub animated: bool,
+}
+
+// GuildStickerWithUserResponse
+#[derive(Deserialize, Clone, Debug)]
+pub struct GuildStickerWithUser {
+    pub id: Id<StickerMarker>,
+    pub name: String,
+    pub description: String,
+    pub tags: Vec<String>,
+    pub animated: bool,
+    pub user: PartialUser,
 }
 
 #[derive(Deserialize_repr, Serialize_repr, Copy, Clone, Debug)]

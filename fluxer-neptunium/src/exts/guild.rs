@@ -9,6 +9,8 @@ use neptunium_http::endpoints::{
             },
         },
         get_guild_information::GetGuildInformation,
+        get_guild_vanity_url::{GetGuildVanityUrl, GetGuildVanityUrlResponse},
+        leave_guild::LeaveGuild,
         list_guild_audit_logs::{ListGuildAuditLogs, ListGuildAuditLogsParams},
         list_guild_bans::ListGuildBans,
         members::{
@@ -22,8 +24,29 @@ use neptunium_http::endpoints::{
             unban_guild_member::UnbanGuildMember,
             update_guild_member::{UpdateGuildMember, UpdateGuildMemberBody},
         },
-        roles::list_guild_roles::ListGuildRoles,
+        roles::{
+            create_guild_role::{CreateGuildRole, CreateGuildRoleBody},
+            delete_guild_role::DeleteGuildRole,
+            list_guild_roles::ListGuildRoles,
+            reset_role_hoist_positions::ResetGuildRoleHoistPositions,
+            update_guild_role::{UpdateGuildRole, UpdateGuildRoleBody},
+            update_role_hoist_positions::{
+                UpdateGuildRoleHoistPositions, UpdateGuildRoleHoistPositionsEntry,
+            },
+            update_role_positions::{UpdateGuildRolePositions, UpdateGuildRolePositionsEntry},
+        },
+        stickers::{
+            bulk_create_guild_stickers::{
+                BulkCreateGuildStickers, BulkCreateGuildStickersResponse,
+            },
+            create_guild_sticker::{CreateGuildSticker, CreateGuildStickerBody},
+            delete_guild_sticker::DeleteGuildSticker,
+            list_guild_stickers::ListGuildStickers,
+            update_guild_sticker::{UpdateGuildSticker, UpdateGuildStickerBody},
+        },
         toggle_detached_banner::ToggleDetachedBanner,
+        toggle_guild_text_channel_flexible_names::ToggleGuildTextChannelFlexibleNames,
+        update_guild_vanity_url::{UpdateGuildVanityUrl, UpdateGuildVanityUrlResponse},
     },
     invites::list_guild_invites::ListGuildInvites,
     webhooks::list_guild_webhooks::ListGuildWebhooks,
@@ -32,11 +55,11 @@ use neptunium_model::{
     channel::Channel,
     guild::{
         Guild, audit_log::GuildAuditLogs, bans::GuildBanListEntry, member::GuildMember,
-        permissions::GuildRole, webhook::Webhook,
+        permissions::GuildRole, properties::GuildSticker, webhook::Webhook,
     },
     id::{
         Id,
-        marker::{RoleMarker, UserMarker},
+        marker::{RoleMarker, StickerMarker, UserMarker},
     },
     invites::InviteWithMetadata,
 };
@@ -129,6 +152,71 @@ pub trait GuildExt {
         role_id: Id<RoleMarker>,
     ) -> Result<(), Error>;
     async fn list_roles(&self, ctx: &Context) -> Result<Vec<GuildRole>, Error>;
+    async fn create_role(
+        &self,
+        ctx: &Context,
+        body: CreateGuildRoleBody,
+    ) -> Result<GuildRole, Error>;
+    async fn update_role_positions(
+        &self,
+        ctx: &Context,
+        positions: Vec<UpdateGuildRolePositionsEntry>,
+    ) -> Result<(), Error>;
+    async fn reset_role_hoist_positions(&self, ctx: &Context) -> Result<(), Error>;
+    async fn update_role_hoist_positions(
+        &self,
+        ctx: &Context,
+        positions: Vec<UpdateGuildRoleHoistPositionsEntry>,
+    ) -> Result<(), Error>;
+    async fn delete_role(&self, ctx: &Context, role_id: Id<RoleMarker>) -> Result<(), Error>;
+    async fn update_role(
+        &self,
+        ctx: &Context,
+        role_id: Id<RoleMarker>,
+        updates: UpdateGuildRoleBody,
+    ) -> Result<GuildRole, Error>;
+    async fn list_stickers(&self, ctx: &Context) -> Result<Vec<GuildSticker>, Error>;
+    async fn create_sticker(
+        &self,
+        ctx: &Context,
+        sticker: CreateGuildStickerBody,
+    ) -> Result<GuildSticker, Error>;
+    async fn bulk_create_stickers(
+        &self,
+        ctx: &Context,
+        stickers: Vec<CreateGuildStickerBody>,
+    ) -> Result<BulkCreateGuildStickersResponse, Error>;
+    async fn delete_sticker(
+        &self,
+        ctx: &Context,
+        sticker_id: Id<StickerMarker>,
+    ) -> Result<(), Error>;
+    async fn update_sticker(
+        &self,
+        ctx: &Context,
+        sticker_id: Id<StickerMarker>,
+        updates: UpdateGuildStickerBody,
+    ) -> Result<GuildSticker, Error>;
+    async fn toggle_channel_flexible_names(
+        &self,
+        ctx: &Context,
+        enabled: bool,
+    ) -> Result<Guild, Error>;
+    #[cfg(feature = "user_api")]
+    async fn transfer_ownership(
+        &self,
+        ctx: &Context,
+        new_owner_id: Id<UserMarker>,
+        password: Option<String>,
+    ) -> Result<Guild, Error>;
+    async fn get_vanity_url(&self, ctx: &Context) -> Result<GetGuildVanityUrlResponse, Error>;
+    async fn update_vanity_url(
+        &self,
+        ctx: &Context,
+        code: Option<String>,
+    ) -> Result<UpdateGuildVanityUrlResponse, Error>;
+    /// Leave this guild.
+    async fn leave(&self, ctx: &Context) -> Result<(), Error>;
 }
 
 #[async_trait]
@@ -409,6 +497,216 @@ impl<T: GuildTrait> GuildExt for T {
         Ok(ctx
             .get_http_client()
             .execute(ListGuildRoles {
+                guild_id: self.get_guild_id(),
+            })
+            .await?)
+    }
+
+    async fn create_role(
+        &self,
+        ctx: &Context,
+        body: CreateGuildRoleBody,
+    ) -> Result<GuildRole, Error> {
+        Ok(ctx
+            .get_http_client()
+            .execute(CreateGuildRole {
+                guild_id: self.get_guild_id(),
+                body,
+            })
+            .await?)
+    }
+
+    async fn update_role_positions(
+        &self,
+        ctx: &Context,
+        positions: Vec<UpdateGuildRolePositionsEntry>,
+    ) -> Result<(), Error> {
+        Ok(ctx
+            .get_http_client()
+            .execute(UpdateGuildRolePositions {
+                guild_id: self.get_guild_id(),
+                body: positions,
+            })
+            .await?)
+    }
+
+    async fn reset_role_hoist_positions(&self, ctx: &Context) -> Result<(), Error> {
+        Ok(ctx
+            .get_http_client()
+            .execute(ResetGuildRoleHoistPositions {
+                guild_id: self.get_guild_id(),
+            })
+            .await?)
+    }
+
+    async fn update_role_hoist_positions(
+        &self,
+        ctx: &Context,
+        positions: Vec<UpdateGuildRoleHoistPositionsEntry>,
+    ) -> Result<(), Error> {
+        Ok(ctx
+            .get_http_client()
+            .execute(UpdateGuildRoleHoistPositions {
+                guild_id: self.get_guild_id(),
+                body: positions,
+            })
+            .await?)
+    }
+
+    async fn delete_role(&self, ctx: &Context, role_id: Id<RoleMarker>) -> Result<(), Error> {
+        Ok(ctx
+            .get_http_client()
+            .execute(DeleteGuildRole {
+                guild_id: self.get_guild_id(),
+                role_id,
+            })
+            .await?)
+    }
+
+    async fn update_role(
+        &self,
+        ctx: &Context,
+        role_id: Id<RoleMarker>,
+        updates: UpdateGuildRoleBody,
+    ) -> Result<GuildRole, Error> {
+        Ok(ctx
+            .get_http_client()
+            .execute(UpdateGuildRole {
+                guild_id: self.get_guild_id(),
+                role_id,
+                body: updates,
+            })
+            .await?)
+    }
+
+    async fn list_stickers(&self, ctx: &Context) -> Result<Vec<GuildSticker>, Error> {
+        Ok(ctx
+            .get_http_client()
+            .execute(ListGuildStickers {
+                guild_id: self.get_guild_id(),
+            })
+            .await?)
+    }
+
+    async fn create_sticker(
+        &self,
+        ctx: &Context,
+        sticker: CreateGuildStickerBody,
+    ) -> Result<GuildSticker, Error> {
+        Ok(ctx
+            .get_http_client()
+            .execute(CreateGuildSticker {
+                guild_id: self.get_guild_id(),
+                body: sticker,
+            })
+            .await?)
+    }
+
+    async fn bulk_create_stickers(
+        &self,
+        ctx: &Context,
+        stickers: Vec<CreateGuildStickerBody>,
+    ) -> Result<BulkCreateGuildStickersResponse, Error> {
+        Ok(ctx
+            .get_http_client()
+            .execute(BulkCreateGuildStickers {
+                guild_id: self.get_guild_id(),
+                body: stickers,
+            })
+            .await?)
+    }
+
+    async fn delete_sticker(
+        &self,
+        ctx: &Context,
+        sticker_id: Id<StickerMarker>,
+    ) -> Result<(), Error> {
+        Ok(ctx
+            .get_http_client()
+            .execute(DeleteGuildSticker {
+                guild_id: self.get_guild_id(),
+                sticker_id,
+            })
+            .await?)
+    }
+
+    async fn update_sticker(
+        &self,
+        ctx: &Context,
+        sticker_id: Id<StickerMarker>,
+        updates: UpdateGuildStickerBody,
+    ) -> Result<GuildSticker, Error> {
+        Ok(ctx
+            .get_http_client()
+            .execute(UpdateGuildSticker {
+                guild_id: self.get_guild_id(),
+                sticker_id,
+                body: updates,
+            })
+            .await?)
+    }
+
+    async fn toggle_channel_flexible_names(
+        &self,
+        ctx: &Context,
+        enabled: bool,
+    ) -> Result<Guild, Error> {
+        Ok(ctx
+            .get_http_client()
+            .execute(ToggleGuildTextChannelFlexibleNames {
+                guild_id: self.get_guild_id(),
+                enabled,
+            })
+            .await?)
+    }
+
+    #[cfg(feature = "user_api")]
+    async fn transfer_ownership(
+        &self,
+        ctx: &Context,
+        new_owner_id: Id<UserMarker>,
+        password: Option<String>,
+    ) -> Result<Guild, Error> {
+        use neptunium_http::endpoints::guild::transfer_guild_ownership::TransferGuildOwnership;
+        use zeroize::Zeroizing;
+
+        Ok(ctx
+            .get_http_client()
+            .execute(TransferGuildOwnership {
+                guild_id: self.get_guild_id(),
+                new_owner_id,
+                password: password.map(Zeroizing::new),
+            })
+            .await?)
+    }
+
+    async fn get_vanity_url(&self, ctx: &Context) -> Result<GetGuildVanityUrlResponse, Error> {
+        Ok(ctx
+            .get_http_client()
+            .execute(GetGuildVanityUrl {
+                guild_id: self.get_guild_id(),
+            })
+            .await?)
+    }
+
+    async fn update_vanity_url(
+        &self,
+        ctx: &Context,
+        code: Option<String>,
+    ) -> Result<UpdateGuildVanityUrlResponse, Error> {
+        Ok(ctx
+            .get_http_client()
+            .execute(UpdateGuildVanityUrl {
+                guild_id: self.get_guild_id(),
+                code,
+            })
+            .await?)
+    }
+
+    async fn leave(&self, ctx: &Context) -> Result<(), Error> {
+        Ok(ctx
+            .get_http_client()
+            .execute(LeaveGuild {
                 guild_id: self.get_guild_id(),
             })
             .await?)

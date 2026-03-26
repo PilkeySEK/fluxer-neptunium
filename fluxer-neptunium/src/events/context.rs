@@ -2,11 +2,15 @@ use std::sync::Arc;
 
 use neptunium_http::{
     client::HttpClient,
-    endpoints::gateway::get_gateway_information::{GatewayInformation, GetGatewayInformation},
+    endpoints::{
+        gateway::get_gateway_information::{GatewayInformation, GetGatewayInformation},
+        guild::list_current_user_guilds::{ListCurrentUserGuilds, ListCurrentUserGuildsParams},
+    },
 };
 use neptunium_model::{
     channel::Channel,
     gateway::payload::outgoing::presence_update::PresenceUpdateOutgoing,
+    guild::Guild,
     id::{Id, marker::ChannelMarker},
 };
 use tokio::sync::mpsc::UnboundedSender;
@@ -50,5 +54,26 @@ impl Context {
     /// or the API returned unexpected data that could not be parsed.
     pub async fn get_gateway_information(&self) -> Result<GatewayInformation, Error> {
         Ok(self.http_client.execute(GetGatewayInformation).await?)
+    }
+
+    pub async fn list_current_user_guilds(&self) -> Result<Vec<Guild>, Error> {
+        Ok(self
+            .http_client
+            .execute(
+                ListCurrentUserGuilds::builder()
+                    .params(ListCurrentUserGuildsParams::builder().build())
+                    .build(),
+            )
+            .await?)
+    }
+
+    pub async fn list_current_user_guilds_with_params(
+        &self,
+        params: ListCurrentUserGuildsParams,
+    ) -> Result<Vec<Guild>, Error> {
+        Ok(self
+            .http_client
+            .execute(ListCurrentUserGuilds::builder().params(params).build())
+            .await?)
     }
 }

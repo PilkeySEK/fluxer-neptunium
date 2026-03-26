@@ -5,9 +5,17 @@ pub mod create_guild;
 pub mod delete_guild;
 pub mod emoji;
 pub mod get_guild_information;
+pub mod get_guild_vanity_url;
+pub mod leave_guild;
+pub mod list_current_user_guilds;
 pub mod list_guild_audit_logs;
 pub mod list_guild_bans;
 pub mod members;
 pub mod roles;
+pub mod stickers;
 pub mod toggle_detached_banner;
+pub mod toggle_guild_text_channel_flexible_names;
+#[cfg(feature = "user_api")]
+pub mod transfer_guild_ownership;
 pub mod update_guild_settings;
+pub mod update_guild_vanity_url;
