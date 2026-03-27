@@ -12,7 +12,7 @@ publish = true
 [dependencies]
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.149"
-neptunium-model = { path = "../neptunium-model", version = "0.2.5" }
+neptunium-model = { workspace = true }
 tokio-tungstenite = { version = "0.28.0", features = ["rustls-tls-native-roots"] }
 futures-util = { version = "0.3.32", default-features = false, features = ["sink", "std"] }
 tokio = { version = "1.50.0", features = ["net"] }

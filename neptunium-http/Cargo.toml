@@ -12,7 +12,7 @@ publish = true
 [dependencies]
 async-trait = "0.1.89"
 bon = "3.9.0"
-neptunium-model = { path = "../neptunium-model", version = "0.2.5" }
+neptunium-model = { workspace = true }
 futures = { version = "0.3.32", features = ["alloc"] }
 percent-encoding = "2.3.2"
 rand = "0.10.0"

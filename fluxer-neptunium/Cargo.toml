@@ -11,9 +11,9 @@ publish = true
 
 [dependencies]
 tokio = { version = "1.50.0", features = ["rt-multi-thread", "macros"] } # `time` for when we need sleep()
-neptunium-gateway = { path = "../neptunium-gateway", version = "0.2.5" }
-neptunium-model = { path = "../neptunium-model", version = "0.2.5" }
-neptunium-http = { path = "../neptunium-http", version = "0.2.5" }
+neptunium-gateway = { workspace = true }
+neptunium-model = { workspace = true }
+neptunium-http = { workspace = true }
 tokio-tungstenite = "0.28.0"
 serde_json = "1.0.149"
 rand = "0.10.0"

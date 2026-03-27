@@ -3,9 +3,15 @@ resolver = "3"
 members = ["neptunium-gateway", "neptunium-http", "neptunium-model", "fluxer-neptunium", "examples"]
 
 [workspace.package]
-version = "0.2.6"
+# ! When updating this, update the [workspace.dependencies] too !
+version = "0.2.7"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/PilkeySEK/fluxer-neptunium"
+
+[workspace.dependencies]
+neptunium-model = { path = "neptunium-model", version = "0.2.7" }
+neptunium-gateway = { path = "neptunium-gateway", version = "0.2.7" }
+neptunium-http = { path = "neptunium-http", version = "0.2.7" }
 
 [workspace.lints.clippy]
 cargo = {level = "warn", priority = 0 }
