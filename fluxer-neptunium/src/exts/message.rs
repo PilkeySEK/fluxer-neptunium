@@ -84,6 +84,10 @@ pub trait MessageExt {
 
     async fn pin(&self, ctx: &Context) -> Result<(), Error>;
     async fn unpin(&self, ctx: &Context) -> Result<(), Error>;
+    /// If this message mentions the current user, deletes it from the user's mention
+    /// history. Note that this does not delete the message.
+    #[cfg(feature = "user_api")]
+    async fn delete_mention(&self, ctx: &Context) -> Result<(), Error>;
 }
 
 #[async_trait]
@@ -101,7 +105,7 @@ impl MessageExt for Message {
                 .build(),
         );
         Ok(ctx
-            .http_client
+            .get_http_client()
             .execute(
                 CreateMessage::builder()
                     .channel_id(self.channel_id)
@@ -117,7 +121,7 @@ impl MessageExt for Message {
         reaction: impl Into<Reaction<'_>> + Send,
     ) -> Result<(), crate::client::error::Error> {
         Ok(ctx
-            .http_client
+            .get_http_client()
             .execute(
                 AddReaction::builder()
                     .channel_id(self.channel_id)
@@ -134,7 +138,7 @@ impl MessageExt for Message {
         reaction: impl Into<Reaction<'_>> + Send,
     ) -> Result<(), Error> {
         Ok(ctx
-            .http_client
+            .get_http_client()
             .execute(
                 DeleteOwnReaction::builder()
                     .channel_id(self.channel_id)
@@ -152,7 +156,7 @@ impl MessageExt for Message {
         target: Id<UserMarker>,
     ) -> Result<(), Error> {
         Ok(ctx
-            .http_client
+            .get_http_client()
             .execute(
                 DeleteReaction::builder()
                     .channel_id(self.channel_id)
@@ -170,7 +174,7 @@ impl MessageExt for Message {
         reaction: impl Into<Reaction<'_>> + Send,
     ) -> Result<(), Error> {
         Ok(ctx
-            .http_client
+            .get_http_client()
             .execute(
                 DeleteAllReactionsOfEmoji::builder()
                     .channel_id(self.channel_id)
@@ -183,7 +187,7 @@ impl MessageExt for Message {
 
     async fn delete_all_reactions(&self, ctx: &Context) -> Result<(), Error> {
         Ok(ctx
-            .http_client
+            .get_http_client()
             .execute(
                 DeleteAllReactions::builder()
                     .channel_id(self.channel_id)
@@ -195,7 +199,7 @@ impl MessageExt for Message {
 
     async fn delete(&self, ctx: &Context) -> Result<(), Error> {
         Ok(ctx
-            .http_client
+            .get_http_client()
             .execute(
                 DeleteMessage::builder()
                     .channel_id(self.channel_id)
@@ -207,7 +211,7 @@ impl MessageExt for Message {
 
     async fn edit(&self, ctx: &Context, updates: EditMessageBody) -> Result<Message, Error> {
         Ok(ctx
-            .http_client
+            .get_http_client()
             .execute(
                 EditMessage::builder()
                     .channel_id(self.channel_id)
@@ -220,7 +224,7 @@ impl MessageExt for Message {
 
     async fn fetch(&self, ctx: &Context) -> Result<Message, Error> {
         Ok(ctx
-            .http_client
+            .get_http_client()
             .execute(
                 FetchMessage::builder()
                     .message_id(self.id)
@@ -235,7 +239,7 @@ impl MessageExt for Message {
         use neptunium_http::endpoints::channel::AcknowledgeMessage;
 
         Ok(ctx
-            .http_client
+            .get_http_client()
             .execute(
                 AcknowledgeMessage::builder()
                     .message_id(self.id)
@@ -255,7 +259,7 @@ impl MessageExt for Message {
         use neptunium_http::endpoints::channel::AcknowledgeMessage;
 
         Ok(ctx
-            .http_client
+            .get_http_client()
             .execute(AcknowledgeMessage {
                 message_id: self.id,
                 channel_id: self.channel_id,
@@ -271,7 +275,7 @@ impl MessageExt for Message {
         attachment_id: Id<AttachmentMarker>,
     ) -> Result<(), Error> {
         Ok(ctx
-            .http_client
+            .get_http_client()
             .execute(DeleteMessageAttachment {
                 channel_id: self.channel_id,
                 message_id: self.id,
@@ -282,7 +286,7 @@ impl MessageExt for Message {
 
     async fn pin(&self, ctx: &Context) -> Result<(), Error> {
         Ok(ctx
-            .http_client
+            .get_http_client()
             .execute(PinMessage {
                 channel_id: self.channel_id,
                 message_id: self.id,
@@ -292,9 +296,21 @@ impl MessageExt for Message {
 
     async fn unpin(&self, ctx: &Context) -> Result<(), Error> {
         Ok(ctx
-            .http_client
+            .get_http_client()
             .execute(UnpinMessage {
                 channel_id: self.channel_id,
+                message_id: self.id,
+            })
+            .await?)
+    }
+
+    #[cfg(feature = "user_api")]
+    async fn delete_mention(&self, ctx: &Context) -> Result<(), Error> {
+        use neptunium_http::endpoints::users::DeleteMention;
+
+        Ok(ctx
+            .get_http_client()
+            .execute(DeleteMention {
                 message_id: self.id,
             })
             .await?)

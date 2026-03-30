@@ -27,3 +27,4 @@ bon = "3.9.1"
 [features]
 default = []
 user_api = ["neptunium-http/user_api", "neptunium-model/user_api"]
+staff_api = ["neptunium-http/staff_api", "neptunium-model/staff_api"]

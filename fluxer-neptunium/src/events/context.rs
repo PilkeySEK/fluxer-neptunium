@@ -4,7 +4,9 @@ use std::sync::Arc;
 
 #[cfg(feature = "user_api")]
 use neptunium_http::endpoints::users::{
-    GetDataHarvestDownloadUrlResponse, RequestDataHarvestResponse, RequestNewEmailAddress,
+    CancelBulkMessageDeletionResponse, DisableTotpMfa, EnableTotpMfa,
+    GetDataHarvestDownloadUrlResponse, GetMfaBackupCodes, ListCurrentUserMentions,
+    MfaBackupCodesResponse, RequestDataHarvestResponse, RequestNewEmailAddress,
     RequestNewEmailAddressResponse, StartEmailChangeResponse, UpdateCurrentUserProfile,
     UpdateDmNotificationSettings, VerifyNewEmailAddress, VerifyNewEmailAddressResponse,
     VerifyOriginalEmailAddress, VerifyOriginalEmailAddressResponse,
@@ -347,5 +349,86 @@ impl Context {
             .http_client
             .execute(GetDataHarvestDownloadUrl { harvest_id })
             .await?)
+    }
+
+    /// Retrieves messages where the current user was mentioned.
+    #[cfg(feature = "user_api")]
+    pub async fn list_own_mentions(
+        &self,
+        params: ListCurrentUserMentions,
+    ) -> Result<Vec<Message>, Error> {
+        Ok(self.http_client.execute(params).await?)
+    }
+
+    /// Initiates bulk deletion of all messages sent by the current user.
+    /// The deletion process is asynchronous and may take time to complete. User data remains intact.
+    #[cfg(feature = "user_api")]
+    pub async fn request_bulk_message_deletion(&self, auth: SudoVerification) -> Result<(), Error> {
+        use neptunium_http::endpoints::users::RequestBulkMessageDeletion;
+
+        Ok(self
+            .http_client
+            .execute(RequestBulkMessageDeletion { auth })
+            .await?)
+    }
+
+    /// Cancels an in-progress bulk message deletion request. Can only be used if the deletion has not yet completed.
+    #[cfg(feature = "user_api")]
+    pub async fn cancel_bulk_message_deletion(
+        &self,
+    ) -> Result<CancelBulkMessageDeletionResponse, Error> {
+        use neptunium_http::endpoints::users::CancelBulkMessageDeletion;
+
+        Ok(self.http_client.execute(CancelBulkMessageDeletion).await?)
+    }
+
+    /// Staff-only endpoint for testing bulk message deletion functionality.
+    /// Creates a test deletion request with a 1-minute delay.
+    #[cfg(feature = "staff_api")]
+    pub async fn test_bulk_message_deletion(&self) -> Result<(), Error> {
+        use neptunium_http::endpoints::users::TestBulkMessageDeletion;
+
+        Ok(self.http_client.execute(TestBulkMessageDeletion).await?)
+    }
+
+    /// Generate and retrieve new backup codes for account recovery. Old codes are invalidated.
+    #[cfg(feature = "user_api")]
+    pub async fn get_mfa_backup_codes(
+        &self,
+        body: GetMfaBackupCodes,
+    ) -> Result<MfaBackupCodesResponse, Error> {
+        Ok(self.http_client.execute(body).await?)
+    }
+
+    /// Disable SMS-based multi-factor authentication on the current account.
+    #[cfg(feature = "user_api")]
+    pub async fn disable_sms_mfa(&self, auth: SudoVerification) -> Result<(), Error> {
+        use neptunium_http::endpoints::users::DisableSmsMfa;
+
+        Ok(self.http_client.execute(DisableSmsMfa { auth }).await?)
+    }
+
+    /// Enable SMS-based multi-factor authentication on the current account.
+    /// Requires a verified phone number.
+    #[cfg(feature = "user_api")]
+    pub async fn enable_sms_mfa(&self, auth: SudoVerification) -> Result<(), Error> {
+        use neptunium_http::endpoints::users::EnableSmsMfa;
+
+        Ok(self.http_client.execute(EnableSmsMfa { auth }).await?)
+    }
+
+    /// Disable TOTP multi-factor authentication on the current account.
+    #[cfg(feature = "user_api")]
+    pub async fn disable_totp_mfa(&self, body: DisableTotpMfa) -> Result<(), Error> {
+        Ok(self.http_client.execute(body).await?)
+    }
+
+    /// Enable time-based one-time password (TOTP) MFA on the current account.
+    #[cfg(feature = "user_api")]
+    pub async fn enable_totp_mfa(
+        &self,
+        body: EnableTotpMfa,
+    ) -> Result<MfaBackupCodesResponse, Error> {
+        Ok(self.http_client.execute(body).await?)
     }
 }

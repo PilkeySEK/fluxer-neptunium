@@ -47,7 +47,9 @@ impl Request {
         if let Some(body) = self.body {
             request = request.body(body);
         }
-        if let Some(params) = self.params {
+        if let Some(params) = self.params
+            && !params.is_empty()
+        {
             request = request.query(&params);
         }
 
