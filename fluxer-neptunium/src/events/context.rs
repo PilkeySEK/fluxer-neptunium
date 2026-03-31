@@ -4,12 +4,16 @@ use std::sync::Arc;
 
 #[cfg(feature = "user_api")]
 use neptunium_http::endpoints::users::{
-    CancelBulkMessageDeletionResponse, DisableTotpMfa, EnableTotpMfa,
-    GetDataHarvestDownloadUrlResponse, GetMfaBackupCodes, ListCurrentUserMentions,
-    MfaBackupCodesResponse, RequestDataHarvestResponse, RequestNewEmailAddress,
-    RequestNewEmailAddressResponse, StartEmailChangeResponse, UpdateCurrentUserProfile,
-    UpdateDmNotificationSettings, VerifyNewEmailAddress, VerifyNewEmailAddressResponse,
-    VerifyOriginalEmailAddress, VerifyOriginalEmailAddressResponse,
+    AddPhoneNumberToAccount, CancelBulkMessageDeletionResponse, CompletePasswordChange,
+    DeleteWebauthnCredential, DisableTotpMfa, EnableTotpMfa, GetDataHarvestDownloadUrlResponse,
+    GetMfaBackupCodes, GetWebauthnRegistrationOptionsResponse, ListCurrentUserMentions,
+    ListWebauthnCredentialsResponseEntry, MfaBackupCodesResponse, RegisterWebauthnCredential,
+    RequestDataHarvestResponse, RequestNewEmailAddress, RequestNewEmailAddressResponse,
+    StartEmailChangeResponse, StartPasswordChangeResponse, UpdateCurrentUserProfile,
+    UpdateDmNotificationSettings, UpdateWebauthnCredential, VerifyNewEmailAddress,
+    VerifyNewEmailAddressResponse, VerifyOriginalEmailAddress, VerifyOriginalEmailAddressResponse,
+    VerifyPasswordChangeCode, VerifyPasswordChangeCodeResponse, VerifyPhoneCode,
+    VerifyPhoneCodeResponse,
 };
 use neptunium_http::{
     client::HttpClient,
@@ -29,6 +33,7 @@ use neptunium_model::{
 #[cfg(feature = "user_api")]
 use neptunium_model::{
     channel::message::Message,
+    id::marker::UserMarker,
     user::{
         auth::SudoVerification, data_harvest::DataHarvestResponse, gifts::GiftPrivateResponse,
         settings::UserGuildSettings,
@@ -429,6 +434,173 @@ impl Context {
         &self,
         body: EnableTotpMfa,
     ) -> Result<MfaBackupCodesResponse, Error> {
+        Ok(self.http_client.execute(body).await?)
+    }
+
+    /// Retrieve all registered WebAuthn credentials (security keys, biometric devices) for the current user.
+    #[cfg(feature = "user_api")]
+    pub async fn list_webauthn_credentials(
+        &self,
+    ) -> Result<Vec<ListWebauthnCredentialsResponseEntry>, Error> {
+        use neptunium_http::endpoints::users::ListWebauthnCredentials;
+
+        Ok(self.http_client.execute(ListWebauthnCredentials).await?)
+    }
+
+    /// Complete registration of a new WebAuthn credential (security key or biometric device).
+    #[cfg(feature = "user_api")]
+    pub async fn register_webauthn_credential(
+        &self,
+        body: RegisterWebauthnCredential,
+    ) -> Result<(), Error> {
+        Ok(self.http_client.execute(body).await?)
+    }
+
+    /// Generate challenge and options to register a new WebAuthn credential.
+    #[cfg(feature = "user_api")]
+    pub async fn get_webauthn_registration_options(
+        &self,
+        auth: SudoVerification,
+    ) -> Result<GetWebauthnRegistrationOptionsResponse, Error> {
+        use neptunium_http::endpoints::users::GetWebauthnRegistrationOptions;
+
+        Ok(self
+            .http_client
+            .execute(GetWebauthnRegistrationOptions { auth })
+            .await?)
+    }
+
+    /// Remove a registered WebAuthn credential from the current account.
+    #[cfg(feature = "user_api")]
+    pub async fn delete_webauthn_credential(
+        &self,
+        body: DeleteWebauthnCredential,
+    ) -> Result<(), Error> {
+        Ok(self.http_client.execute(body).await?)
+    }
+
+    /// Update the name or settings of a registered WebAuthn credential.
+    #[cfg(feature = "user_api")]
+    pub async fn update_webauthn_credential(
+        &self,
+        body: UpdateWebauthnCredential,
+    ) -> Result<(), Error> {
+        Ok(self.http_client.execute(body).await?)
+    }
+
+    /// Retrieves all notes the current user has written about other users.
+    #[cfg(feature = "user_api")]
+    pub async fn list_user_notes(&self) -> Result<HashMap<Id<UserMarker>, String>, Error> {
+        use neptunium_http::endpoints::users::ListCurrentUserNotes;
+
+        Ok(self.http_client.execute(ListCurrentUserNotes).await?)
+    }
+
+    /// Retrieves a specific note the current user has written about another user.
+    #[cfg(feature = "user_api")]
+    pub async fn get_user_note(&self, user_id: Id<UserMarker>) -> Result<String, Error> {
+        use neptunium_http::endpoints::users::GetUserNote;
+
+        let response = self.http_client.execute(GetUserNote { user_id }).await?;
+        Ok(response.note)
+    }
+
+    /// Creates or updates a private note on another user.
+    /// Pass `None` for the `note` to clear the note.
+    #[cfg(feature = "user_api")]
+    pub async fn set_user_note(
+        &self,
+        user_id: Id<UserMarker>,
+        note: Option<String>,
+    ) -> Result<(), Error> {
+        use neptunium_http::endpoints::users::SetUserNote;
+
+        Ok(self
+            .http_client
+            .execute(SetUserNote { user_id, note })
+            .await?)
+    }
+
+    /// Completes the password change after email verification. Invalidates all existing sessions.
+    #[cfg(feature = "user_api")]
+    pub async fn complete_password_change(
+        &self,
+        body: CompletePasswordChange,
+    ) -> Result<(), Error> {
+        Ok(self.http_client.execute(body).await?)
+    }
+
+    /// Resends the verification code for a password change. Use if the original code was not received.
+    #[cfg(feature = "user_api")]
+    pub async fn resend_password_change_verification_code(
+        &self,
+        ticket: String,
+    ) -> Result<(), Error> {
+        use neptunium_http::endpoints::users::ResendPasswordChangeVerificationCode;
+
+        Ok(self
+            .http_client
+            .execute(ResendPasswordChangeVerificationCode { ticket })
+            .await?)
+    }
+
+    /// Initiates a password change process. Sends a verification code to the user’s email address.
+    #[cfg(feature = "user_api")]
+    pub async fn start_password_change(&self) -> Result<StartPasswordChangeResponse, Error> {
+        use neptunium_http::endpoints::users::StartPasswordChange;
+
+        Ok(self.http_client.execute(StartPasswordChange).await?)
+    }
+
+    /// Verifies the email code sent during password change.
+    #[cfg(feature = "user_api")]
+    pub async fn verify_password_change_code(
+        &self,
+        body: VerifyPasswordChangeCode,
+    ) -> Result<VerifyPasswordChangeCodeResponse, Error> {
+        Ok(self.http_client.execute(body).await?)
+    }
+
+    /// Add or update the phone number associated with the current account. Phone must be verified before use.
+    #[cfg(feature = "user_api")]
+    pub async fn add_phone_number_to_account(
+        &self,
+        body: AddPhoneNumberToAccount,
+    ) -> Result<(), Error> {
+        Ok(self.http_client.execute(body).await?)
+    }
+
+    /// Remove the phone number from the current account. SMS MFA will be disabled if enabled.
+    #[cfg(feature = "user_api")]
+    pub async fn remove_phone_number_from_account(
+        &self,
+        auth: SudoVerification,
+    ) -> Result<(), Error> {
+        use neptunium_http::endpoints::users::RemovePhoneNumberFromAccount;
+
+        Ok(self
+            .http_client
+            .execute(RemovePhoneNumberFromAccount { auth })
+            .await?)
+    }
+
+    /// Request a verification code to be sent via SMS to the provided phone number.
+    #[cfg(feature = "user_api")]
+    pub async fn send_phone_verification_code(&self, phone: String) -> Result<(), Error> {
+        use neptunium_http::endpoints::users::SendPhoneVerificationCode;
+
+        Ok(self
+            .http_client
+            .execute(SendPhoneVerificationCode { phone })
+            .await?)
+    }
+
+    /// Verify a phone number by confirming the SMS verification code.
+    #[cfg(feature = "user_api")]
+    pub async fn verify_phone_code(
+        &self,
+        body: VerifyPhoneCode,
+    ) -> Result<VerifyPhoneCodeResponse, Error> {
         Ok(self.http_client.execute(body).await?)
     }
 }

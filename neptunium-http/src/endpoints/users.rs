@@ -1,9 +1,15 @@
 #[cfg(feature = "user_api")]
+mod add_phone_number_to_account;
+#[cfg(feature = "user_api")]
 mod cancel_bulk_message_deletion;
+#[cfg(feature = "user_api")]
+mod complete_password_change;
 #[cfg(feature = "user_api")]
 mod delete_current_user_account;
 #[cfg(feature = "user_api")]
 mod delete_current_user_mention;
+#[cfg(feature = "user_api")]
+mod delete_webauthn_credential;
 #[cfg(feature = "user_api")]
 mod disable_current_user_account;
 #[cfg(feature = "user_api")]
@@ -26,9 +32,21 @@ mod get_data_harvest_status;
 #[cfg(feature = "user_api")]
 mod get_latest_data_harvest;
 #[cfg(feature = "user_api")]
+mod get_note_on_user;
+#[cfg(feature = "user_api")]
+mod get_webauthn_registration_options;
+#[cfg(feature = "user_api")]
 mod list_current_user_mentions;
 #[cfg(feature = "user_api")]
+mod list_current_user_notes;
+#[cfg(feature = "user_api")]
 mod list_user_gifts;
+#[cfg(feature = "user_api")]
+mod list_webauthn_credentials;
+#[cfg(feature = "user_api")]
+mod register_webauthn_credential;
+#[cfg(feature = "user_api")]
+mod remove_phone_number_from_account;
 #[cfg(feature = "user_api")]
 mod request_bulk_message_deletion;
 #[cfg(feature = "user_api")]
@@ -42,9 +60,17 @@ mod resend_new_email_confirmation;
 #[cfg(feature = "user_api")]
 mod resend_original_email_confirmation;
 #[cfg(feature = "user_api")]
+mod resend_password_change_verification_code;
+#[cfg(feature = "user_api")]
 mod resend_replacement_email_code;
 #[cfg(feature = "user_api")]
+mod send_phone_verification_code;
+#[cfg(feature = "user_api")]
+mod set_note_on_user;
+#[cfg(feature = "user_api")]
 mod start_email_change;
+#[cfg(feature = "user_api")]
+mod start_password_change;
 #[cfg(feature = "staff_api")]
 mod test_bulk_message_deletion;
 #[cfg(feature = "user_api")]
@@ -54,18 +80,30 @@ mod update_dm_notification_settings;
 #[cfg(feature = "user_api")]
 mod update_guild_settings_for_user;
 #[cfg(feature = "user_api")]
+mod update_webauthn_credential;
+#[cfg(feature = "user_api")]
 mod verify_new_email_address;
 #[cfg(feature = "user_api")]
 mod verify_original_email_address;
 #[cfg(feature = "user_api")]
+mod verify_password_change_code;
+#[cfg(feature = "user_api")]
+mod verify_phone_code;
+#[cfg(feature = "user_api")]
 mod verify_replacement_email_for_bounced_address;
 
 #[cfg(feature = "user_api")]
+pub use add_phone_number_to_account::*;
+#[cfg(feature = "user_api")]
 pub use cancel_bulk_message_deletion::*;
+#[cfg(feature = "user_api")]
+pub use complete_password_change::*;
 #[cfg(feature = "user_api")]
 pub use delete_current_user_account::*;
 #[cfg(feature = "user_api")]
 pub use delete_current_user_mention::*;
+#[cfg(feature = "user_api")]
+pub use delete_webauthn_credential::*;
 #[cfg(feature = "user_api")]
 pub use disable_current_user_account::*;
 #[cfg(feature = "user_api")]
@@ -88,9 +126,21 @@ pub use get_data_harvest_status::*;
 #[cfg(feature = "user_api")]
 pub use get_latest_data_harvest::*;
 #[cfg(feature = "user_api")]
+pub use get_note_on_user::*;
+#[cfg(feature = "user_api")]
+pub use get_webauthn_registration_options::*;
+#[cfg(feature = "user_api")]
 pub use list_current_user_mentions::*;
 #[cfg(feature = "user_api")]
+pub use list_current_user_notes::*;
+#[cfg(feature = "user_api")]
 pub use list_user_gifts::*;
+#[cfg(feature = "user_api")]
+pub use list_webauthn_credentials::*;
+#[cfg(feature = "user_api")]
+pub use register_webauthn_credential::*;
+#[cfg(feature = "user_api")]
+pub use remove_phone_number_from_account::*;
 #[cfg(feature = "user_api")]
 pub use request_bulk_message_deletion::*;
 #[cfg(feature = "user_api")]
@@ -104,9 +154,17 @@ pub use resend_new_email_confirmation::*;
 #[cfg(feature = "user_api")]
 pub use resend_original_email_confirmation::*;
 #[cfg(feature = "user_api")]
+pub use resend_password_change_verification_code::*;
+#[cfg(feature = "user_api")]
 pub use resend_replacement_email_code::*;
 #[cfg(feature = "user_api")]
+pub use send_phone_verification_code::*;
+#[cfg(feature = "user_api")]
+pub use set_note_on_user::*;
+#[cfg(feature = "user_api")]
 pub use start_email_change::*;
+#[cfg(feature = "user_api")]
+pub use start_password_change::*;
 #[cfg(feature = "staff_api")]
 pub use test_bulk_message_deletion::*;
 #[cfg(feature = "user_api")]
@@ -116,8 +174,14 @@ pub use update_dm_notification_settings::*;
 #[cfg(feature = "user_api")]
 pub use update_guild_settings_for_user::*;
 #[cfg(feature = "user_api")]
+pub use update_webauthn_credential::*;
+#[cfg(feature = "user_api")]
 pub use verify_new_email_address::*;
 #[cfg(feature = "user_api")]
 pub use verify_original_email_address::*;
+#[cfg(feature = "user_api")]
+pub use verify_password_change_code::*;
+#[cfg(feature = "user_api")]
+pub use verify_phone_code::*;
 #[cfg(feature = "user_api")]
 pub use verify_replacement_email_for_bounced_address::*;
