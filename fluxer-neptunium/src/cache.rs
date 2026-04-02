@@ -2,22 +2,27 @@ use std::{fmt::Debug, sync::Arc};
 
 use bon::Builder;
 use neptunium_model::{
-    channel::message::Message,
+    channel::{Channel, message::Message},
+    gateway::payload::incoming::UserPrivateResponse,
     guild::Guild,
     id::{
         Id,
-        marker::{GuildMarker, MessageMarker, UserMarker},
+        marker::{ChannelMarker, GuildMarker, MessageMarker, UserMarker},
     },
     user::PartialUser,
 };
 
 use quick_cache::sync::Cache as QuickCache;
+use tokio::sync::RwLock;
 
+// Things to be cached in the future: relationships, guild members, user guild settings, emojis, stickers, saved messages, (scheduled messages), user settings
 #[derive(Clone)]
 pub(crate) struct Cache {
     pub users: Arc<QuickCache<Id<UserMarker>, Arc<PartialUser>>>,
     pub guilds: Arc<QuickCache<Id<GuildMarker>, Arc<Guild>>>,
     pub messages: Arc<QuickCache<Id<MessageMarker>, Arc<Message>>>,
+    pub channels: Arc<QuickCache<Id<ChannelMarker>, Arc<Channel>>>,
+    pub current_user: Arc<tokio::sync::RwLock<Option<Arc<UserPrivateResponse>>>>,
 }
 
 impl Debug for Cache {
@@ -50,6 +55,8 @@ pub struct CacheConfig {
     pub guilds: usize,
     #[builder(default = 1024)]
     pub messages: usize,
+    #[builder(default = 1024)]
+    pub channels: usize,
 }
 
 impl Default for CacheConfig {
@@ -65,6 +72,8 @@ impl Cache {
             users: Arc::new(quick_cache::sync::Cache::new(config.users)),
             guilds: Arc::new(quick_cache::sync::Cache::new(config.guilds)),
             messages: Arc::new(quick_cache::sync::Cache::new(config.messages)),
+            channels: Arc::new(quick_cache::sync::Cache::new(config.channels)),
+            current_user: Arc::new(RwLock::new(None)),
         }
     }
 
@@ -158,10 +167,12 @@ impl_cache_keys!(
     Id<UserMarker> => users: PartialUser;
     Id<GuildMarker> => guilds: Guild;
     Id<MessageMarker> => messages: Message;
+    Id<ChannelMarker> => channels: Channel;
 );
 
 impl_cache_values!(
     PartialUser => users: id;
     Guild => guilds: id;
     Message => messages: id;
+    Channel => channels: id;
 );
