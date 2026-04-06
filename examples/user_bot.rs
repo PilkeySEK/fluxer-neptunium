@@ -3,20 +3,17 @@
 use std::{env, sync::Arc};
 
 use fluxer_neptunium::{
-    http::client::TokenType,
-    model::gateway::payload::incoming::{PassiveUpdates, Ready},
-    prelude::*,
+    cached_payload::CachedReady, http::client::TokenType,
+    model::gateway::payload::incoming::PassiveUpdates, prelude::*,
 };
 
 struct Handler;
 
 #[async_trait]
 impl EventHandler for Handler {
-    async fn on_ready(&self, _ctx: Context, data: Arc<Ready>) -> Result<(), EventError> {
-        println!(
-            "Logged in as {}#{}",
-            data.user.username, data.user.discriminator
-        );
+    async fn on_ready(&self, _ctx: Context, data: Arc<CachedReady>) -> Result<(), EventError> {
+        let user = data.user.read().await;
+        println!("Logged in as {}#{}", user.username, user.discriminator);
         Ok(())
     }
 

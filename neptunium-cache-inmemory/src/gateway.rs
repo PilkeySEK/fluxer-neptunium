@@ -33,154 +33,165 @@ use crate::{
 
 pub mod cached_payload;
 
-#[expect(clippy::too_many_lines)]
-pub async fn add_gateway_dispatch_event_to_cache(
-    event: DispatchEvent,
-    cache: &Arc<Cache>,
-) -> CachedDispatchEvent {
-    match event {
-        DispatchEvent::Ready(payload) => {
-            CachedDispatchEvent::Ready(CachedReady::from_noncached(payload, cache).await)
+impl CachedDispatchEvent {
+    #[expect(clippy::too_many_lines)]
+    pub async fn from_dispatch_event(event: DispatchEvent, cache: &Arc<Cache>) -> Self {
+        match event {
+            DispatchEvent::Ready(payload) => {
+                CachedDispatchEvent::Ready(CachedReady::from_noncached(payload, cache).await)
+            }
+            DispatchEvent::Resumed(()) => CachedDispatchEvent::Resumed(()),
+            DispatchEvent::SessionsReplace(payload) => {
+                CachedDispatchEvent::SessionsReplace(payload)
+            }
+            DispatchEvent::GuildAuditLogEntryCreate(payload) => {
+                CachedDispatchEvent::GuildAuditLogEntryCreate(payload)
+            }
+            DispatchEvent::UserUpdate(payload) => {
+                CachedDispatchEvent::UserUpdate(payload.insert_and_return(cache).await)
+            }
+            DispatchEvent::UserPinnedDmsUpdate(payload) => {
+                CachedDispatchEvent::UserPinnedDmsUpdate(payload)
+            }
+            DispatchEvent::UserSettingsUpdate(payload) => {
+                CachedDispatchEvent::UserSettingsUpdate(payload.insert_and_return(cache).await)
+            }
+            DispatchEvent::UserGuildSettingsUpdate(payload) => {
+                CachedDispatchEvent::UserGuildSettingsUpdate(payload)
+            }
+            DispatchEvent::UserNoteUpdate(payload) => CachedDispatchEvent::UserNoteUpdate(payload),
+            DispatchEvent::RecentMentionDelete(payload) => {
+                CachedDispatchEvent::RecentMentionDelete(payload)
+            }
+            DispatchEvent::SavedMessageCreate(payload) => CachedDispatchEvent::SavedMessageCreate(
+                CachedMessage::from_message(payload, cache)
+                    .await
+                    .insert_and_return(cache)
+                    .await,
+            ),
+            DispatchEvent::SavedMessageDelete(payload) => {
+                CachedDispatchEvent::SavedMessageDelete(payload)
+            }
+            DispatchEvent::FavoriteMemeCreate(payload) => {
+                CachedDispatchEvent::FavoriteMemeCreate(payload)
+            }
+            DispatchEvent::FavoriteMemeUpdate(payload) => {
+                CachedDispatchEvent::FavoriteMemeUpdate(payload)
+            }
+            DispatchEvent::FavoriteMemeDelete(payload) => {
+                CachedDispatchEvent::FavoriteMemeDelete(payload)
+            }
+            DispatchEvent::AuthSessionChange(payload) => {
+                CachedDispatchEvent::AuthSessionChange(payload)
+            }
+            DispatchEvent::PresenceUpdate(payload) => CachedDispatchEvent::PresenceUpdate(payload),
+            DispatchEvent::GuildCreate(payload) => CachedDispatchEvent::GuildCreate(payload),
+            DispatchEvent::GuildUpdate(payload) => {
+                CachedDispatchEvent::GuildUpdate(payload.insert_and_return(cache).await)
+            }
+            DispatchEvent::GuildDelete(payload) => CachedDispatchEvent::GuildDelete(payload),
+            DispatchEvent::GuildMemberAdd(payload) => CachedDispatchEvent::GuildMemberAdd(payload),
+            DispatchEvent::GuildMemberUpdate(payload) => {
+                CachedDispatchEvent::GuildMemberUpdate(payload)
+            }
+            DispatchEvent::GuildMemberRemove(payload) => {
+                CachedDispatchEvent::GuildMemberRemove(payload)
+            }
+            DispatchEvent::GuildRoleCreate(payload) => {
+                CachedDispatchEvent::GuildRoleCreate(payload)
+            }
+            DispatchEvent::GuildRoleUpdate(payload) => {
+                CachedDispatchEvent::GuildRoleUpdate(payload)
+            }
+            DispatchEvent::GuildRoleUpdateBulk(payload) => {
+                CachedDispatchEvent::GuildRoleUpdateBulk(payload)
+            }
+            DispatchEvent::GuildRoleDelete(payload) => {
+                CachedDispatchEvent::GuildRoleDelete(payload)
+            }
+            DispatchEvent::GuildEmojisUpdate(payload) => {
+                CachedDispatchEvent::GuildEmojisUpdate(payload)
+            }
+            DispatchEvent::GuildStickersUpdate(payload) => {
+                CachedDispatchEvent::GuildStickersUpdate(payload)
+            }
+            DispatchEvent::GuildBanAdd(payload) => CachedDispatchEvent::GuildBanAdd(payload),
+            DispatchEvent::GuildBanRemove(payload) => CachedDispatchEvent::GuildBanRemove(payload),
+            DispatchEvent::ChannelCreate(payload) => CachedDispatchEvent::ChannelCreate(
+                CachedChannel::from_channel(payload, cache)
+                    .await
+                    .insert_and_return(cache)
+                    .await,
+            ),
+            DispatchEvent::ChannelUpdate(payload) => CachedDispatchEvent::ChannelUpdate(
+                CachedChannel::from_channel(payload, cache)
+                    .await
+                    .insert_and_return(cache)
+                    .await,
+            ),
+            DispatchEvent::ChannelUpdateBulk(payload) => {
+                CachedDispatchEvent::ChannelUpdateBulk(payload)
+            }
+            DispatchEvent::ChannelDelete(payload) => CachedDispatchEvent::ChannelDelete(payload),
+            DispatchEvent::ChannelPinsUpdate(payload) => {
+                CachedDispatchEvent::ChannelPinsUpdate(payload)
+            }
+            DispatchEvent::ChannelPinsAck(payload) => CachedDispatchEvent::ChannelPinsAck(payload),
+            DispatchEvent::ChannelRecipientAdd(payload) => {
+                CachedDispatchEvent::ChannelRecipientAdd(payload)
+            }
+            DispatchEvent::ChannelRecipientRemove(payload) => {
+                CachedDispatchEvent::ChannelRecipientRemove(payload)
+            }
+            DispatchEvent::MessageCreate(payload) => CachedDispatchEvent::MessageCreate(payload),
+            DispatchEvent::MessageUpdate(payload) => CachedDispatchEvent::MessageUpdate(
+                CachedMessage::from_message(payload, cache)
+                    .await
+                    .insert_and_return(cache)
+                    .await,
+            ),
+            DispatchEvent::MessageDelete(payload) => CachedDispatchEvent::MessageDelete(payload),
+            DispatchEvent::MessageDeleteBulk(payload) => {
+                CachedDispatchEvent::MessageDeleteBulk(payload)
+            }
+            DispatchEvent::MessageReactionAdd(payload) => {
+                CachedDispatchEvent::MessageReactionAdd(payload)
+            }
+            DispatchEvent::MessageReactionRemove(payload) => {
+                CachedDispatchEvent::MessageReactionRemove(payload)
+            }
+            DispatchEvent::MessageReactionRemoveAll(payload) => {
+                CachedDispatchEvent::MessageReactionRemoveAll(payload)
+            }
+            DispatchEvent::MessageReactionRemoveEmoji(payload) => {
+                CachedDispatchEvent::MessageReactionRemoveEmoji(payload)
+            }
+            DispatchEvent::MessageAck(payload) => CachedDispatchEvent::MessageAck(payload),
+            DispatchEvent::TypingStart(payload) => CachedDispatchEvent::TypingStart(payload),
+            DispatchEvent::WebhooksUpdate(payload) => CachedDispatchEvent::WebhooksUpdate(payload),
+            DispatchEvent::InviteCreate(payload) => CachedDispatchEvent::InviteCreate(payload),
+            DispatchEvent::InviteDelete(payload) => CachedDispatchEvent::InviteDelete(payload),
+            DispatchEvent::RelationshipAdd(payload) => {
+                CachedDispatchEvent::RelationshipAdd(payload)
+            }
+            DispatchEvent::RelationshipUpdate(payload) => {
+                CachedDispatchEvent::RelationshipUpdate(payload)
+            }
+            DispatchEvent::RelationshipRemove(payload) => {
+                CachedDispatchEvent::RelationshipRemove(payload)
+            }
+            DispatchEvent::VoiceStateUpdate(payload) => {
+                CachedDispatchEvent::VoiceStateUpdate(payload)
+            }
+            DispatchEvent::VoiceServerUpdate(payload) => {
+                CachedDispatchEvent::VoiceServerUpdate(payload)
+            }
+            DispatchEvent::CallCreate(payload) => CachedDispatchEvent::CallCreate(payload),
+            DispatchEvent::CallUpdate(payload) => CachedDispatchEvent::CallUpdate(payload),
+            DispatchEvent::CallDelete(payload) => CachedDispatchEvent::CallDelete(payload),
+            #[cfg(feature = "user_api")]
+            DispatchEvent::PassiveUpdates(payload) => CachedDispatchEvent::PassiveUpdates(payload),
         }
-        DispatchEvent::Resumed(()) => CachedDispatchEvent::Resumed(()),
-        DispatchEvent::SessionsReplace(payload) => CachedDispatchEvent::SessionsReplace(payload),
-        DispatchEvent::GuildAuditLogEntryCreate(payload) => {
-            CachedDispatchEvent::GuildAuditLogEntryCreate(payload)
-        }
-        DispatchEvent::UserUpdate(payload) => {
-            CachedDispatchEvent::UserUpdate(payload.insert_and_return(cache).await)
-        }
-        DispatchEvent::UserPinnedDmsUpdate(payload) => {
-            CachedDispatchEvent::UserPinnedDmsUpdate(payload)
-        }
-        DispatchEvent::UserSettingsUpdate(payload) => {
-            CachedDispatchEvent::UserSettingsUpdate(payload.insert_and_return(cache).await)
-        }
-        DispatchEvent::UserGuildSettingsUpdate(payload) => {
-            CachedDispatchEvent::UserGuildSettingsUpdate(payload)
-        }
-        DispatchEvent::UserNoteUpdate(payload) => CachedDispatchEvent::UserNoteUpdate(payload),
-        DispatchEvent::RecentMentionDelete(payload) => {
-            CachedDispatchEvent::RecentMentionDelete(payload)
-        }
-        DispatchEvent::SavedMessageCreate(payload) => CachedDispatchEvent::SavedMessageCreate(
-            CachedMessage::from_message(payload, cache)
-                .await
-                .insert_and_return(cache)
-                .await,
-        ),
-        DispatchEvent::SavedMessageDelete(payload) => {
-            CachedDispatchEvent::SavedMessageDelete(payload)
-        }
-        DispatchEvent::FavoriteMemeCreate(payload) => {
-            CachedDispatchEvent::FavoriteMemeCreate(payload)
-        }
-        DispatchEvent::FavoriteMemeUpdate(payload) => {
-            CachedDispatchEvent::FavoriteMemeUpdate(payload)
-        }
-        DispatchEvent::FavoriteMemeDelete(payload) => {
-            CachedDispatchEvent::FavoriteMemeDelete(payload)
-        }
-        DispatchEvent::AuthSessionChange(payload) => {
-            CachedDispatchEvent::AuthSessionChange(payload)
-        }
-        DispatchEvent::PresenceUpdate(payload) => CachedDispatchEvent::PresenceUpdate(payload),
-        DispatchEvent::GuildCreate(payload) => CachedDispatchEvent::GuildCreate(payload),
-        DispatchEvent::GuildUpdate(payload) => {
-            CachedDispatchEvent::GuildUpdate(payload.insert_and_return(cache).await)
-        }
-        DispatchEvent::GuildDelete(payload) => CachedDispatchEvent::GuildDelete(payload),
-        DispatchEvent::GuildMemberAdd(payload) => CachedDispatchEvent::GuildMemberAdd(payload),
-        DispatchEvent::GuildMemberUpdate(payload) => {
-            CachedDispatchEvent::GuildMemberUpdate(payload)
-        }
-        DispatchEvent::GuildMemberRemove(payload) => {
-            CachedDispatchEvent::GuildMemberRemove(payload)
-        }
-        DispatchEvent::GuildRoleCreate(payload) => CachedDispatchEvent::GuildRoleCreate(payload),
-        DispatchEvent::GuildRoleUpdate(payload) => CachedDispatchEvent::GuildRoleUpdate(payload),
-        DispatchEvent::GuildRoleUpdateBulk(payload) => {
-            CachedDispatchEvent::GuildRoleUpdateBulk(payload)
-        }
-        DispatchEvent::GuildRoleDelete(payload) => CachedDispatchEvent::GuildRoleDelete(payload),
-        DispatchEvent::GuildEmojisUpdate(payload) => {
-            CachedDispatchEvent::GuildEmojisUpdate(payload)
-        }
-        DispatchEvent::GuildStickersUpdate(payload) => {
-            CachedDispatchEvent::GuildStickersUpdate(payload)
-        }
-        DispatchEvent::GuildBanAdd(payload) => CachedDispatchEvent::GuildBanAdd(payload),
-        DispatchEvent::GuildBanRemove(payload) => CachedDispatchEvent::GuildBanRemove(payload),
-        DispatchEvent::ChannelCreate(payload) => CachedDispatchEvent::ChannelCreate(
-            CachedChannel::from_channel(payload, cache)
-                .await
-                .insert_and_return(cache)
-                .await,
-        ),
-        DispatchEvent::ChannelUpdate(payload) => CachedDispatchEvent::ChannelUpdate(
-            CachedChannel::from_channel(payload, cache)
-                .await
-                .insert_and_return(cache)
-                .await,
-        ),
-        DispatchEvent::ChannelUpdateBulk(payload) => {
-            CachedDispatchEvent::ChannelUpdateBulk(payload)
-        }
-        DispatchEvent::ChannelDelete(payload) => CachedDispatchEvent::ChannelDelete(payload),
-        DispatchEvent::ChannelPinsUpdate(payload) => {
-            CachedDispatchEvent::ChannelPinsUpdate(payload)
-        }
-        DispatchEvent::ChannelPinsAck(payload) => CachedDispatchEvent::ChannelPinsAck(payload),
-        DispatchEvent::ChannelRecipientAdd(payload) => {
-            CachedDispatchEvent::ChannelRecipientAdd(payload)
-        }
-        DispatchEvent::ChannelRecipientRemove(payload) => {
-            CachedDispatchEvent::ChannelRecipientRemove(payload)
-        }
-        DispatchEvent::MessageCreate(payload) => CachedDispatchEvent::MessageCreate(payload),
-        DispatchEvent::MessageUpdate(payload) => CachedDispatchEvent::MessageUpdate(
-            CachedMessage::from_message(payload, cache)
-                .await
-                .insert_and_return(cache)
-                .await,
-        ),
-        DispatchEvent::MessageDelete(payload) => CachedDispatchEvent::MessageDelete(payload),
-        DispatchEvent::MessageDeleteBulk(payload) => {
-            CachedDispatchEvent::MessageDeleteBulk(payload)
-        }
-        DispatchEvent::MessageReactionAdd(payload) => {
-            CachedDispatchEvent::MessageReactionAdd(payload)
-        }
-        DispatchEvent::MessageReactionRemove(payload) => {
-            CachedDispatchEvent::MessageReactionRemove(payload)
-        }
-        DispatchEvent::MessageReactionRemoveAll(payload) => {
-            CachedDispatchEvent::MessageReactionRemoveAll(payload)
-        }
-        DispatchEvent::MessageReactionRemoveEmoji(payload) => {
-            CachedDispatchEvent::MessageReactionRemoveEmoji(payload)
-        }
-        DispatchEvent::MessageAck(payload) => CachedDispatchEvent::MessageAck(payload),
-        DispatchEvent::TypingStart(payload) => CachedDispatchEvent::TypingStart(payload),
-        DispatchEvent::WebhooksUpdate(payload) => CachedDispatchEvent::WebhooksUpdate(payload),
-        DispatchEvent::InviteCreate(payload) => CachedDispatchEvent::InviteCreate(payload),
-        DispatchEvent::InviteDelete(payload) => CachedDispatchEvent::InviteDelete(payload),
-        DispatchEvent::RelationshipAdd(payload) => CachedDispatchEvent::RelationshipAdd(payload),
-        DispatchEvent::RelationshipUpdate(payload) => {
-            CachedDispatchEvent::RelationshipUpdate(payload)
-        }
-        DispatchEvent::RelationshipRemove(payload) => {
-            CachedDispatchEvent::RelationshipRemove(payload)
-        }
-        DispatchEvent::VoiceStateUpdate(payload) => CachedDispatchEvent::VoiceStateUpdate(payload),
-        DispatchEvent::VoiceServerUpdate(payload) => {
-            CachedDispatchEvent::VoiceServerUpdate(payload)
-        }
-        DispatchEvent::CallCreate(payload) => CachedDispatchEvent::CallCreate(payload),
-        DispatchEvent::CallUpdate(payload) => CachedDispatchEvent::CallUpdate(payload),
-        DispatchEvent::CallDelete(payload) => CachedDispatchEvent::CallDelete(payload),
-        #[cfg(feature = "user_api")]
-        DispatchEvent::PassiveUpdates(payload) => CachedDispatchEvent::PassiveUpdates(payload),
     }
 }
 

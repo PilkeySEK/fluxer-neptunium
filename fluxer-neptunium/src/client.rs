@@ -1,6 +1,6 @@
 use std::{ops::Deref, sync::Arc, time::Duration};
 
-use neptunium_cache_inmemory::Cache;
+use neptunium_cache_inmemory::{Cache, gateway::CachedDispatchEvent};
 use neptunium_gateway::shard::{EventReceiveError, Shard, config::ShardConfig};
 use neptunium_http::client::HttpClient;
 use neptunium_model::gateway::{
@@ -292,7 +292,7 @@ impl Client {
             GatewayEvent::Dispatch(payload) => {
                 // TODO: Maybe check if the current sequence number is bigger than the received one because that shouldn't happen? Or something...
                 self.last_sequence_number = Some(payload.sequence_number);
-                return self.handle_dispatch_event(payload.event);
+                return self.handle_dispatch_event(payload.event).await;
             }
         }
         Ok(())
@@ -314,8 +314,8 @@ impl Client {
             .map_err(|e| Box::new(Error::new(ClientErrorKind::NetworkError(e))))
     }
 
-    #[expect(clippy::too_many_lines, clippy::unnecessary_wraps)]
-    fn handle_dispatch_event(
+    #[expect(clippy::too_many_lines)]
+    async fn handle_dispatch_event(
         &mut self,
         event: DispatchEvent,
     ) -> Result<(), Box<self::error::Error>> {
@@ -344,14 +344,16 @@ impl Client {
             }};
         }
 
+        let event = CachedDispatchEvent::from_dispatch_event(event, &self.context.cache).await;
+
         match event {
-            DispatchEvent::Ready(data) => {
+            CachedDispatchEvent::Ready(data) => {
                 self.resume_info = Some(ResumeInfo {
                     session_id: data.session_id.clone(),
                 });
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_ready);
             }
-            DispatchEvent::Resumed(()) => {
+            CachedDispatchEvent::Resumed(()) => {
                 for handler in &self.event_handlers {
                     let handler = Arc::clone(handler);
                     let ctx_clone = self.context.clone();
@@ -368,182 +370,182 @@ impl Client {
                     });
                 }
             }
-            DispatchEvent::SessionsReplace(data) => {
+            CachedDispatchEvent::SessionsReplace(data) => {
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_sessions_replace);
             }
-            DispatchEvent::GuildAuditLogEntryCreate(data) => {
+            CachedDispatchEvent::GuildAuditLogEntryCreate(data) => {
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_guild_audit_log_entry_create);
             }
-            DispatchEvent::UserUpdate(data) => {
+            CachedDispatchEvent::UserUpdate(data) => {
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_user_update);
             }
-            DispatchEvent::UserPinnedDmsUpdate(data) => {
+            CachedDispatchEvent::UserPinnedDmsUpdate(data) => {
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_user_pinned_dms_update);
             }
-            DispatchEvent::UserSettingsUpdate(data) => {
+            CachedDispatchEvent::UserSettingsUpdate(data) => {
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_user_settings_update);
             }
-            DispatchEvent::UserGuildSettingsUpdate(data) => {
+            CachedDispatchEvent::UserGuildSettingsUpdate(data) => {
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_user_guild_settings_update);
             }
-            DispatchEvent::UserNoteUpdate(data) => {
+            CachedDispatchEvent::UserNoteUpdate(data) => {
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_user_note_update);
             }
-            DispatchEvent::RecentMentionDelete(data) => {
+            CachedDispatchEvent::RecentMentionDelete(data) => {
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_recent_mention_delete);
             }
-            DispatchEvent::SavedMessageCreate(data) => {
+            CachedDispatchEvent::SavedMessageCreate(data) => {
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_saved_message_create);
             }
-            DispatchEvent::SavedMessageDelete(data) => {
+            CachedDispatchEvent::SavedMessageDelete(data) => {
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_saved_message_delete);
             }
-            DispatchEvent::FavoriteMemeCreate(data) => {
+            CachedDispatchEvent::FavoriteMemeCreate(data) => {
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_favorite_meme_create);
             }
-            DispatchEvent::FavoriteMemeUpdate(data) => {
+            CachedDispatchEvent::FavoriteMemeUpdate(data) => {
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_favorite_meme_update);
             }
-            DispatchEvent::FavoriteMemeDelete(data) => {
+            CachedDispatchEvent::FavoriteMemeDelete(data) => {
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_favorite_meme_delete);
             }
-            DispatchEvent::AuthSessionChange(data) => {
+            CachedDispatchEvent::AuthSessionChange(data) => {
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_auth_session_change);
             }
-            DispatchEvent::PresenceUpdate(data) => {
+            CachedDispatchEvent::PresenceUpdate(data) => {
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_presence_update);
             }
-            DispatchEvent::GuildCreate(data) => {
+            CachedDispatchEvent::GuildCreate(data) => {
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_guild_create);
             }
-            DispatchEvent::GuildUpdate(data) => {
+            CachedDispatchEvent::GuildUpdate(data) => {
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_guild_update);
             }
-            DispatchEvent::GuildDelete(data) => {
+            CachedDispatchEvent::GuildDelete(data) => {
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_guild_delete);
             }
-            DispatchEvent::GuildMemberAdd(data) => {
+            CachedDispatchEvent::GuildMemberAdd(data) => {
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_guild_member_add);
             }
-            DispatchEvent::GuildMemberUpdate(data) => {
+            CachedDispatchEvent::GuildMemberUpdate(data) => {
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_guild_member_update);
             }
-            DispatchEvent::GuildMemberRemove(data) => {
+            CachedDispatchEvent::GuildMemberRemove(data) => {
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_guild_member_remove);
             }
-            DispatchEvent::GuildRoleCreate(data) => {
+            CachedDispatchEvent::GuildRoleCreate(data) => {
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_guild_role_create);
             }
-            DispatchEvent::GuildRoleUpdate(data) => {
+            CachedDispatchEvent::GuildRoleUpdate(data) => {
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_guild_role_update);
             }
-            DispatchEvent::GuildRoleUpdateBulk(data) => {
+            CachedDispatchEvent::GuildRoleUpdateBulk(data) => {
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_guild_role_update_bulk);
             }
-            DispatchEvent::GuildRoleDelete(data) => {
+            CachedDispatchEvent::GuildRoleDelete(data) => {
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_guild_role_delete);
             }
-            DispatchEvent::GuildEmojisUpdate(data) => {
+            CachedDispatchEvent::GuildEmojisUpdate(data) => {
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_guild_emojis_update);
             }
-            DispatchEvent::GuildStickersUpdate(data) => {
+            CachedDispatchEvent::GuildStickersUpdate(data) => {
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_guild_stickers_update);
             }
-            DispatchEvent::GuildBanAdd(data) => {
+            CachedDispatchEvent::GuildBanAdd(data) => {
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_guild_ban_add);
             }
-            DispatchEvent::GuildBanRemove(data) => {
+            CachedDispatchEvent::GuildBanRemove(data) => {
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_guild_ban_remove);
             }
-            DispatchEvent::ChannelCreate(data) => {
+            CachedDispatchEvent::ChannelCreate(data) => {
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_channel_create);
             }
-            DispatchEvent::ChannelUpdate(data) => {
+            CachedDispatchEvent::ChannelUpdate(data) => {
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_channel_update);
             }
-            DispatchEvent::ChannelUpdateBulk(data) => {
+            CachedDispatchEvent::ChannelUpdateBulk(data) => {
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_channel_update_bulk);
             }
-            DispatchEvent::ChannelDelete(data) => {
+            CachedDispatchEvent::ChannelDelete(data) => {
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_channel_delete);
             }
-            DispatchEvent::ChannelPinsUpdate(data) => {
+            CachedDispatchEvent::ChannelPinsUpdate(data) => {
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_channel_pins_update);
             }
-            DispatchEvent::ChannelPinsAck(data) => {
+            CachedDispatchEvent::ChannelPinsAck(data) => {
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_channel_pins_ack);
             }
-            DispatchEvent::ChannelRecipientAdd(data) => {
+            CachedDispatchEvent::ChannelRecipientAdd(data) => {
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_channel_recipient_add);
             }
-            DispatchEvent::ChannelRecipientRemove(data) => {
+            CachedDispatchEvent::ChannelRecipientRemove(data) => {
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_channel_recipient_remove);
             }
-            DispatchEvent::MessageCreate(data) => {
+            CachedDispatchEvent::MessageCreate(data) => {
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_message_create);
             }
-            DispatchEvent::MessageUpdate(data) => {
+            CachedDispatchEvent::MessageUpdate(data) => {
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_message_update);
             }
-            DispatchEvent::MessageDelete(data) => {
+            CachedDispatchEvent::MessageDelete(data) => {
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_message_delete);
             }
-            DispatchEvent::MessageDeleteBulk(data) => {
+            CachedDispatchEvent::MessageDeleteBulk(data) => {
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_message_delete_bulk);
             }
-            DispatchEvent::MessageReactionAdd(data) => {
+            CachedDispatchEvent::MessageReactionAdd(data) => {
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_message_reaction_add);
             }
-            DispatchEvent::MessageReactionRemove(data) => {
+            CachedDispatchEvent::MessageReactionRemove(data) => {
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_message_reaction_remove);
             }
-            DispatchEvent::MessageReactionRemoveAll(data) => {
+            CachedDispatchEvent::MessageReactionRemoveAll(data) => {
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_message_reaction_remove_all);
             }
-            DispatchEvent::MessageReactionRemoveEmoji(data) => {
+            CachedDispatchEvent::MessageReactionRemoveEmoji(data) => {
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_message_reaction_remove_emoji);
             }
-            DispatchEvent::MessageAck(data) => {
+            CachedDispatchEvent::MessageAck(data) => {
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_message_ack);
             }
-            DispatchEvent::TypingStart(data) => {
+            CachedDispatchEvent::TypingStart(data) => {
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_typing_start);
             }
-            DispatchEvent::WebhooksUpdate(data) => {
+            CachedDispatchEvent::WebhooksUpdate(data) => {
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_webhooks_update);
             }
-            DispatchEvent::InviteCreate(data) => {
+            CachedDispatchEvent::InviteCreate(data) => {
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_invite_create);
             }
-            DispatchEvent::InviteDelete(data) => {
+            CachedDispatchEvent::InviteDelete(data) => {
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_invite_delete);
             }
-            DispatchEvent::RelationshipAdd(data) => {
+            CachedDispatchEvent::RelationshipAdd(data) => {
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_relationship_add);
             }
-            DispatchEvent::RelationshipUpdate(data) => {
+            CachedDispatchEvent::RelationshipUpdate(data) => {
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_relationship_update);
             }
-            DispatchEvent::RelationshipRemove(data) => {
+            CachedDispatchEvent::RelationshipRemove(data) => {
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_relationship_remove);
             }
-            DispatchEvent::VoiceStateUpdate(data) => {
+            CachedDispatchEvent::VoiceStateUpdate(data) => {
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_voice_state_update);
             }
-            DispatchEvent::VoiceServerUpdate(data) => {
+            CachedDispatchEvent::VoiceServerUpdate(data) => {
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_voice_server_update);
             }
-            DispatchEvent::CallCreate(data) => {
+            CachedDispatchEvent::CallCreate(data) => {
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_call_create);
             }
-            DispatchEvent::CallUpdate(data) => {
+            CachedDispatchEvent::CallUpdate(data) => {
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_call_update);
             }
-            DispatchEvent::CallDelete(data) => {
+            CachedDispatchEvent::CallDelete(data) => {
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_call_delete);
             }
             #[cfg(feature = "user_api")]
-            DispatchEvent::PassiveUpdates(data) => {
+            CachedDispatchEvent::PassiveUpdates(data) => {
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_passive_updates);
             }
         }

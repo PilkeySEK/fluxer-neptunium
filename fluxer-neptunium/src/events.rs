@@ -2,8 +2,11 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 use bon::Builder;
+use neptunium_cache_inmemory::{
+    Cached, CachedChannel, CachedMessage, gateway::cached_payload::CachedReady,
+};
 use neptunium_model::{
-    channel::{Channel, message::Message},
+    channel::Channel,
     gateway::payload::incoming::{
         AuthSessionChange, CallCreate, CallDelete, CallUpdate, ChannelPinsAck, ChannelPinsUpdate,
         ChannelRecipientAdd, ChannelRecipientRemove, ChannelUpdateBulk, FavoriteMemeDelete,
@@ -11,7 +14,7 @@ use neptunium_model::{
         GuildEmojisUpdate, GuildMemberRemove, GuildRoleCreate, GuildRoleDelete, GuildRoleUpdate,
         GuildRoleUpdateBulk, GuildStickersUpdate, InviteDelete, MessageAck, MessageCreate,
         MessageDelete, MessageDeleteBulk, MessageReactionAdd, MessageReactionRemove,
-        MessageReactionRemoveAll, MessageReactionRemoveEmoji, PresenceUpdateIncoming, Ready,
+        MessageReactionRemoveAll, MessageReactionRemoveEmoji, PresenceUpdateIncoming,
         RecentMentionDelete, RelationshipRemove, SavedMessageDelete, TypingStart, UserNoteUpdate,
         UserPrivateResponse, VoiceServerUpdate, VoiceStateUpdate, WebhooksUpdate,
     },
@@ -31,7 +34,7 @@ pub mod context;
 #[expect(unused)]
 #[async_trait]
 pub trait EventHandler: Send {
-    async fn on_ready(&self, ctx: Context, data: Arc<Ready>) -> Result<(), EventError> {
+    async fn on_ready(&self, ctx: Context, data: Arc<CachedReady>) -> Result<(), EventError> {
         Ok(())
     }
     async fn on_resumed(&self, ctx: Context) -> Result<(), EventError> {
@@ -54,7 +57,7 @@ pub trait EventHandler: Send {
     async fn on_user_update(
         &self,
         ctx: Context,
-        data: Arc<UserPrivateResponse>,
+        data: Arc<Cached<UserPrivateResponse>>,
     ) -> Result<(), EventError> {
         Ok(())
     }
@@ -68,7 +71,7 @@ pub trait EventHandler: Send {
     async fn on_user_settings_update(
         &self,
         ctx: Context,
-        data: Arc<UserSettings>,
+        data: Arc<Cached<UserSettings>>,
     ) -> Result<(), EventError> {
         Ok(())
     }
@@ -96,7 +99,7 @@ pub trait EventHandler: Send {
     async fn on_saved_message_create(
         &self,
         ctx: Context,
-        data: Arc<Message>,
+        data: Arc<Cached<CachedMessage>>,
     ) -> Result<(), EventError> {
         Ok(())
     }
@@ -149,7 +152,11 @@ pub trait EventHandler: Send {
     ) -> Result<(), EventError> {
         Ok(())
     }
-    async fn on_guild_update(&self, ctx: Context, data: Arc<Guild>) -> Result<(), EventError> {
+    async fn on_guild_update(
+        &self,
+        ctx: Context,
+        data: Arc<Cached<Guild>>,
+    ) -> Result<(), EventError> {
         Ok(())
     }
     async fn on_guild_delete(
@@ -236,10 +243,18 @@ pub trait EventHandler: Send {
     ) -> Result<(), EventError> {
         Ok(())
     }
-    async fn on_channel_create(&self, ctx: Context, data: Arc<Channel>) -> Result<(), EventError> {
+    async fn on_channel_create(
+        &self,
+        ctx: Context,
+        data: Arc<Cached<CachedChannel>>,
+    ) -> Result<(), EventError> {
         Ok(())
     }
-    async fn on_channel_update(&self, ctx: Context, data: Arc<Channel>) -> Result<(), EventError> {
+    async fn on_channel_update(
+        &self,
+        ctx: Context,
+        data: Arc<Cached<CachedChannel>>,
+    ) -> Result<(), EventError> {
         Ok(())
     }
     async fn on_channel_update_bulk(
@@ -287,7 +302,11 @@ pub trait EventHandler: Send {
     ) -> Result<(), EventError> {
         Ok(())
     }
-    async fn on_message_update(&self, ctx: Context, data: Arc<Message>) -> Result<(), EventError> {
+    async fn on_message_update(
+        &self,
+        ctx: Context,
+        data: Arc<Cached<CachedMessage>>,
+    ) -> Result<(), EventError> {
         Ok(())
     }
     async fn on_message_delete(

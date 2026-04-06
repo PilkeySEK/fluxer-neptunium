@@ -45,6 +45,8 @@ const fn unwrap_or(option: Option<&'static str>, default: &'static str) -> &'sta
     }
 }
 
+pub use neptunium_cache_inmemory::gateway::cached_payload;
+
 pub mod prelude {
     pub use crate::{
         client::{Client, ClientConfig},
