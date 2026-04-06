@@ -319,6 +319,7 @@ impl Client {
         &mut self,
         event: DispatchEvent,
     ) -> Result<(), Box<self::error::Error>> {
+        tracing::trace!("Dispatch Event: {event:?}");
         macro_rules! call_event_handlers {
             ($always_propagate_event_errors:expr, $tx:expr, $handlers:expr, $ctx:expr, $data:expr => $func_name:ident) => {{
                 let arc = Arc::new($data);
@@ -544,7 +545,7 @@ impl Client {
             CachedDispatchEvent::CallDelete(data) => {
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_call_delete);
             }
-            #[cfg(feature = "user_api")]
+            // #[cfg(feature = "user_api")]
             CachedDispatchEvent::PassiveUpdates(data) => {
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_passive_updates);
             }

@@ -27,9 +27,11 @@ serde_path_to_error = "0.1.20"
 bon = "3.9.1"
 
 [features]
-default = []
+default = ["webpki-roots"]
 user_api = ["neptunium-http/user_api", "neptunium-model/user_api", "neptunium-cache-inmemory/user_api"]
 staff_api = ["neptunium-http/staff_api", "neptunium-model/staff_api"]
+webpki-roots = ["neptunium-gateway/webpki-roots"]
+native-roots = ["neptunium-gateway/native-roots"]
 
 [lints]
 workspace = true

@@ -40,7 +40,7 @@ pub struct AuditLogOptionalEntryInfo {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub inviter_id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub max_age: Option<u64>,
+    pub max_age: Option<String>, // TODO: Is this maybe u64 in some cases only?
     #[serde(skip_serializing_if = "Option::is_none")]
     pub max_uses: Option<u64>,
     // Need to check further what type this actually is

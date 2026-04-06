@@ -11,7 +11,7 @@ mod invites_events;
 mod members_events;
 mod message_events;
 mod message_reactions_events;
-#[cfg(feature = "user_api")]
+// #[cfg(feature = "user_api")]
 mod passive_updates;
 mod presence_events;
 mod read_state_events;
@@ -37,7 +37,7 @@ pub use invites_events::*;
 pub use members_events::*;
 pub use message_events::*;
 pub use message_reactions_events::*;
-#[cfg(feature = "user_api")]
+// #[cfg(feature = "user_api")]
 pub use passive_updates::*;
 pub use presence_events::*;
 pub use read_state_events::*;

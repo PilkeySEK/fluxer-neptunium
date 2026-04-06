@@ -6,9 +6,10 @@ use neptunium_model::gateway::{
     event::gateway::GatewayEvent,
     payload::outgoing::{ConnectionProperties, Identify, OutgoingGatewayMessage, Resume},
 };
+use tokio::net::TcpStream;
 use tokio_tungstenite::{
-    connect_async,
-    tungstenite::{self, Message, protocol::CloseFrame},
+    client_async_tls_with_config, connect_async,
+    tungstenite::{self, Message, client::IntoClientRequest, protocol::CloseFrame},
 };
 
 #[derive(Debug)]
@@ -34,7 +35,7 @@ pub mod config;
 
 #[derive(Debug)]
 pub struct Shard {
-    config: ShardConfig,
+    pub config: ShardConfig,
     connection: Option<ShardConnection>,
 }
 
@@ -67,7 +68,35 @@ impl Shard {
         match &mut self.connection {
             Some(conn) => Ok(conn),
             none => {
-                let (stream, _) = connect_async(&self.config.gateway_url).await?;
+                let stream = if self.config.force_ipv4 {
+                    tracing::debug!("Forcing the use of IPv4 to connect to the gateway.");
+                    let url = &self.config.gateway_url;
+                    let request = url.into_client_request().unwrap();
+                    let host = request
+                        .uri()
+                        .host()
+                        .unwrap_or("gateway.fluxer.app")
+                        .to_string();
+                    let port = request.uri().port_u16().unwrap_or(443);
+                    let addr = tokio::net::lookup_host(format!("{host}:{port}"))
+                        .await
+                        .unwrap()
+                        .find(std::net::SocketAddr::is_ipv4);
+                    let Some(addr) = addr else {
+                        tracing::error!(
+                            "Force IPv4 is enabled but no IPv4 address was found for {host}:{port}."
+                        );
+                        panic!(
+                            "Force IPv4 is enabled but no IPv4 address was found for {host}:{port}."
+                        );
+                    };
+                    let stream = TcpStream::connect(addr).await?;
+                    client_async_tls_with_config(request, stream, None, None)
+                        .await?
+                        .0
+                } else {
+                    connect_async(&self.config.gateway_url).await?.0
+                };
                 let (tx, rx) = stream.split();
                 Ok(none.insert(ShardConnection { tx, rx }))
             }

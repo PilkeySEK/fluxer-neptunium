@@ -14,7 +14,7 @@ categories = ["api-bindings", "web-programming::websocket"]
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.149"
 neptunium-model = { workspace = true }
-tokio-tungstenite = { version = "0.28.0", features = ["rustls-tls-native-roots"] }
+tokio-tungstenite = { version = "0.28.0" }
 futures-util = { version = "0.3.32", default-features = false, features = ["sink", "std"] }
 tokio = { version = "1.50.0", features = ["net"] }
 zeroize = "1.8.2"
@@ -24,3 +24,8 @@ bon = "3.9.1"
 
 [lints]
 workspace = true
+
+[features]
+default = ["webpki-roots"]
+webpki-roots = ["tokio-tungstenite/rustls-tls-webpki-roots"]
+native-roots = ["tokio-tungstenite/rustls-tls-native-roots"]

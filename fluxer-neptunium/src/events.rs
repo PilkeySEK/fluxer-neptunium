@@ -3,7 +3,8 @@ use std::sync::Arc;
 use async_trait::async_trait;
 use bon::Builder;
 use neptunium_cache_inmemory::{
-    Cached, CachedChannel, CachedMessage, gateway::cached_payload::CachedReady,
+    Cached, CachedChannel, CachedMessage,
+    gateway::cached_payload::{CachedMessageCreate, CachedReady},
 };
 use neptunium_model::{
     channel::Channel,
@@ -12,11 +13,11 @@ use neptunium_model::{
         ChannelRecipientAdd, ChannelRecipientRemove, ChannelUpdateBulk, FavoriteMemeDelete,
         GuildAuditLogEntryCreate, GuildBanAdd, GuildBanRemove, GuildCreate, GuildDelete,
         GuildEmojisUpdate, GuildMemberRemove, GuildRoleCreate, GuildRoleDelete, GuildRoleUpdate,
-        GuildRoleUpdateBulk, GuildStickersUpdate, InviteDelete, MessageAck, MessageCreate,
-        MessageDelete, MessageDeleteBulk, MessageReactionAdd, MessageReactionRemove,
-        MessageReactionRemoveAll, MessageReactionRemoveEmoji, PresenceUpdateIncoming,
-        RecentMentionDelete, RelationshipRemove, SavedMessageDelete, TypingStart, UserNoteUpdate,
-        UserPrivateResponse, VoiceServerUpdate, VoiceStateUpdate, WebhooksUpdate,
+        GuildRoleUpdateBulk, GuildStickersUpdate, InviteDelete, MessageAck, MessageDelete,
+        MessageDeleteBulk, MessageReactionAdd, MessageReactionRemove, MessageReactionRemoveAll,
+        MessageReactionRemoveEmoji, PresenceUpdateIncoming, RecentMentionDelete,
+        RelationshipRemove, SavedMessageDelete, TypingStart, UserNoteUpdate, UserPrivateResponse,
+        VoiceServerUpdate, VoiceStateUpdate, WebhooksUpdate,
     },
     guild::{Guild, member::GuildMember},
     id::{Id, marker::ChannelMarker},
@@ -298,7 +299,7 @@ pub trait EventHandler: Send {
     async fn on_message_create(
         &self,
         ctx: Context,
-        data: Arc<MessageCreate>,
+        data: Arc<CachedMessageCreate>,
     ) -> Result<(), EventError> {
         Ok(())
     }
@@ -426,7 +427,7 @@ pub trait EventHandler: Send {
     async fn on_call_delete(&self, ctx: Context, data: Arc<CallDelete>) -> Result<(), EventError> {
         Ok(())
     }
-    #[cfg(feature = "user_api")]
+    // #[cfg(feature = "user_api")]
     async fn on_passive_updates(
         &self,
         ctx: Context,

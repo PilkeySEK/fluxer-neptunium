@@ -10,10 +10,10 @@ use neptunium_model::{
             FavoriteMemeDelete, GuildAuditLogEntryCreate, GuildBanAdd, GuildBanRemove, GuildCreate,
             GuildDelete, GuildEmojisUpdate, GuildMemberRemove, GuildRoleCreate, GuildRoleDelete,
             GuildRoleUpdate, GuildRoleUpdateBulk, GuildStickersUpdate, InviteDelete, MessageAck,
-            MessageCreate, MessageDelete, MessageDeleteBulk, MessageReactionAdd,
-            MessageReactionRemove, MessageReactionRemoveAll, MessageReactionRemoveEmoji,
-            PresenceUpdateIncoming, RecentMentionDelete, RelationshipRemove, SavedMessageDelete,
-            TypingStart, UserNoteUpdate, UserPrivateResponse, VoiceServerUpdate, VoiceStateUpdate,
+            MessageDelete, MessageDeleteBulk, MessageReactionAdd, MessageReactionRemove,
+            MessageReactionRemoveAll, MessageReactionRemoveEmoji, PresenceUpdateIncoming,
+            RecentMentionDelete, RelationshipRemove, SavedMessageDelete, TypingStart,
+            UserNoteUpdate, UserPrivateResponse, VoiceServerUpdate, VoiceStateUpdate,
             WebhooksUpdate,
         },
     },
@@ -28,7 +28,7 @@ use neptunium_model::{
 
 use crate::{
     Cache, CacheValue, Cached, CachedChannel, CachedMessage,
-    gateway::cached_payload::{CachedReady, FromNonCached},
+    gateway::cached_payload::{CachedMessageCreate, CachedReady, FromNonCached},
 };
 
 pub mod cached_payload;
@@ -143,7 +143,9 @@ impl CachedDispatchEvent {
             DispatchEvent::ChannelRecipientRemove(payload) => {
                 CachedDispatchEvent::ChannelRecipientRemove(payload)
             }
-            DispatchEvent::MessageCreate(payload) => CachedDispatchEvent::MessageCreate(payload),
+            DispatchEvent::MessageCreate(payload) => CachedDispatchEvent::MessageCreate(
+                CachedMessageCreate::from_noncached(payload, cache).await,
+            ),
             DispatchEvent::MessageUpdate(payload) => CachedDispatchEvent::MessageUpdate(
                 CachedMessage::from_message(payload, cache)
                     .await
@@ -194,7 +196,6 @@ impl CachedDispatchEvent {
     }
 }
 
-#[expect(clippy::large_enum_variant)]
 pub enum CachedDispatchEvent {
     Ready(CachedReady),
     /// The payload is null. The presence of this event indicates a successful resume.
@@ -242,7 +243,7 @@ pub enum CachedDispatchEvent {
     ChannelRecipientAdd(ChannelRecipientAdd),
     /// Sent when a user is removed from a group DM.
     ChannelRecipientRemove(ChannelRecipientRemove),
-    MessageCreate(MessageCreate),
+    MessageCreate(CachedMessageCreate),
     MessageUpdate(Cached<CachedMessage>),
     MessageDelete(MessageDelete),
     MessageDeleteBulk(MessageDeleteBulk),

@@ -1,6 +1,6 @@
 use std::{env, sync::Arc};
 
-use fluxer_neptunium::{model::gateway::payload::incoming::MessageCreate, prelude::*};
+use fluxer_neptunium::{cached_payload::CachedMessageCreate, prelude::*};
 
 struct Handler;
 
@@ -9,9 +9,11 @@ impl EventHandler for Handler {
     async fn on_message_create(
         &self,
         ctx: Context,
-        message: Arc<MessageCreate>,
+        event: Arc<CachedMessageCreate>,
     ) -> Result<(), EventError> {
-        if !message.author.bot && message.content == "n?ping" {
+        let message = event.message.read().await;
+        let author = message.author.read().await;
+        if !author.bot && message.content == "n?ping" {
             message.reply(&ctx, "Pong!").await?;
         }
 

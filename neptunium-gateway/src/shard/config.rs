@@ -11,6 +11,8 @@ pub struct ShardConfig {
     #[builder(into)]
     pub token: Zeroizing<String>,
     pub ignored_events: Option<GatewayEventFlags>,
+    #[builder(default = false)]
+    pub force_ipv4: bool,
 }
 
 impl ShardConfig {
