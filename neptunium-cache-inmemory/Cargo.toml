@@ -25,5 +25,6 @@ serde_json = "1.0.149"
 workspace = true
 
 [features]
-default = []
+default = ["statistics"]
 user_api = ["neptunium-model/user_api", "neptunium-http/user_api"]
+statistics = []

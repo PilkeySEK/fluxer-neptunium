@@ -16,10 +16,15 @@ use neptunium_model::{
 use tokio::sync::OnceCell;
 
 pub mod gateway;
+#[cfg(feature = "statistics")]
+pub mod stats;
 mod structs;
 mod traits;
 pub use structs::*;
 pub use traits::*;
+
+#[cfg(feature = "statistics")]
+use crate::stats::CacheStats;
 
 pub type Cached<T> = Arc<tokio::sync::RwLock<T>>;
 
@@ -71,6 +76,13 @@ impl Cache {
             invites: MokaCache::new(config.invites),
             guilds: MokaCache::new(config.guilds),
         }
+    }
+
+    /// Calculate approximate statistics about the cache.
+    #[cfg(feature = "statistics")]
+    #[must_use]
+    pub fn stats(&self) -> CacheStats {
+        CacheStats::calculate_from_cache(self)
     }
 }
 
