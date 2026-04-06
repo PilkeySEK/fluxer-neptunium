@@ -8,7 +8,7 @@ use neptunium_http::{
 };
 use neptunium_model::{
     gateway::payload::incoming::UserPrivateResponse,
-    guild::Guild,
+    guild::{Guild, permissions::GuildRole},
     invites::{GroupDmInvite, GuildInvite, InviteWithMetadata, PackInvite},
     user::PartialUser,
 };
@@ -154,6 +154,22 @@ impl CacheValue for Guild {
         }
         let value = Arc::new(RwLock::new(self));
         cache.guilds.insert(guild_id, Arc::clone(&value));
+        value
+    }
+}
+
+impl CacheValue for GuildRole {
+    async fn insert_and_return(self, cache: &Arc<Cache>) -> Cached<Self> {
+        let role_id = self.id;
+        if let Some(existing_role) = cache.roles.get(&role_id) {
+            {
+                let mut guard = existing_role.write().await;
+                *guard = self;
+            }
+            return existing_role;
+        }
+        let value = Arc::new(RwLock::new(self));
+        cache.roles.insert(role_id, Arc::clone(&value));
         value
     }
 }

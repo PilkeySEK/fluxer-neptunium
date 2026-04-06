@@ -1,4 +1,5 @@
 use async_trait::async_trait;
+use neptunium_cache_inmemory::{CachableEndpoint, Cached, CachedChannel};
 #[cfg(feature = "user_api")]
 use neptunium_http::endpoints::users::{UpdateUserGuildSettings, UpdateUserGuildSettingsBody};
 use neptunium_http::endpoints::{
@@ -21,9 +22,8 @@ use neptunium_http::endpoints::{
     webhooks::ListGuildWebhooks,
 };
 #[cfg(feature = "user_api")]
-use neptunium_model::user::settings::UserGuildSettings;
+use neptunium_model::user::{auth::SudoVerification, settings::UserGuildSettings};
 use neptunium_model::{
-    channel::Channel,
     guild::{
         Guild, audit_log::GuildAuditLogs, bans::GuildBanListEntry, member::GuildMember,
         permissions::GuildRole, properties::GuildSticker, webhook::Webhook,
@@ -39,9 +39,9 @@ use crate::{client::error::Error, events::context::Context, internal::traits::gu
 
 #[async_trait]
 pub trait GuildExt {
-    async fn list_invites(&self, ctx: &Context) -> Result<Vec<InviteWithMetadata>, Error>;
+    async fn list_invites(&self, ctx: &Context) -> Result<Vec<Cached<InviteWithMetadata>>, Error>;
     async fn list_webhooks(&self, ctx: &Context) -> Result<Vec<Webhook>, Error>;
-    async fn fetch(&self, ctx: &Context) -> Result<Guild, Error>;
+    async fn fetch(&self, ctx: &Context) -> Result<Cached<Guild>, Error>;
     async fn list_audit_logs(
         &self,
         ctx: &Context,
@@ -55,12 +55,12 @@ pub trait GuildExt {
         body: BanGuildMemberBody,
     ) -> Result<(), Error>;
     async fn unban_member(&self, ctx: &Context, user_id: Id<UserMarker>) -> Result<(), Error>;
-    async fn list_channels(&self, ctx: &Context) -> Result<Vec<Channel>, Error>;
+    async fn list_channels(&self, ctx: &Context) -> Result<Vec<Cached<CachedChannel>>, Error>;
     async fn create_channel(
         &self,
         ctx: &Context,
         channel: GuildChannelCreateRequest,
-    ) -> Result<Channel, Error>;
+    ) -> Result<Cached<CachedChannel>, Error>;
     // TODO: Add helper functions for things, such as making a reordering using Vec<Id<ChannelMarker>>
     async fn update_channel_positions(
         &self,
@@ -73,7 +73,11 @@ pub trait GuildExt {
         ctx: &Context,
         auth: neptunium_model::user::auth::SudoVerification,
     ) -> Result<(), Error>;
-    async fn toggle_detached_banner(&self, ctx: &Context, detached: bool) -> Result<Guild, Error>;
+    async fn toggle_detached_banner(
+        &self,
+        ctx: &Context,
+        detached: bool,
+    ) -> Result<Cached<Guild>, Error>;
     /// List the guild members. `limit` defaults to 1 and should not be greater than 1000.
     async fn list_members(
         &self,
@@ -119,12 +123,12 @@ pub trait GuildExt {
         member_id: Id<UserMarker>,
         role_id: Id<RoleMarker>,
     ) -> Result<(), Error>;
-    async fn list_roles(&self, ctx: &Context) -> Result<Vec<GuildRole>, Error>;
+    async fn list_roles(&self, ctx: &Context) -> Result<Vec<Cached<GuildRole>>, Error>;
     async fn create_role(
         &self,
         ctx: &Context,
         body: CreateGuildRoleBody,
-    ) -> Result<GuildRole, Error>;
+    ) -> Result<Cached<GuildRole>, Error>;
     async fn update_role_positions(
         &self,
         ctx: &Context,
@@ -142,7 +146,7 @@ pub trait GuildExt {
         ctx: &Context,
         role_id: Id<RoleMarker>,
         updates: UpdateGuildRoleBody,
-    ) -> Result<GuildRole, Error>;
+    ) -> Result<Cached<GuildRole>, Error>;
     async fn list_stickers(&self, ctx: &Context) -> Result<Vec<GuildSticker>, Error>;
     async fn create_sticker(
         &self,
@@ -169,14 +173,14 @@ pub trait GuildExt {
         &self,
         ctx: &Context,
         enabled: bool,
-    ) -> Result<Guild, Error>;
+    ) -> Result<Cached<Guild>, Error>;
     #[cfg(feature = "user_api")]
     async fn transfer_ownership(
         &self,
         ctx: &Context,
         new_owner_id: Id<UserMarker>,
-        password: Option<String>,
-    ) -> Result<Guild, Error>;
+        auth: SudoVerification,
+    ) -> Result<Cached<Guild>, Error>;
     async fn get_vanity_url(&self, ctx: &Context) -> Result<GetGuildVanityUrlResponse, Error>;
     async fn update_vanity_url(
         &self,
@@ -196,13 +200,12 @@ pub trait GuildExt {
 
 #[async_trait]
 impl<T: GuildTrait> GuildExt for T {
-    async fn list_invites(&self, ctx: &Context) -> Result<Vec<InviteWithMetadata>, Error> {
-        Ok(ctx
-            .get_http_client()
-            .execute(ListGuildInvites {
-                guild_id: self.get_guild_id(),
-            })
-            .await?)
+    async fn list_invites(&self, ctx: &Context) -> Result<Vec<Cached<InviteWithMetadata>>, Error> {
+        Ok(ListGuildInvites {
+            guild_id: self.get_guild_id(),
+        }
+        .execute_cached(ctx.get_http_client(), &ctx.cache)
+        .await?)
     }
 
     async fn list_webhooks(&self, ctx: &Context) -> Result<Vec<Webhook>, Error> {
@@ -214,13 +217,12 @@ impl<T: GuildTrait> GuildExt for T {
             .await?)
     }
 
-    async fn fetch(&self, ctx: &Context) -> Result<Guild, Error> {
-        Ok(ctx
-            .get_http_client()
-            .execute(GetGuildInformation {
-                guild_id: self.get_guild_id(),
-            })
-            .await?)
+    async fn fetch(&self, ctx: &Context) -> Result<Cached<Guild>, Error> {
+        Ok(GetGuildInformation {
+            guild_id: self.get_guild_id(),
+        }
+        .execute_cached(ctx.get_http_client(), &ctx.cache)
+        .await?)
     }
 
     async fn list_audit_logs(
@@ -272,27 +274,25 @@ impl<T: GuildTrait> GuildExt for T {
             .await?)
     }
 
-    async fn list_channels(&self, ctx: &Context) -> Result<Vec<Channel>, Error> {
-        Ok(ctx
-            .get_http_client()
-            .execute(ListGuildChannels {
-                guild_id: self.get_guild_id(),
-            })
-            .await?)
+    async fn list_channels(&self, ctx: &Context) -> Result<Vec<Cached<CachedChannel>>, Error> {
+        Ok(ListGuildChannels {
+            guild_id: self.get_guild_id(),
+        }
+        .execute_cached(ctx.get_http_client(), &ctx.cache)
+        .await?)
     }
 
     async fn create_channel(
         &self,
         ctx: &Context,
         channel: GuildChannelCreateRequest,
-    ) -> Result<Channel, Error> {
-        Ok(ctx
-            .get_http_client()
-            .execute(CreateGuildChannel {
-                guild_id: self.get_guild_id(),
-                body: channel,
-            })
-            .await?)
+    ) -> Result<Cached<CachedChannel>, Error> {
+        Ok(CreateGuildChannel {
+            guild_id: self.get_guild_id(),
+            body: channel,
+        }
+        .execute_cached(ctx.get_http_client(), &ctx.cache)
+        .await?)
     }
 
     async fn update_channel_positions(
@@ -300,6 +300,7 @@ impl<T: GuildTrait> GuildExt for T {
         ctx: &Context,
         positions: Vec<UpdateGuildChannelPositionsEntry>,
     ) -> Result<(), Error> {
+        // TODO: Caching for this
         Ok(ctx
             .get_http_client()
             .execute(UpdateGuildChannelPositions {
@@ -317,23 +318,25 @@ impl<T: GuildTrait> GuildExt for T {
     ) -> Result<(), Error> {
         use neptunium_http::endpoints::guild::DeleteGuild;
 
-        Ok(ctx
-            .get_http_client()
-            .execute(DeleteGuild {
-                guild_id: self.get_guild_id(),
-                auth,
-            })
-            .await?)
+        Ok(DeleteGuild {
+            guild_id: self.get_guild_id(),
+            auth,
+        }
+        .execute_cached(ctx.get_http_client(), &ctx.cache)
+        .await?)
     }
 
-    async fn toggle_detached_banner(&self, ctx: &Context, detached: bool) -> Result<Guild, Error> {
-        Ok(ctx
-            .get_http_client()
-            .execute(ToggleDetachedBanner {
-                guild_id: self.get_guild_id(),
-                enabled: detached,
-            })
-            .await?)
+    async fn toggle_detached_banner(
+        &self,
+        ctx: &Context,
+        detached: bool,
+    ) -> Result<Cached<Guild>, Error> {
+        Ok(ToggleDetachedBanner {
+            guild_id: self.get_guild_id(),
+            enabled: detached,
+        }
+        .execute_cached(ctx.get_http_client(), &ctx.cache)
+        .await?)
     }
 
     async fn list_members(
@@ -465,27 +468,25 @@ impl<T: GuildTrait> GuildExt for T {
             .await?)
     }
 
-    async fn list_roles(&self, ctx: &Context) -> Result<Vec<GuildRole>, Error> {
-        Ok(ctx
-            .get_http_client()
-            .execute(ListGuildRoles {
-                guild_id: self.get_guild_id(),
-            })
-            .await?)
+    async fn list_roles(&self, ctx: &Context) -> Result<Vec<Cached<GuildRole>>, Error> {
+        Ok(ListGuildRoles {
+            guild_id: self.get_guild_id(),
+        }
+        .execute_cached(ctx.get_http_client(), &ctx.cache)
+        .await?)
     }
 
     async fn create_role(
         &self,
         ctx: &Context,
         body: CreateGuildRoleBody,
-    ) -> Result<GuildRole, Error> {
-        Ok(ctx
-            .get_http_client()
-            .execute(CreateGuildRole {
-                guild_id: self.get_guild_id(),
-                body,
-            })
-            .await?)
+    ) -> Result<Cached<GuildRole>, Error> {
+        Ok(CreateGuildRole {
+            guild_id: self.get_guild_id(),
+            body,
+        }
+        .execute_cached(ctx.get_http_client(), &ctx.cache)
+        .await?)
     }
 
     async fn update_role_positions(
@@ -493,16 +494,16 @@ impl<T: GuildTrait> GuildExt for T {
         ctx: &Context,
         positions: Vec<UpdateGuildRolePositionsEntry>,
     ) -> Result<(), Error> {
-        Ok(ctx
-            .get_http_client()
-            .execute(UpdateGuildRolePositions {
-                guild_id: self.get_guild_id(),
-                body: positions,
-            })
-            .await?)
+        Ok(UpdateGuildRolePositions {
+            guild_id: self.get_guild_id(),
+            body: positions,
+        }
+        .execute_cached(ctx.get_http_client(), &ctx.cache)
+        .await?)
     }
 
     async fn reset_role_hoist_positions(&self, ctx: &Context) -> Result<(), Error> {
+        // TODO: Caching for this (need to map guild AND role id to GuildRole for this to be possible)
         Ok(ctx
             .get_http_client()
             .execute(ResetGuildRoleHoistPositions {
@@ -516,23 +517,21 @@ impl<T: GuildTrait> GuildExt for T {
         ctx: &Context,
         positions: Vec<UpdateGuildRoleHoistPositionsEntry>,
     ) -> Result<(), Error> {
-        Ok(ctx
-            .get_http_client()
-            .execute(UpdateGuildRoleHoistPositions {
-                guild_id: self.get_guild_id(),
-                body: positions,
-            })
-            .await?)
+        Ok(UpdateGuildRoleHoistPositions {
+            guild_id: self.get_guild_id(),
+            body: positions,
+        }
+        .execute_cached(ctx.get_http_client(), &ctx.cache)
+        .await?)
     }
 
     async fn delete_role(&self, ctx: &Context, role_id: Id<RoleMarker>) -> Result<(), Error> {
-        Ok(ctx
-            .get_http_client()
-            .execute(DeleteGuildRole {
-                guild_id: self.get_guild_id(),
-                role_id,
-            })
-            .await?)
+        Ok(DeleteGuildRole {
+            guild_id: self.get_guild_id(),
+            role_id,
+        }
+        .execute_cached(ctx.get_http_client(), &ctx.cache)
+        .await?)
     }
 
     async fn update_role(
@@ -540,15 +539,14 @@ impl<T: GuildTrait> GuildExt for T {
         ctx: &Context,
         role_id: Id<RoleMarker>,
         updates: UpdateGuildRoleBody,
-    ) -> Result<GuildRole, Error> {
-        Ok(ctx
-            .get_http_client()
-            .execute(UpdateGuildRole {
-                guild_id: self.get_guild_id(),
-                role_id,
-                body: updates,
-            })
-            .await?)
+    ) -> Result<Cached<GuildRole>, Error> {
+        Ok(UpdateGuildRole {
+            guild_id: self.get_guild_id(),
+            role_id,
+            body: updates,
+        }
+        .execute_cached(ctx.get_http_client(), &ctx.cache)
+        .await?)
     }
 
     async fn list_stickers(&self, ctx: &Context) -> Result<Vec<GuildSticker>, Error> {
@@ -622,14 +620,13 @@ impl<T: GuildTrait> GuildExt for T {
         &self,
         ctx: &Context,
         enabled: bool,
-    ) -> Result<Guild, Error> {
-        Ok(ctx
-            .get_http_client()
-            .execute(ToggleGuildTextChannelFlexibleNames {
-                guild_id: self.get_guild_id(),
-                enabled,
-            })
-            .await?)
+    ) -> Result<Cached<Guild>, Error> {
+        Ok(ToggleGuildTextChannelFlexibleNames {
+            guild_id: self.get_guild_id(),
+            enabled,
+        }
+        .execute_cached(ctx.get_http_client(), &ctx.cache)
+        .await?)
     }
 
     #[cfg(feature = "user_api")]
@@ -637,19 +634,17 @@ impl<T: GuildTrait> GuildExt for T {
         &self,
         ctx: &Context,
         new_owner_id: Id<UserMarker>,
-        password: Option<String>,
-    ) -> Result<Guild, Error> {
+        auth: SudoVerification,
+    ) -> Result<Cached<Guild>, Error> {
         use neptunium_http::endpoints::guild::TransferGuildOwnership;
-        use zeroize::Zeroizing;
 
-        Ok(ctx
-            .get_http_client()
-            .execute(TransferGuildOwnership {
-                guild_id: self.get_guild_id(),
-                new_owner_id,
-                password: password.map(Zeroizing::new),
-            })
-            .await?)
+        Ok(TransferGuildOwnership {
+            guild_id: self.get_guild_id(),
+            new_owner_id,
+            auth,
+        }
+        .execute_cached(ctx.get_http_client(), &ctx.cache)
+        .await?)
     }
 
     async fn get_vanity_url(&self, ctx: &Context) -> Result<GetGuildVanityUrlResponse, Error> {
@@ -666,22 +661,20 @@ impl<T: GuildTrait> GuildExt for T {
         ctx: &Context,
         code: Option<String>,
     ) -> Result<UpdateGuildVanityUrlResponse, Error> {
-        Ok(ctx
-            .get_http_client()
-            .execute(UpdateGuildVanityUrl {
-                guild_id: self.get_guild_id(),
-                code,
-            })
-            .await?)
+        Ok(UpdateGuildVanityUrl {
+            guild_id: self.get_guild_id(),
+            code,
+        }
+        .execute_cached(ctx.get_http_client(), &ctx.cache)
+        .await?)
     }
 
     async fn leave(&self, ctx: &Context) -> Result<(), Error> {
-        Ok(ctx
-            .get_http_client()
-            .execute(LeaveGuild {
-                guild_id: self.get_guild_id(),
-            })
-            .await?)
+        Ok(LeaveGuild {
+            guild_id: self.get_guild_id(),
+        }
+        .execute_cached(ctx.get_http_client(), &ctx.cache)
+        .await?)
     }
 
     #[cfg(feature = "user_api")]

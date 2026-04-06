@@ -9,6 +9,7 @@ pub struct CacheStats {
     pub messages: u64,
     pub invites: u64,
     pub guilds: u64,
+    pub roles: u64,
 }
 
 impl CacheStats {
@@ -19,7 +20,8 @@ impl CacheStats {
         let messages = cache.messages.entry_count();
         let invites = cache.invites.entry_count();
         let guilds = cache.guilds.entry_count();
-        let total_objects = users + user_profiles + channels + messages + invites + guilds;
+        let roles = cache.roles.entry_count();
+        let total_objects = users + user_profiles + channels + messages + invites + guilds + roles;
         Self {
             total_objects,
             users,
@@ -28,6 +30,7 @@ impl CacheStats {
             messages,
             invites,
             guilds,
+            roles,
         }
     }
 }

@@ -6,6 +6,7 @@ use std::collections::HashMap;
 #[cfg(feature = "user_api")]
 use neptunium_http::endpoints::{
     channel::PreloadMessagesForChannels,
+    guild::{DeleteGuild, TransferGuildOwnership},
     users::{
         GetUserSettings, ListCurrentUserMentions, UpdateCurrentUserProfile, UpdateUserSettings,
     },
@@ -28,16 +29,31 @@ use neptunium_http::{
             ListPrivateChannels, RemoveUserFromGroupDm, SetPermissionOverwrite, UpdateCallRegion,
             UpdateChannelSettings,
         },
-        invites::{CreateChannelInvite, ListChannelInvites},
+        guild::{
+            CreateGuildChannel, CreateGuildRole, DeleteGuildRole, GetGuildInformation, LeaveGuild,
+            ListGuildChannels, ListGuildRoles, ToggleDetachedBanner,
+            ToggleGuildTextChannelFlexibleNames, UpdateGuildRole, UpdateGuildRoleHoistPositions,
+            UpdateGuildRoleHoistPositionsEntry, UpdateGuildRolePositions,
+            UpdateGuildRolePositionsEntry, UpdateGuildVanityUrl, UpdateGuildVanityUrlResponse,
+        },
+        invites::{CreateChannelInvite, ListChannelInvites, ListGuildInvites},
         users::{GetCurrentUserProfile, GetUserById, GetUserProfile},
     },
 };
 use neptunium_model::{
-    channel::PermissionOverwrite, guild::permissions::Permissions, invites::InviteWithMetadata,
+    channel::PermissionOverwrite,
+    guild::{
+        Guild,
+        permissions::{GuildRole, Permissions},
+    },
+    invites::InviteWithMetadata,
 };
 use tokio::sync::RwLock;
 
-use crate::{CachableEndpoint, Cache, Cached, CachedChannel, CachedMessage, traits::CacheValue};
+use crate::{
+    CachableEndpoint, Cache, Cached, CachedChannel, CachedMessage,
+    gateway::cached_payload::cache_vec, traits::CacheValue,
+};
 
 #[async_trait]
 impl CachableEndpoint for GetUserById {
@@ -543,10 +559,264 @@ impl CachableEndpoint for ListChannelInvites {
         cache: &Arc<Cache>,
     ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
         let invites = client.execute(self).await?;
-        let mut cached_invites = Vec::with_capacity(invites.len());
-        for invite in invites {
-            cached_invites.push(invite.insert_and_return(cache).await);
-        }
+        let cached_invites = cache_vec!(invites, cache);
         Ok(cached_invites)
+    }
+}
+
+#[async_trait]
+impl CachableEndpoint for ListGuildInvites {
+    type Response = Vec<Cached<InviteWithMetadata>>;
+    async fn execute_cached(
+        self,
+        client: &Arc<HttpClient>,
+        cache: &Arc<Cache>,
+    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+        let invites = client.execute(self).await?;
+        let cached_invites = cache_vec!(invites, cache);
+        Ok(cached_invites)
+    }
+}
+
+#[async_trait]
+impl CachableEndpoint for GetGuildInformation {
+    type Response = Cached<Guild>;
+    async fn execute_cached(
+        self,
+        client: &Arc<HttpClient>,
+        cache: &Arc<Cache>,
+    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+        if let Some(cached_guild) = cache.guilds.get(&self.guild_id) {
+            return Ok(cached_guild);
+        }
+        let guild = client.execute(self).await?;
+        Ok(guild.insert_and_return(cache).await)
+    }
+}
+
+#[async_trait]
+impl CachableEndpoint for ListGuildChannels {
+    type Response = Vec<Cached<CachedChannel>>;
+    async fn execute_cached(
+        self,
+        client: &Arc<HttpClient>,
+        cache: &Arc<Cache>,
+    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+        let channels = client.execute(self).await?;
+        let mut cached_channels = Vec::with_capacity(channels.len());
+        for channel in channels {
+            cached_channels.push(
+                CachedChannel::from_channel(channel, cache)
+                    .await
+                    .insert_and_return(cache)
+                    .await,
+            );
+        }
+        Ok(cached_channels)
+    }
+}
+
+#[async_trait]
+impl CachableEndpoint for CreateGuildChannel {
+    type Response = Cached<CachedChannel>;
+    async fn execute_cached(
+        self,
+        client: &Arc<HttpClient>,
+        cache: &Arc<Cache>,
+    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+        let res = client.execute(self).await?;
+        Ok(CachedChannel::from_channel(res, cache)
+            .await
+            .insert_and_return(cache)
+            .await)
+    }
+}
+
+#[cfg(feature = "user_api")]
+#[async_trait]
+impl CachableEndpoint for DeleteGuild {
+    type Response = ();
+    async fn execute_cached(
+        self,
+        client: &Arc<HttpClient>,
+        cache: &Arc<Cache>,
+    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+        let guild_id = self.guild_id;
+        client.execute(self).await?;
+        cache.guilds.invalidate(&guild_id);
+        Ok(())
+    }
+}
+
+#[async_trait]
+impl CachableEndpoint for ToggleDetachedBanner {
+    type Response = Cached<Guild>;
+    async fn execute_cached(
+        self,
+        client: &Arc<HttpClient>,
+        cache: &Arc<Cache>,
+    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+        let guild = client.execute(self).await?;
+        Ok(guild.insert_and_return(cache).await)
+    }
+}
+
+#[async_trait]
+impl CachableEndpoint for ListGuildRoles {
+    type Response = Vec<Cached<GuildRole>>;
+    async fn execute_cached(
+        self,
+        client: &Arc<HttpClient>,
+        cache: &Arc<Cache>,
+    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+        let roles = client.execute(self).await?;
+        let cached_roles = cache_vec!(roles, cache);
+        Ok(cached_roles)
+    }
+}
+
+#[async_trait]
+impl CachableEndpoint for CreateGuildRole {
+    type Response = Cached<GuildRole>;
+    async fn execute_cached(
+        self,
+        client: &Arc<HttpClient>,
+        cache: &Arc<Cache>,
+    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+        let role = client.execute(self).await?;
+        Ok(role.insert_and_return(cache).await)
+    }
+}
+
+#[async_trait]
+impl CachableEndpoint for UpdateGuildRolePositions {
+    type Response = ();
+    async fn execute_cached(
+        self,
+        client: &Arc<HttpClient>,
+        cache: &Arc<Cache>,
+    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+        let entries = self.body.clone();
+        client.execute(self).await?;
+        for UpdateGuildRolePositionsEntry { id, position } in entries {
+            if let Some(cached_role) = cache.roles.get(&id) {
+                let mut guard = cached_role.write().await;
+                guard.position = position;
+            }
+        }
+        Ok(())
+    }
+}
+
+#[async_trait]
+impl CachableEndpoint for UpdateGuildRoleHoistPositions {
+    type Response = ();
+    async fn execute_cached(
+        self,
+        client: &Arc<HttpClient>,
+        cache: &Arc<Cache>,
+    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+        let entries = self.body.clone();
+        client.execute(self).await?;
+        for UpdateGuildRoleHoistPositionsEntry {
+            id,
+            hoist_position: position,
+        } in entries
+        {
+            if let Some(cached_role) = cache.roles.get(&id) {
+                let mut guard = cached_role.write().await;
+                guard.hoist_position = Some(position);
+            }
+        }
+        Ok(())
+    }
+}
+
+#[async_trait]
+impl CachableEndpoint for DeleteGuildRole {
+    type Response = ();
+    async fn execute_cached(
+        self,
+        client: &Arc<HttpClient>,
+        cache: &Arc<Cache>,
+    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+        let role_id = self.role_id;
+        client.execute(self).await?;
+        cache.roles.invalidate(&role_id);
+        Ok(())
+    }
+}
+
+#[async_trait]
+impl CachableEndpoint for UpdateGuildRole {
+    type Response = Cached<GuildRole>;
+    async fn execute_cached(
+        self,
+        client: &Arc<HttpClient>,
+        cache: &Arc<Cache>,
+    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+        let role = client.execute(self).await?;
+        Ok(role.insert_and_return(cache).await)
+    }
+}
+
+#[async_trait]
+impl CachableEndpoint for ToggleGuildTextChannelFlexibleNames {
+    type Response = Cached<Guild>;
+    async fn execute_cached(
+        self,
+        client: &Arc<HttpClient>,
+        cache: &Arc<Cache>,
+    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+        let guild = client.execute(self).await?;
+        Ok(guild.insert_and_return(cache).await)
+    }
+}
+
+#[cfg(feature = "user_api")]
+#[async_trait]
+impl CachableEndpoint for TransferGuildOwnership {
+    type Response = Cached<Guild>;
+    async fn execute_cached(
+        self,
+        client: &Arc<HttpClient>,
+        cache: &Arc<Cache>,
+    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+        let guild = client.execute(self).await?;
+        Ok(guild.insert_and_return(cache).await)
+    }
+}
+
+#[async_trait]
+impl CachableEndpoint for UpdateGuildVanityUrl {
+    type Response = UpdateGuildVanityUrlResponse;
+    async fn execute_cached(
+        self,
+        client: &Arc<HttpClient>,
+        cache: &Arc<Cache>,
+    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+        let guild_id = self.guild_id;
+        let res = client.execute(self).await?;
+        let code = res.code.clone();
+        if let Some(cached_guild) = cache.guilds.get(&guild_id) {
+            let mut guard = cached_guild.write().await;
+            guard.vanity_url_code = Some(code);
+        }
+        Ok(res)
+    }
+}
+
+#[async_trait]
+impl CachableEndpoint for LeaveGuild {
+    type Response = ();
+    async fn execute_cached(
+        self,
+        client: &Arc<HttpClient>,
+        cache: &Arc<Cache>,
+    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+        let guild_id = self.guild_id;
+        client.execute(self).await?;
+        cache.guilds.invalidate(&guild_id);
+        Ok(())
     }
 }

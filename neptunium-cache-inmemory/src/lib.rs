@@ -5,10 +5,10 @@ use mini_moka::sync::Cache as MokaCache;
 use neptunium_http::endpoints::users::UserProfileFullResponse;
 use neptunium_model::{
     gateway::payload::incoming::UserPrivateResponse,
-    guild::Guild,
+    guild::{Guild, permissions::GuildRole},
     id::{
         Id,
-        marker::{ChannelMarker, GuildMarker, MessageMarker, UserMarker},
+        marker::{ChannelMarker, GuildMarker, MessageMarker, RoleMarker, UserMarker},
     },
     invites::InviteWithMetadata,
     user::{PartialUser, settings::UserSettings},
@@ -28,6 +28,8 @@ use crate::stats::CacheStats;
 
 pub type Cached<T> = Arc<tokio::sync::RwLock<T>>;
 
+// TODO: More things to cache: guild channels (guild id->channels), relationships,
+// guild invites (guild id->invites), guild members
 #[expect(clippy::type_complexity)]
 pub struct Cache {
     pub users: MokaCache<Id<UserMarker>, Cached<PartialUser>>,
@@ -39,6 +41,8 @@ pub struct Cache {
     pub current_user_settings: OnceCell<Cached<UserSettings>>,
     pub invites: MokaCache<String, Cached<InviteWithMetadata>>,
     pub guilds: MokaCache<Id<GuildMarker>, Cached<Guild>>,
+    // TODO: Attach guild id
+    pub roles: MokaCache<Id<RoleMarker>, Cached<GuildRole>>,
 }
 
 #[derive(Builder, Copy, Clone, Debug)]
@@ -55,6 +59,8 @@ pub struct CacheConfig {
     pub invites: u64,
     #[builder(default = 1024)]
     pub guilds: u64,
+    #[builder(default = 1024)]
+    pub roles: u64,
 }
 
 impl Default for CacheConfig {
@@ -75,6 +81,7 @@ impl Cache {
             current_user_settings: OnceCell::new(),
             invites: MokaCache::new(config.invites),
             guilds: MokaCache::new(config.guilds),
+            roles: MokaCache::new(config.roles),
         }
     }
 

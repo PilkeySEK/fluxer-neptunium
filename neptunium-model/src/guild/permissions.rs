@@ -115,12 +115,12 @@ pub struct GuildRole {
     pub id: Id<RoleMarker>,
     pub name: String,
     pub permissions: Permissions,
-    pub position: i32, // Maybe consider making this type smaller
+    pub position: u16,
     pub color: HexColor32,
     /// Hash of the icon
     pub icon: Option<ImageHash>,
     pub unicode_emoji: Option<String>,
     pub hoist: bool,
-    pub hoist_position: Option<i32>,
+    pub hoist_position: Option<u16>,
     pub mentionable: bool,
 }

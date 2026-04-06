@@ -11,7 +11,7 @@ use crate::{endpoints::Endpoint, request::Request};
 #[derive(Builder, Serialize, Copy, Clone, Debug)]
 pub struct UpdateGuildRolePositionsEntry {
     pub id: Id<RoleMarker>,
-    pub position: u64,
+    pub position: u16,
 }
 
 #[derive(Builder, Clone, Debug)]
