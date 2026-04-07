@@ -81,7 +81,7 @@ pub struct Guild {
     pub message_history_cutoff: Option<Timestamp<Iso8601>>,
     /// The current user permissions in this guild.
     #[serde(skip_serializing_if = "Option::is_none", rename = "permissions")]
-    pub current_user_permissions: Permissions,
+    pub current_user_permissions: Option<Permissions>,
 }
 
 #[derive(Deserialize, Clone, Debug)]

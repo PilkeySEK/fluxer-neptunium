@@ -4,22 +4,22 @@ use async_trait::async_trait;
 use bon::Builder;
 use neptunium_cache_inmemory::{
     Cached, CachedChannel, CachedMessage,
-    gateway::cached_payload::{CachedMessageCreate, CachedReady},
+    gateway::cached_payload::{
+        CachedGuildCreate, CachedGuildRoleUpdateBulk, CachedMessageCreate, CachedReady,
+    },
 };
 use neptunium_model::{
-    channel::Channel,
     gateway::payload::incoming::{
         AuthSessionChange, CallCreate, CallDelete, CallUpdate, ChannelPinsAck, ChannelPinsUpdate,
         ChannelRecipientAdd, ChannelRecipientRemove, ChannelUpdateBulk, FavoriteMemeDelete,
-        GuildAuditLogEntryCreate, GuildBanAdd, GuildBanRemove, GuildCreate, GuildDelete,
-        GuildEmojisUpdate, GuildMemberRemove, GuildRoleCreate, GuildRoleDelete, GuildRoleUpdate,
-        GuildRoleUpdateBulk, GuildStickersUpdate, InviteDelete, MessageAck, MessageDelete,
-        MessageDeleteBulk, MessageReactionAdd, MessageReactionRemove, MessageReactionRemoveAll,
-        MessageReactionRemoveEmoji, PresenceUpdateIncoming, RecentMentionDelete,
-        RelationshipRemove, SavedMessageDelete, TypingStart, UserNoteUpdate, UserPrivateResponse,
-        VoiceServerUpdate, VoiceStateUpdate, WebhooksUpdate,
+        GuildAuditLogEntryCreate, GuildBanAdd, GuildBanRemove, GuildDelete, GuildEmojisUpdate,
+        GuildMemberRemove, GuildRoleDelete, GuildStickersUpdate, InviteDelete, MessageAck,
+        MessageDelete, MessageDeleteBulk, MessageReactionAdd, MessageReactionRemove,
+        MessageReactionRemoveAll, MessageReactionRemoveEmoji, PresenceUpdateIncoming,
+        RecentMentionDelete, RelationshipRemove, SavedMessageDelete, TypingStart, UserNoteUpdate,
+        UserPrivateResponse, VoiceServerUpdate, VoiceStateUpdate, WebhooksUpdate,
     },
-    guild::{Guild, member::GuildMember},
+    guild::{Guild, member::GuildMember, permissions::GuildRole},
     id::{Id, marker::ChannelMarker},
     invites::InviteWithMetadata,
     user::{
@@ -149,7 +149,7 @@ pub trait EventHandler: Send {
     async fn on_guild_create(
         &self,
         ctx: Context,
-        data: Arc<GuildCreate>,
+        data: Arc<CachedGuildCreate>,
     ) -> Result<(), EventError> {
         Ok(())
     }
@@ -191,21 +191,21 @@ pub trait EventHandler: Send {
     async fn on_guild_role_create(
         &self,
         ctx: Context,
-        data: Arc<GuildRoleCreate>,
+        data: Arc<Cached<GuildRole>>,
     ) -> Result<(), EventError> {
         Ok(())
     }
     async fn on_guild_role_update(
         &self,
         ctx: Context,
-        data: Arc<GuildRoleUpdate>,
+        data: Arc<Cached<GuildRole>>,
     ) -> Result<(), EventError> {
         Ok(())
     }
     async fn on_guild_role_update_bulk(
         &self,
         ctx: Context,
-        data: Arc<GuildRoleUpdateBulk>,
+        data: Arc<CachedGuildRoleUpdateBulk>,
     ) -> Result<(), EventError> {
         Ok(())
     }
@@ -265,7 +265,11 @@ pub trait EventHandler: Send {
     ) -> Result<(), EventError> {
         Ok(())
     }
-    async fn on_channel_delete(&self, ctx: Context, data: Arc<Channel>) -> Result<(), EventError> {
+    async fn on_channel_delete(
+        &self,
+        ctx: Context,
+        data: Arc<CachedChannel>,
+    ) -> Result<(), EventError> {
         Ok(())
     }
     async fn on_channel_pins_update(

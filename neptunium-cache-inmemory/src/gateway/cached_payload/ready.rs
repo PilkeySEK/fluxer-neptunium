@@ -22,7 +22,7 @@ use zeroize::Zeroizing;
 
 use crate::{
     Cache, Cached, CachedChannel,
-    gateway::cached_payload::{FromNonCached, cache_option_vec},
+    gateway::cached_payload::{CachedPayload, cache_option_vec},
     traits::CacheValue,
 };
 
@@ -51,9 +51,9 @@ pub struct CachedReady {
     pub longitude: Option<String>,
 }
 
-impl FromNonCached for CachedReady {
+impl CachedPayload for CachedReady {
     type NonCached = Ready;
-    fn from_noncached(non_cached: Self::NonCached, cache: &Arc<Cache>) -> Self {
+    fn cache_payload(non_cached: Self::NonCached, cache: &Arc<Cache>) -> Self {
         let user = non_cached.user.insert_and_return(cache);
         let private_channels =
             // cache_option_vec!(non_cached.private_channels, cache, async |value| CachedChannel::from_channel(value, cache).await);

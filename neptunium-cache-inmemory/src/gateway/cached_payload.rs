@@ -1,16 +1,20 @@
-mod message_create;
+mod guild_create;
+mod guild_role_payloads;
+mod message_events;
 mod ready;
 
 use std::sync::Arc;
 
-pub use message_create::*;
+pub use guild_create::*;
+pub use guild_role_payloads::*;
+pub use message_events::*;
 pub use ready::*;
 
 use crate::Cache;
 
-pub(crate) trait FromNonCached {
+pub(crate) trait CachedPayload {
     type NonCached;
-    fn from_noncached(non_cached: Self::NonCached, cache: &Arc<Cache>) -> Self;
+    fn cache_payload(non_cached: Self::NonCached, cache: &Arc<Cache>) -> Self;
 }
 
 macro_rules! cache_vec {

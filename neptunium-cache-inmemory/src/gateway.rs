@@ -1,23 +1,21 @@
 use std::sync::Arc;
 
 use neptunium_model::{
-    channel::Channel,
     gateway::{
         event::dispatch::DispatchEvent,
         payload::incoming::{
             AuthSessionChange, CallCreate, CallDelete, CallUpdate, ChannelPinsAck,
             ChannelPinsUpdate, ChannelRecipientAdd, ChannelRecipientRemove, ChannelUpdateBulk,
-            FavoriteMemeDelete, GuildAuditLogEntryCreate, GuildBanAdd, GuildBanRemove, GuildCreate,
-            GuildDelete, GuildEmojisUpdate, GuildMemberRemove, GuildRoleCreate, GuildRoleDelete,
-            GuildRoleUpdate, GuildRoleUpdateBulk, GuildStickersUpdate, InviteDelete, MessageAck,
-            MessageDelete, MessageDeleteBulk, MessageReactionAdd, MessageReactionRemove,
-            MessageReactionRemoveAll, MessageReactionRemoveEmoji, PresenceUpdateIncoming,
-            RecentMentionDelete, RelationshipRemove, SavedMessageDelete, TypingStart,
-            UserNoteUpdate, UserPrivateResponse, VoiceServerUpdate, VoiceStateUpdate,
-            WebhooksUpdate,
+            FavoriteMemeDelete, GuildAuditLogEntryCreate, GuildBanAdd, GuildBanRemove, GuildDelete,
+            GuildEmojisUpdate, GuildMemberRemove, GuildRoleCreate, GuildRoleDelete,
+            GuildStickersUpdate, InviteDelete, MessageAck, MessageDelete, MessageDeleteBulk,
+            MessageReactionAdd, MessageReactionRemove, MessageReactionRemoveAll,
+            MessageReactionRemoveEmoji, PresenceUpdateIncoming, RecentMentionDelete,
+            RelationshipRemove, SavedMessageDelete, TypingStart, UserNoteUpdate,
+            UserPrivateResponse, VoiceServerUpdate, VoiceStateUpdate, WebhooksUpdate,
         },
     },
-    guild::{Guild, member::GuildMember},
+    guild::{Guild, member::GuildMember, permissions::GuildRole},
     id::{Id, marker::ChannelMarker},
     invites::InviteWithMetadata,
     user::{
@@ -28,7 +26,10 @@ use neptunium_model::{
 
 use crate::{
     Cache, CacheValue, Cached, CachedChannel, CachedMessage,
-    gateway::cached_payload::{CachedMessageCreate, CachedReady, FromNonCached},
+    gateway::cached_payload::{
+        CachedGuildCreate, CachedGuildRoleUpdateBulk, CachedMessageCreate, CachedPayload,
+        CachedReady,
+    },
 };
 
 pub mod cached_payload;
@@ -38,7 +39,7 @@ impl CachedDispatchEvent {
     pub fn from_dispatch_event(event: DispatchEvent, cache: &Arc<Cache>) -> Self {
         match event {
             DispatchEvent::Ready(payload) => {
-                CachedDispatchEvent::Ready(CachedReady::from_noncached(payload, cache))
+                CachedDispatchEvent::Ready(CachedReady::cache_payload(payload, cache))
             }
             DispatchEvent::Resumed(()) => CachedDispatchEvent::Resumed(()),
             DispatchEvent::SessionsReplace(payload) => {
@@ -82,7 +83,9 @@ impl CachedDispatchEvent {
                 CachedDispatchEvent::AuthSessionChange(payload)
             }
             DispatchEvent::PresenceUpdate(payload) => CachedDispatchEvent::PresenceUpdate(payload),
-            DispatchEvent::GuildCreate(payload) => CachedDispatchEvent::GuildCreate(payload),
+            DispatchEvent::GuildCreate(payload) => {
+                CachedDispatchEvent::GuildCreate(CachedGuildCreate::cache_payload(payload, cache))
+            }
             DispatchEvent::GuildUpdate(payload) => {
                 CachedDispatchEvent::GuildUpdate(payload.insert_and_return(cache))
             }
@@ -94,14 +97,18 @@ impl CachedDispatchEvent {
             DispatchEvent::GuildMemberRemove(payload) => {
                 CachedDispatchEvent::GuildMemberRemove(payload)
             }
-            DispatchEvent::GuildRoleCreate(payload) => {
-                CachedDispatchEvent::GuildRoleCreate(payload)
-            }
-            DispatchEvent::GuildRoleUpdate(payload) => {
-                CachedDispatchEvent::GuildRoleUpdate(payload)
-            }
+            DispatchEvent::GuildRoleCreate(payload) => CachedDispatchEvent::GuildRoleCreate(
+                Cached::<GuildRole>::cache_payload(payload, cache),
+            ),
+            DispatchEvent::GuildRoleUpdate(payload) => CachedDispatchEvent::GuildRoleUpdate(
+                // Need to convert GuildRoleUpdate to GuildRoleCreate because I can't have two types for
+                // CachedPayload::NonCached (obviously). But the result is the same, so this is fine™
+                Cached::<GuildRole>::cache_payload(GuildRoleCreate { role: payload.role }, cache),
+            ),
             DispatchEvent::GuildRoleUpdateBulk(payload) => {
-                CachedDispatchEvent::GuildRoleUpdateBulk(payload)
+                CachedDispatchEvent::GuildRoleUpdateBulk(CachedGuildRoleUpdateBulk::cache_payload(
+                    payload, cache,
+                ))
             }
             DispatchEvent::GuildRoleDelete(payload) => {
                 CachedDispatchEvent::GuildRoleDelete(payload)
@@ -123,7 +130,9 @@ impl CachedDispatchEvent {
             DispatchEvent::ChannelUpdateBulk(payload) => {
                 CachedDispatchEvent::ChannelUpdateBulk(payload)
             }
-            DispatchEvent::ChannelDelete(payload) => CachedDispatchEvent::ChannelDelete(payload),
+            DispatchEvent::ChannelDelete(payload) => {
+                CachedDispatchEvent::ChannelDelete(CachedChannel::from_channel(payload, cache))
+            }
             DispatchEvent::ChannelPinsUpdate(payload) => {
                 CachedDispatchEvent::ChannelPinsUpdate(payload)
             }
@@ -135,12 +144,14 @@ impl CachedDispatchEvent {
                 CachedDispatchEvent::ChannelRecipientRemove(payload)
             }
             DispatchEvent::MessageCreate(payload) => CachedDispatchEvent::MessageCreate(
-                CachedMessageCreate::from_noncached(payload, cache),
+                CachedMessageCreate::cache_payload(payload, cache),
             ),
             DispatchEvent::MessageUpdate(payload) => CachedDispatchEvent::MessageUpdate(
                 CachedMessage::from_message(payload, cache).insert_and_return(cache),
             ),
-            DispatchEvent::MessageDelete(payload) => CachedDispatchEvent::MessageDelete(payload),
+            DispatchEvent::MessageDelete(payload) => {
+                CachedDispatchEvent::MessageDelete(MessageDelete::cache_payload(payload, cache))
+            }
             DispatchEvent::MessageDeleteBulk(payload) => {
                 CachedDispatchEvent::MessageDeleteBulk(payload)
             }
@@ -203,16 +214,18 @@ pub enum CachedDispatchEvent {
     FavoriteMemeDelete(FavoriteMemeDelete),
     AuthSessionChange(AuthSessionChange),
     PresenceUpdate(PresenceUpdateIncoming),
-    GuildCreate(GuildCreate),
+    GuildCreate(CachedGuildCreate),
     GuildUpdate(Cached<Guild>),
+    // I think not deleting a guild from the cache even when it is "deleted" could be a good thing
+    // Might need to ask some people about that
     GuildDelete(GuildDelete),
     /// Sent when a user joins a guild.
     GuildMemberAdd(GuildMember),
     GuildMemberUpdate(GuildMember),
     GuildMemberRemove(GuildMemberRemove),
-    GuildRoleCreate(GuildRoleCreate),
-    GuildRoleUpdate(GuildRoleUpdate),
-    GuildRoleUpdateBulk(GuildRoleUpdateBulk),
+    GuildRoleCreate(Cached<GuildRole>),
+    GuildRoleUpdate(Cached<GuildRole>),
+    GuildRoleUpdateBulk(CachedGuildRoleUpdateBulk),
     GuildRoleDelete(GuildRoleDelete),
     GuildEmojisUpdate(GuildEmojisUpdate),
     GuildStickersUpdate(GuildStickersUpdate),
@@ -221,7 +234,9 @@ pub enum CachedDispatchEvent {
     ChannelCreate(Cached<CachedChannel>),
     ChannelUpdate(Cached<CachedChannel>),
     ChannelUpdateBulk(ChannelUpdateBulk),
-    ChannelDelete(Channel),
+    // Not caching this because why have a nonexistent channel in the cache?
+    // Only CachedChannel without Cached<T> wrapper
+    ChannelDelete(CachedChannel),
     /// Sent when a mesage is pinned or unpinned.
     ChannelPinsUpdate(ChannelPinsUpdate),
     ChannelPinsAck(ChannelPinsAck),
