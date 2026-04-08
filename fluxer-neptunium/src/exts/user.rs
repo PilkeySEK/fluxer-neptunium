@@ -132,3 +132,30 @@ impl<T: UserTrait> UserExt for T {
         .await?)
     }
 }
+
+pub trait PartialUserExt {
+    /// Returns either the display name (global name), or
+    /// the username if a global name is not set.
+    fn display_name(&self) -> String;
+    /// Returns either the display name (global name) with the specified `global_name_prefix`,
+    /// or the username with the specified `username_prefix` if a global name is not set.
+    fn display_name_formatted(&self, global_name_prefix: &str, username_prefix: &str) -> String;
+}
+
+impl PartialUserExt for PartialUser {
+    fn display_name(&self) -> String {
+        if let Some(global_name) = &self.global_name {
+            global_name.clone()
+        } else {
+            self.username.clone()
+        }
+    }
+
+    fn display_name_formatted(&self, global_name_prefix: &str, username_prefix: &str) -> String {
+        if let Some(global_name) = &self.global_name {
+            format!("{global_name_prefix}{global_name}")
+        } else {
+            format!("{}{}", username_prefix, self.username)
+        }
+    }
+}
