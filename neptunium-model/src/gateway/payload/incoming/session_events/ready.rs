@@ -52,7 +52,7 @@ pub struct UserPrivateResponsePendingBulkMessageDeletion {
 
 #[derive(Debug, Copy, Clone, Serialize_repr, Deserialize_repr)]
 #[repr(u8)]
-pub enum UserAuthenticatorTypes {
+pub enum UserAuthenticatorType {
     TimeBasedOneTimePassword = 0,
     SMSBased = 1,
     WebAuthn = 2,
@@ -65,7 +65,7 @@ pub struct UserPrivateResponse {
     /// Access control list entries for the user
     pub acls: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub authenticator_types: Option<Vec<UserAuthenticatorTypes>>,
+    pub authenticator_types: Option<Vec<UserAuthenticatorType>>,
     pub avatar: Option<String>,
     pub avatar_color: Option<i32>,
     pub banner: Option<String>,
@@ -105,11 +105,24 @@ pub struct UserPrivateResponse {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub system: Option<bool>,
     pub traits: Vec<String>,
-    pub unread_gift_inventory_count: i32,
+    pub unread_gift_inventory_count: u32,
     pub used_mobile_client: bool,
     pub username: String,
     /// Whether the email address has been verified
     pub verified: bool,
+    // Undocumented.
+    // TODO: Is this optional?
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg(feature = "user_api")]
+    pub privacy_agreed_at: Option<Timestamp<Iso8601>>,
+    // Undocumented.
+    // TODO: Is this optional?
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg(feature = "user_api")]
+    pub terms_agreed_at: Option<Timestamp<Iso8601>>,
+    // Undocumented.
+    #[cfg(feature = "user_api")]
+    pub premium_out_of_band_trial_ends_at: Option<Timestamp<Iso8601>>,
 }
 
 #[derive(Debug, Copy, Clone, Serialize_repr, Deserialize_repr)]

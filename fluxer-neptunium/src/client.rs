@@ -596,6 +596,9 @@ impl Client {
             CachedDispatchEvent::PassiveUpdates(data) => {
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_passive_updates);
             }
+            CachedDispatchEvent::GuildMembersChunk(data) => {
+                call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_guild_members_chunk);
+            }
         }
     }
 }

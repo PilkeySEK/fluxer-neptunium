@@ -13,8 +13,8 @@ use neptunium_model::{
         AuthSessionChange, CallCreate, CallDelete, CallUpdate, ChannelPinsAck, ChannelPinsUpdate,
         ChannelRecipientAdd, ChannelRecipientRemove, ChannelUpdateBulk, FavoriteMemeDelete,
         GuildAuditLogEntryCreate, GuildBanAdd, GuildBanRemove, GuildDelete, GuildEmojisUpdate,
-        GuildMemberRemove, GuildRoleDelete, GuildStickersUpdate, InviteDelete, MessageAck,
-        MessageDelete, MessageDeleteBulk, MessageReactionAdd, MessageReactionRemove,
+        GuildMemberRemove, GuildMembersChunk, GuildRoleDelete, GuildStickersUpdate, InviteDelete,
+        MessageAck, MessageDelete, MessageDeleteBulk, MessageReactionAdd, MessageReactionRemove,
         MessageReactionRemoveAll, MessageReactionRemoveEmoji, PresenceUpdateIncoming,
         RecentMentionDelete, RelationshipRemove, SavedMessageDelete, TypingStart, UserNoteUpdate,
         UserPrivateResponse, VoiceServerUpdate, VoiceStateUpdate, WebhooksUpdate,
@@ -439,6 +439,13 @@ pub trait EventHandler: Send {
         &self,
         ctx: Context,
         data: Arc<neptunium_model::gateway::payload::incoming::PassiveUpdates>,
+    ) -> Result<(), EventError> {
+        Ok(())
+    }
+    async fn on_guild_members_chunk(
+        &self,
+        ctx: Context,
+        data: Arc<GuildMembersChunk>,
     ) -> Result<(), EventError> {
         Ok(())
     }

@@ -7,9 +7,9 @@ use neptunium_model::{
             AuthSessionChange, CallCreate, CallDelete, CallUpdate, ChannelPinsAck,
             ChannelPinsUpdate, ChannelRecipientAdd, ChannelRecipientRemove, ChannelUpdateBulk,
             FavoriteMemeDelete, GuildAuditLogEntryCreate, GuildBanAdd, GuildBanRemove, GuildDelete,
-            GuildEmojisUpdate, GuildMemberRemove, GuildRoleCreate, GuildRoleDelete,
-            GuildStickersUpdate, InviteDelete, MessageAck, MessageDelete, MessageDeleteBulk,
-            MessageReactionAdd, MessageReactionRemove, MessageReactionRemoveAll,
+            GuildEmojisUpdate, GuildMemberRemove, GuildMembersChunk, GuildRoleCreate,
+            GuildRoleDelete, GuildStickersUpdate, InviteDelete, MessageAck, MessageDelete,
+            MessageDeleteBulk, MessageReactionAdd, MessageReactionRemove, MessageReactionRemoveAll,
             MessageReactionRemoveEmoji, PresenceUpdateIncoming, RecentMentionDelete,
             RelationshipRemove, SavedMessageDelete, TypingStart, UserNoteUpdate,
             UserPrivateResponse, VoiceServerUpdate, VoiceStateUpdate, WebhooksUpdate,
@@ -194,6 +194,9 @@ impl CachedDispatchEvent {
             DispatchEvent::CallUpdate(payload) => CachedDispatchEvent::CallUpdate(payload),
             DispatchEvent::CallDelete(payload) => CachedDispatchEvent::CallDelete(payload),
             DispatchEvent::PassiveUpdates(payload) => CachedDispatchEvent::PassiveUpdates(payload),
+            DispatchEvent::GuildMembersChunk(payload) => {
+                CachedDispatchEvent::GuildMembersChunk(payload)
+            }
         }
     }
 }
@@ -276,4 +279,6 @@ pub enum CachedDispatchEvent {
     /// Dispatched to all recipients when the call terminates (all participants leave or timeout).
     CallDelete(CallDelete),
     PassiveUpdates(neptunium_model::gateway::payload::incoming::PassiveUpdates),
+    // TODO: Cache this when guild members are cached
+    GuildMembersChunk(GuildMembersChunk),
 }

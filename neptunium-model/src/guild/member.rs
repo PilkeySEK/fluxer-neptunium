@@ -60,8 +60,12 @@ pub struct GuildMember {
     /// Timestamp until which the member is timed out.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub communication_disabled_until: Option<Timestamp<Iso8601>>,
+    // May be not present when the payload is of type `GuildMemberData` and not `GuildMemberResponse`.
+    #[serde(default = "boolean_false")]
     pub deaf: bool,
     pub joined_at: Timestamp<Iso8601>,
+    // May be not present when the payload is of type `GuildMemberData` and not `GuildMemberResponse`.
+    #[serde(default = "boolean_false")]
     pub mute: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub nick: Option<String>,
@@ -69,6 +73,11 @@ pub struct GuildMember {
     pub profile_flags: Option<GuildMemberProfileFlags>,
     pub roles: Vec<Id<RoleMarker>>,
     pub user: PartialUser,
+}
+
+// I hate serde what even is this
+fn boolean_false() -> bool {
+    false
 }
 
 #[derive(Deserialize, Clone, Debug)]
