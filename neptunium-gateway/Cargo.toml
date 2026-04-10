@@ -16,7 +16,7 @@ serde_json = "1.0.149"
 neptunium-model = { workspace = true }
 tokio-tungstenite = { version = "0.28.0" }
 futures-util = { version = "0.3.32", default-features = false, features = ["sink", "std"] }
-tokio = { version = "1.50.0", features = ["net"] }
+tokio = { version = "1.50.0", features = ["net", "time"] }
 zeroize = "1.8.2"
 tracing = "0.1.44"
 serde_path_to_error = "0.1.20"

@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use bon::Builder;
 use neptunium_model::gateway::{intents::GatewayEventFlags, shard::ShardInfo};
 use zeroize::Zeroizing;
@@ -13,6 +15,9 @@ pub struct ShardConfig {
     pub ignored_events: Option<GatewayEventFlags>,
     #[builder(default = false)]
     pub force_ipv4: bool,
+    /// Timeout for establishing a new connection to the gateway.
+    #[builder(default = Duration::from_secs(60))]
+    pub connection_timeout: Duration,
 }
 
 impl ShardConfig {
