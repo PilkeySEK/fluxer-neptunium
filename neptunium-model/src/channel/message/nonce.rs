@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 /// A client-provided value for message deduplication. This should be unique for every message.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[serde(transparent)]
-pub struct Nonce(String);
+pub struct Nonce(pub String);
 
 impl Nonce {
     /// Creates a new nonce based on the current system time in nanoseconds.

@@ -1,4 +1,9 @@
-use std::{ops::Deref, sync::Arc, time::Duration};
+use std::{
+    collections::HashMap,
+    ops::{ControlFlow, Deref},
+    sync::Arc,
+    time::Duration,
+};
 
 use neptunium_cache_inmemory::{Cache, gateway::CachedDispatchEvent};
 use neptunium_gateway::shard::{EventReceiveError, Shard, config::ShardConfig};
@@ -6,12 +11,18 @@ use neptunium_http::client::HttpClient;
 use neptunium_model::gateway::{
     close_code::GatewayCloseCode,
     event::{dispatch::DispatchEvent, gateway::GatewayEvent, invalid_session::InvalidSessionEvent},
-    payload::outgoing::{
-        ConnectionProperties, Heartbeat, LazyRequest, OutgoingGatewayMessage,
-        PresenceUpdateOutgoing,
+    payload::{
+        incoming::GuildMembersChunk,
+        outgoing::{
+            ConnectionProperties, Heartbeat, LazyRequest, OutgoingGatewayMessage,
+            PresenceUpdateOutgoing, RequestGuildMembers,
+        },
     },
 };
-use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender, unbounded_channel};
+use tokio::sync::{
+    mpsc::{UnboundedReceiver, UnboundedSender, error::SendError, unbounded_channel},
+    oneshot,
+};
 use zeroize::Zeroizing;
 
 use crate::{
@@ -29,7 +40,12 @@ pub(crate) enum ClientMessage {
     Heartbeat,
     UpdatePresence(
         PresenceUpdateOutgoing,
-        UnboundedSender<Result<(), neptunium_gateway::shard::Error>>,
+        oneshot::Sender<Result<(), neptunium_gateway::shard::Error>>,
+    ),
+    RequestGuildMembers(
+        RequestGuildMembers,
+        oneshot::Sender<Result<(), neptunium_gateway::shard::Error>>,
+        Option<UnboundedSender<GuildMembersChunk>>,
     ),
     SendLazyRequest(
         LazyRequest,
@@ -41,6 +57,7 @@ pub(crate) enum ClientMessage {
 #[derive(Clone, Debug)]
 struct ResumeInfo {
     session_id: Zeroizing<String>,
+    heartbeat_interval: Duration,
     // Doesn't appear to be a thing
     // resume_url: String,
 }
@@ -56,6 +73,7 @@ pub struct Client {
     resume_info: Option<ResumeInfo>,
     auto_reconnect: bool,
     auto_reconnect_wait_time: Duration,
+    guild_members_chunk_listeners: HashMap<String, UnboundedSender<GuildMembersChunk>>,
 }
 
 impl Deref for Client {
@@ -124,6 +142,7 @@ impl Client {
             resume_info: None,
             auto_reconnect: client_config.auto_reconnect,
             auto_reconnect_wait_time: client_config.auto_reconnect_wait_time,
+            guild_members_chunk_listeners: HashMap::new(),
         }
     }
 
@@ -150,7 +169,10 @@ impl Client {
             // (clippy lint large_futures)
             let result = Box::pin(self.inner_start()).await;
             let error = match result {
-                Ok(result) => return Ok(result),
+                Ok(()) => {
+                    tracing::debug!("Restarting client.");
+                    continue;
+                }
                 Err(e) => e,
             };
             if self.auto_reconnect {
@@ -181,51 +203,54 @@ impl Client {
         }
     }
 
+    #[expect(clippy::too_many_lines)]
     async fn inner_start(&mut self) -> Result<(), self::error::Error> {
-        tracing::info!("Starting client...");
-        let hello_event = match self.shard.next_event().await? {
-            GatewayEvent::Hello(event) => event,
-            event => {
-                return Err(Error::new(error::ClientErrorKind::UnexpectedEventReceived(
-                    Box::new(event),
-                )));
-            }
-        };
+        tracing::debug!("Starting client...");
+        let heartbeat_interval = if let Some(resume_info) = self.resume_info.clone() {
+            let heartbeat_interval = resume_info.heartbeat_interval;
+            self.resume(resume_info).await?;
 
-        let heartbeat_interval: Duration = hello_event.heartbeat_interval.into();
-
-        tracing::debug!(
-            "Received Hello message from gateway. Heartbeat interval: {} ms",
-            heartbeat_interval.as_millis()
-        );
-
-        let tx_clone = self.tx.clone();
-        tokio::spawn(async move {
-            #[expect(clippy::cast_possible_truncation)]
-            let millis = rand::random_range(0..heartbeat_interval.as_millis() as u64);
-            tokio::time::sleep(Duration::from_millis(millis)).await;
-            let _ = tx_clone.send(ClientMessage::Heartbeat);
-        });
-
-        let tx_clone = self.tx.clone();
-        tokio::spawn(async move {
-            loop {
-                tokio::time::sleep(heartbeat_interval).await;
-                if tx_clone.send(ClientMessage::Heartbeat).is_err() {
-                    // The message receiver has stopped
-                    tracing::debug!("Heartbeat task stopping due to channel being closed.");
-                    break;
+            tokio::spawn(Self::heartbeat_task(self.tx.clone(), heartbeat_interval));
+            heartbeat_interval
+        } else {
+            tracing::debug!(
+                "Starting new session instead of resuming because no resume info is present."
+            );
+            let hello_event = match self.shard.next_event().await? {
+                GatewayEvent::Hello(event) => event,
+                event => {
+                    return Err(Error::new(error::ClientErrorKind::UnexpectedEventReceived(
+                        Box::new(event),
+                    )));
                 }
-            }
-        });
+            };
 
-        self.shard
-            .identify(ConnectionProperties {
-                os: String::from(std::env::consts::OS),
-                browser: String::from("fluxer-neptunium"),
-                device: String::from("fluxer-neptunium"),
-            })
-            .await?;
+            let heartbeat_interval: Duration = hello_event.heartbeat_interval.into();
+
+            tracing::debug!(
+                "Received Hello message from gateway. Heartbeat interval: {} ms",
+                heartbeat_interval.as_millis()
+            );
+
+            let tx_clone = self.tx.clone();
+            tokio::spawn(async move {
+                #[expect(clippy::cast_possible_truncation)]
+                let millis = rand::random_range(0..heartbeat_interval.as_millis() as u64);
+                tokio::time::sleep(Duration::from_millis(millis)).await;
+                let _ = tx_clone.send(ClientMessage::Heartbeat);
+            });
+
+            tokio::spawn(Self::heartbeat_task(self.tx.clone(), heartbeat_interval));
+
+            self.shard
+                .identify(ConnectionProperties {
+                    os: String::from(std::env::consts::OS),
+                    browser: String::from("fluxer-neptunium"),
+                    device: String::from("fluxer-neptunium"),
+                })
+                .await?;
+            heartbeat_interval
+        };
 
         loop {
             tokio::select! {
@@ -242,6 +267,12 @@ impl Client {
                                     last_sequence_number: self.last_sequence_number,
                                 }))
                                 .await?;
+                            // Heartbeats are a nice periodic event that happens where we can check for this stuff too
+                            self.guild_members_chunk_listeners.retain(|_, tx| {
+                                // tx being closed indicates that the function listening to tx has returned and has dropped
+                                // the receiving end (meaning it has concluded that no more chunks will be sent)
+                                !tx.is_closed()
+                            });
                         }
                         ClientMessage::UpdatePresence(data, sender) => {
                             let _ = sender.send(self.shard.send_gateway_message(OutgoingGatewayMessage::PresenceUpdate(data)).await);
@@ -255,6 +286,12 @@ impl Client {
                                 tracing::warn!("Error closing shard connection: {e}");
                             }
                             return Err(Error::new(ClientErrorKind::EventError(Box::new(error))));
+                        }
+                        ClientMessage::RequestGuildMembers(data, sender, tx) => {
+                            if let Some(tx) = tx {
+                                self.guild_members_chunk_listeners.insert(data.nonce.clone().unwrap(), tx);
+                            }
+                            let _ = sender.send(self.shard.send_gateway_message(OutgoingGatewayMessage::RequestGuildMembers(data)).await);
                         }
                     }
                 },
@@ -280,13 +317,34 @@ impl Client {
                         }
                     };
                     tracing::trace!("Received message: {message:?}");
-                    self.handle_event(message).await.map_err(|e| *e)?;
+                    if self.handle_event(message, heartbeat_interval).await.map_err(|e| *e)?.is_break() {
+                        return Ok(());
+                    }
                 }
             }
         }
     }
 
-    async fn handle_event(&mut self, event: GatewayEvent) -> Result<(), Box<self::error::Error>> {
+    async fn heartbeat_task(tx: UnboundedSender<ClientMessage>, heartbeat_interval: Duration) {
+        loop {
+            tokio::time::sleep(heartbeat_interval).await;
+            if tx.send(ClientMessage::Heartbeat).is_err() {
+                // The message receiver has stopped, the client is likely restarting and will
+                // respawn this task later. (Either way, stop this task as it is useless when it
+                // can't send messages.)
+                tracing::debug!("Heartbeat task stopping due to mpsc channel being closed.");
+                break;
+            }
+        }
+    }
+
+    /// Returns `ControlFlow::Break(())` if the client should reconnect, and `ControlFlow::Continue(())` if the client
+    /// should wait for the next event (continue normally).
+    async fn handle_event(
+        &mut self,
+        event: GatewayEvent,
+        heartbeat_interval: Duration,
+    ) -> Result<ControlFlow<()>, Box<self::error::Error>> {
         match event {
             GatewayEvent::Heartbeat => {
                 let _ = self.tx.send(ClientMessage::Heartbeat);
@@ -300,39 +358,46 @@ impl Client {
                     tracing::debug!(
                         "Resuming after gateway has sent a `InvalidSession` gateway event with resumable set to `true`."
                     );
-                    self.resume().await?;
+                    if let Some(resume_info) = self.resume_info.clone() {
+                        self.resume(resume_info).await?;
+                    } else {
+                        return Ok(ControlFlow::Break(()));
+                    }
                 } else {
+                    // When resuming, the gateway may send InvalidSession if we didn't reconnect in time to resume.
+                    // To prevent an infinite resume loop, we clear the resume_info here. It's also generally a good idea
+                    // to assume that when the gateway tells us that we may not resume, we should clear the resume info.
+                    self.resume_info = None;
                     return Err(Box::new(Error::new(ClientErrorKind::SessionInvalidated)));
                 }
             }
             GatewayEvent::Reconnect => {
                 tracing::debug!("Resuming after gateway has sent a `Reconnect` gateway event.");
-                self.resume().await?;
+                if let Some(resume_info) = self.resume_info.clone() {
+                    self.resume(resume_info).await?;
+                } else {
+                    return Ok(ControlFlow::Break(()));
+                }
             }
             GatewayEvent::Dispatch(payload) => {
                 // TODO: Maybe check if the current sequence number is bigger than the received one because that shouldn't happen? Or something...
                 self.last_sequence_number = Some(payload.sequence_number);
-                self.handle_dispatch_event(payload.event);
-                return Ok(());
+                self.handle_dispatch_event(payload.event, heartbeat_interval);
+                return Ok(ControlFlow::Continue(()));
             }
             GatewayEvent::GatewayError(payload) => {
                 tracing::warn!("Gateway error: {:?}", payload);
-                return Ok(());
+                return Ok(ControlFlow::Continue(()));
             }
         }
-        Ok(())
+        Ok(ControlFlow::Continue(()))
     }
 
-    async fn resume(&mut self) -> Result<(), Box<Error>> {
-        let Some(resume_info) = &self.resume_info else {
-            tracing::warn!("Resuming was requested but there is no resume info.");
-            return Err(Box::new(Error::new(
-                ClientErrorKind::UnexpectedEventReceived(Box::new(GatewayEvent::Reconnect)),
-            )));
-        };
+    async fn resume(&mut self, resume_info: ResumeInfo) -> Result<(), Box<Error>> {
+        tracing::debug!("Resuming from previous session.");
         self.shard
             .resume(
-                resume_info.session_id.clone(),
+                resume_info.session_id,
                 self.last_sequence_number.unwrap_or(0),
             )
             .await
@@ -340,7 +405,7 @@ impl Client {
     }
 
     #[expect(clippy::too_many_lines)]
-    fn handle_dispatch_event(&mut self, event: DispatchEvent) {
+    fn handle_dispatch_event(&mut self, event: DispatchEvent, heartbeat_interval: Duration) {
         tracing::trace!("Dispatch Event: {event:?}");
         macro_rules! call_event_handlers {
             ($always_propagate_event_errors:expr, $tx:expr, $handlers:expr, $ctx:expr, $data:expr => $func_name:ident) => {{
@@ -395,6 +460,7 @@ impl Client {
             CachedDispatchEvent::Ready(data) => {
                 self.resume_info = Some(ResumeInfo {
                     session_id: data.session_id.clone(),
+                    heartbeat_interval,
                 });
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_ready);
             }
@@ -597,7 +663,25 @@ impl Client {
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_passive_updates);
             }
             CachedDispatchEvent::GuildMembersChunk(data) => {
-                call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_guild_members_chunk);
+                // Unfortunately it seems that there is no easy way to avoid cloning the nonce here,
+                // else rust will give an error that part of `data` is borrowed.
+                if let Some(nonce) = data.nonce.clone()
+                    && let Some(listener_tx) = self.guild_members_chunk_listeners.get(&nonce)
+                {
+                    // The receiving end being dropped indicates that it has received all the messages it needs.
+                    // However, receiving the same nonce is concerning as it likely indicates a bug with how it
+                    // detects whether all messages have been received.
+                    if let Err(SendError(data)) = listener_tx.send(data) {
+                        tracing::warn!(
+                            "Guild member chunk with nonce \"{}\" is managed but the receiver has been dropped.",
+                            nonce
+                        );
+                        self.guild_members_chunk_listeners.remove(&nonce);
+                        call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_guild_members_chunk);
+                    }
+                } else {
+                    call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_guild_members_chunk);
+                }
             }
         }
     }

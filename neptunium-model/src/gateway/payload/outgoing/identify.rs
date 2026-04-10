@@ -192,6 +192,7 @@ pub struct UpdatePresence {
     pub afk: bool,
 }
 
+// TODO: This has more (optional) fields when logging in as a user
 #[derive(serde::Serialize, serde::Deserialize, Clone, Debug)]
 pub struct ConnectionProperties {
     /// The operating system, e.g. "linux".

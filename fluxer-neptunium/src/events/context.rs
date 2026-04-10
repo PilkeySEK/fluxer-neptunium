@@ -46,17 +46,23 @@ use neptunium_model::{
     },
 };
 use neptunium_model::{
+    channel::message::nonce::Nonce,
     gateway::payload::{
         incoming::UserPrivateResponse,
-        outgoing::{GuildSubscriptionRequest, LazyRequest, PresenceUpdateOutgoing},
+        outgoing::{
+            GuildSubscriptionRequest, LazyRequest, PresenceUpdateOutgoing, RequestGuildMembers,
+        },
     },
-    guild::Guild,
+    guild::{Guild, member::GuildMember},
     id::{
         Id,
         marker::{ChannelMarker, GuildMarker},
     },
 };
-use tokio::sync::mpsc::{UnboundedSender, unbounded_channel};
+use tokio::sync::{
+    mpsc::{UnboundedSender, unbounded_channel},
+    oneshot,
+};
 
 use crate::{
     client::{
@@ -81,11 +87,10 @@ impl Context {
         &self.http_client
     }
 
-    // TODO: Make this be async and block
     /// Update the presence by sending a gateway request. Due to
     /// how the crate is structured currently, this does not block.
     pub async fn update_presence(&self, data: PresenceUpdateOutgoing) -> Result<(), Error> {
-        let (tx, mut rx) = unbounded_channel();
+        let (tx, rx) = oneshot::channel();
         if self
             .tx
             .send(ClientMessage::UpdatePresence(data, tx))
@@ -93,13 +98,77 @@ impl Context {
         {
             return Err(Error::new(ClientErrorKind::ClientNotPresent));
         }
-        if let Some(result) = rx.recv().await {
+        if let Ok(result) = rx.await {
             match result {
                 Ok(()) => Ok(()),
                 Err(e) => Err(Error::new(ClientErrorKind::NetworkError(e))),
             }
         } else {
             Err(Error::new(ClientErrorKind::ClientNotPresent))
+        }
+    }
+
+    // TODO: Once caching for guild members and presences exists, cache these things here.
+    // Or more likely cache them in the GuildMembersChunk struct thing directly!!
+    /// Request guild members from the gateway. Internally, this waits for all chunks to have arrived
+    /// and then returns the list of members. For a lower-level version, use `request_guild_members_raw`.
+    ///
+    /// **Note:** You do not need to set a `nonce` in the request, this function will overwrite it.
+    pub async fn request_guild_members(
+        &self,
+        mut data: RequestGuildMembers,
+    ) -> Result<Vec<GuildMember>, Error> {
+        // This is to make sure that the request has a proper nonce.
+        data.nonce = Some(Nonce::generate().0);
+        let (oneshot_tx, oneshot_rx) = oneshot::channel();
+        let (tx, mut rx) = unbounded_channel();
+        if self
+            .tx
+            .send(ClientMessage::RequestGuildMembers(
+                data,
+                oneshot_tx,
+                Some(tx),
+            ))
+            .is_err()
+        {
+            return Err(Error::new(ClientErrorKind::ClientNotPresent));
+        }
+
+        match oneshot_rx.await {
+            Ok(Err(e)) => return Err(Error::new(ClientErrorKind::NetworkError(e))),
+            Err(_) => return Err(Error::new(ClientErrorKind::ClientNotPresent)),
+            Ok(Ok(())) => {}
+        }
+
+        let mut members = Vec::new();
+        while let Some(chunk) = rx.recv().await {
+            for member in chunk.members {
+                members.push(member);
+            }
+            if chunk.chunk_index + 1 == chunk.chunk_count {
+                break;
+            }
+        }
+        Ok(members)
+    }
+
+    /// Send `RequestGuildMembers` to the gateway without waiting for the result.
+    /// You will need to manage receiving the members yourself. This can be useful when you require
+    /// lower-level control though.
+    pub async fn request_guild_members_raw(&self, data: RequestGuildMembers) -> Result<(), Error> {
+        let (tx, rx) = oneshot::channel();
+        if self
+            .tx
+            .send(ClientMessage::RequestGuildMembers(data, tx, None))
+            .is_err()
+        {
+            return Err(Error::new(ClientErrorKind::ClientNotPresent));
+        }
+
+        match rx.await {
+            Ok(Err(e)) => Err(Error::new(ClientErrorKind::NetworkError(e))),
+            Err(_) => Err(Error::new(ClientErrorKind::ClientNotPresent)),
+            Ok(Ok(())) => Ok(()),
         }
     }
 

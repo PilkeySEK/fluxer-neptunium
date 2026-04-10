@@ -158,3 +158,9 @@ impl From<reqwest::Error> for Error {
         }
     }
 }
+
+impl From<Box<Error>> for Error {
+    fn from(value: Box<Error>) -> Self {
+        *value
+    }
+}

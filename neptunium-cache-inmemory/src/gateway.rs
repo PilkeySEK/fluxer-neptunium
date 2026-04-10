@@ -280,5 +280,6 @@ pub enum CachedDispatchEvent {
     CallDelete(CallDelete),
     PassiveUpdates(neptunium_model::gateway::payload::incoming::PassiveUpdates),
     // TODO: Cache this when guild members are cached
+    /// Sent in response to `RequestGuildMembers`.
     GuildMembersChunk(GuildMembersChunk),
 }

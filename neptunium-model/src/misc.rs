@@ -41,3 +41,22 @@ pub enum StringOrBool {
     String(String),
     Bool(bool),
 }
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(untagged)]
+pub enum ListOrSingleValue<T> {
+    One(T),
+    Multiple(Vec<T>),
+}
+
+impl<T> From<T> for ListOrSingleValue<T> {
+    fn from(value: T) -> Self {
+        Self::One(value)
+    }
+}
+
+impl<T> From<Vec<T>> for ListOrSingleValue<T> {
+    fn from(value: Vec<T>) -> Self {
+        Self::Multiple(value)
+    }
+}

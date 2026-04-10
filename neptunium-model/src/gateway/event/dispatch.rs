@@ -105,6 +105,7 @@ pub enum DispatchEvent {
     // Source: https://github.com/fluxerapp/fluxer/blob/refactor/fluxer_app/src/stores/gateway/handlers/guild/PassiveUpdates.tsx#L39
     PassiveUpdates(crate::gateway::payload::incoming::PassiveUpdates),
     // Source: https://github.com/fluxerapp/fluxer/blob/ee1f27fe1a372b5291aead8042944afd706bf5db/fluxer_app/src/stores/gateway/handlers/guild/GuildMembersChunk.tsx#L45
+    /// Sent in response to `RequestGuildMembers`.
     GuildMembersChunk(GuildMembersChunk),
 }
 
