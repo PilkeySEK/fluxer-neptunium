@@ -4,7 +4,6 @@ use arc_swap::ArcSwap;
 use atomic_once_cell::AtomicOnceCell;
 use bon::Builder;
 use mini_moka::sync::Cache as MokaCache;
-use neptunium_http::endpoints::users::UserProfileFullResponse;
 use neptunium_model::{
     gateway::payload::incoming::UserPrivateResponse,
     guild::{Guild, member::GuildMemberProfile, permissions::GuildRole},
@@ -57,13 +56,14 @@ impl<T> Cached<T> {
 
     /// Modify the value "in-place". This does not actually modify the value in-place, but rather create
     /// a clone of the value which it passes to the specified `modify_fn`, then store it.
-    pub fn modify(&self, modify_fn: impl FnOnce(&mut T))
+    pub fn modify<R>(&self, modify_fn: impl FnOnce(&mut T) -> R) -> R
     where
         T: Clone,
     {
         let mut value = self.clone_inner();
-        modify_fn(&mut value);
+        let result = modify_fn(&mut value);
         self.store(Arc::new(value));
+        result
     }
 
     /// Only stores the modified value if `modify_fn` returns `Ok(())`.
@@ -117,12 +117,12 @@ impl<T> Clone for Cached<T> {
 #[expect(clippy::type_complexity)]
 pub struct Cache {
     pub users: MokaCache<Id<UserMarker>, Cached<PartialUser>>,
-    pub guild_members: MokaCache<Id<GuildMarker>, Vec<Cached<CachedGuildMember>>>,
+    pub guild_members: MokaCache<Id<GuildMarker>, Cached<Vec<Cached<CachedGuildMember>>>>,
     pub user_profile_data: MokaCache<Id<UserMarker>, Cached<UserProfileData>>,
     pub guild_member_profiles:
         MokaCache<(Id<UserMarker>, Id<GuildMarker>), Cached<GuildMemberProfile>>,
     pub user_profiles:
-        MokaCache<(Id<UserMarker>, Option<Id<GuildMarker>>), Cached<UserProfileFullResponse>>,
+        MokaCache<(Id<UserMarker>, Option<Id<GuildMarker>>), Cached<CachedUserProfileFullResponse>>,
     pub channels: MokaCache<Id<ChannelMarker>, Cached<CachedChannel>>,
     pub messages: MokaCache<Id<MessageMarker>, Cached<CachedMessage>>,
     pub current_user: AtomicOnceCell<Cached<UserPrivateResponse>>,

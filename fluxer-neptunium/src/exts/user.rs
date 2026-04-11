@@ -1,9 +1,7 @@
 use crate::{client::error::Error, events::context::Context, internal::traits::user::UserTrait};
 use async_trait::async_trait;
-use neptunium_cache_inmemory::{CachableEndpoint, Cached};
-use neptunium_http::endpoints::users::{
-    GetUserById, GetUserProfile, GetUserProfileParams, UserProfileFullResponse,
-};
+use neptunium_cache_inmemory::{CachableEndpoint, Cached, CachedUserProfileFullResponse};
+use neptunium_http::endpoints::users::{GetUserById, GetUserProfile, GetUserProfileParams};
 use neptunium_model::user::PartialUser;
 #[cfg(feature = "user_api")]
 use neptunium_model::user::relationship::Relationship;
@@ -35,7 +33,7 @@ pub trait UserExt {
         &self,
         ctx: &Context,
         params: GetUserProfileParams,
-    ) -> Result<Cached<UserProfileFullResponse>, Error>;
+    ) -> Result<Cached<CachedUserProfileFullResponse>, Error>;
     async fn get_user(&self, ctx: &Context) -> Result<Cached<PartialUser>, Error>;
 }
 
@@ -115,7 +113,7 @@ impl<T: UserTrait> UserExt for T {
         &self,
         ctx: &Context,
         params: GetUserProfileParams,
-    ) -> Result<Cached<UserProfileFullResponse>, Error> {
+    ) -> Result<Cached<CachedUserProfileFullResponse>, Error> {
         Ok(GetUserProfile {
             user_id: self.get_user_id(),
             params,

@@ -31,7 +31,7 @@ use neptunium_http::{
         },
         guild::{
             CreateGuildChannel, CreateGuildRole, DeleteGuildRole, GetGuildInformation, LeaveGuild,
-            ListGuildChannels, ListGuildRoles, ToggleDetachedBanner,
+            ListGuildChannels, ListGuildMembers, ListGuildRoles, ToggleDetachedBanner,
             ToggleGuildTextChannelFlexibleNames, UpdateGuildRole, UpdateGuildRoleHoistPositions,
             UpdateGuildRoleHoistPositionsEntry, UpdateGuildRolePositions,
             UpdateGuildRolePositionsEntry, UpdateGuildVanityUrl, UpdateGuildVanityUrlResponse,
@@ -50,8 +50,8 @@ use neptunium_model::{
 };
 
 use crate::{
-    CachableEndpoint, Cache, Cached, CachedChannel, CachedMessage,
-    gateway::cached_payload::cache_vec, traits::CacheValue,
+    CachableEndpoint, Cache, Cached, CachedChannel, CachedGuildMember, CachedMessage,
+    CachedUserProfileFullResponse, gateway::cached_payload::cache_vec, traits::CacheValue,
 };
 
 #[async_trait]
@@ -75,7 +75,7 @@ impl CachableEndpoint for GetUserById {
 
 #[async_trait]
 impl CachableEndpoint for GetUserProfile {
-    type Response = Cached<<Self as Endpoint>::Response>;
+    type Response = Cached<CachedUserProfileFullResponse>;
     async fn execute_cached(
         self,
         client: &Arc<HttpClient>,
@@ -99,28 +99,31 @@ impl CachableEndpoint for GetUserProfile {
             return Ok(cached_profile.unwrap());
         }
 
-        let mut res = client.execute(self).await?;
+        let guild_id = self.params.guild_id;
+        let res = client.execute(self).await?;
+        let mut cached_res =
+            CachedUserProfileFullResponse::from_user_profile_full_response(res, guild_id, cache);
         if let Some(cached_profile) = cached_profile {
             {
                 let profile = cached_profile.load();
-                if res.mutual_friends.is_none()
+                if cached_res.mutual_friends.is_none()
                     && let Some(mutual_friends) = &profile.mutual_friends
                 {
                     let mutual_friends = mutual_friends.clone();
-                    res.mutual_friends = Some(mutual_friends);
+                    cached_res.mutual_friends = Some(mutual_friends);
                 }
-                if res.mutual_guilds.is_none()
+                if cached_res.mutual_guilds.is_none()
                     && let Some(mutual_guilds) = &profile.mutual_guilds
                 {
                     let mutual_guilds = mutual_guilds.clone();
-                    res.mutual_guilds = Some(mutual_guilds);
+                    cached_res.mutual_guilds = Some(mutual_guilds);
                 }
             }
-            Ok(cached_profile.store_and_return(res))
+            Ok(cached_profile.store_and_return(cached_res))
         } else {
-            let id = res.user.id;
+            let id = cached_res.user.load().id;
             let guild_id = self.params.guild_id;
-            let cached = Cached::new(res);
+            let cached = Cached::new(cached_res);
             cache.user_profiles.insert((id, guild_id), cached.clone());
             Ok(cached)
         }
@@ -834,5 +837,28 @@ impl CachableEndpoint for DeleteMessageAttachment {
             });
         }
         Ok(())
+    }
+}
+
+#[async_trait]
+impl CachableEndpoint for ListGuildMembers {
+    type Response = Vec<Cached<CachedGuildMember>>;
+    async fn execute_cached(
+        self,
+        client: &Arc<HttpClient>,
+        cache: &Arc<Cache>,
+    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+        let guild_id = self.guild_id;
+        let res = client.execute(self).await?;
+        let res = res
+            .into_iter()
+            .map(|member| {
+                (
+                    guild_id,
+                    CachedGuildMember::from_guild_member(member, cache),
+                )
+            })
+            .collect::<Vec<_>>();
+        Ok(cache_vec!(res, cache))
     }
 }

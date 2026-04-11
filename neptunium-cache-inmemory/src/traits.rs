@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::{Cache, Cached, CachedChannel, CachedMessage};
+use crate::{Cache, Cached, CachedChannel, CachedGuildMember, CachedMessage};
 use async_trait::async_trait;
 use neptunium_http::{
     client::HttpClient,
@@ -8,15 +8,19 @@ use neptunium_http::{
 };
 use neptunium_model::{
     gateway::payload::incoming::UserPrivateResponse,
-    guild::{Guild, permissions::GuildRole},
+    guild::{Guild, member::GuildMemberProfile, permissions::GuildRole},
+    id::{
+        Id,
+        marker::{GuildMarker, UserMarker},
+    },
     invites::{GroupDmInvite, GuildInvite, InviteWithMetadata, PackInvite},
-    user::PartialUser,
+    user::{PartialUser, UserProfileData},
 };
 
 pub mod cachable_endpoints;
 
-pub(crate) trait CacheValue: Sized {
-    fn insert_and_return(self, cache: &Arc<Cache>) -> Cached<Self>;
+pub(crate) trait CacheValue<Result = Self>: Sized {
+    fn insert_and_return(self, cache: &Arc<Cache>) -> Cached<Result>;
 }
 
 #[async_trait]
@@ -129,5 +133,56 @@ impl CacheValue for GuildRole {
         let cached = Cached::new(self);
         cache.roles.insert(role_id, cached.clone());
         cached
+    }
+}
+
+impl CacheValue<UserProfileData> for (Id<UserMarker>, UserProfileData) {
+    fn insert_and_return(self, cache: &Arc<Cache>) -> Cached<UserProfileData> {
+        let cached = Cached::new(self.1);
+        cache.user_profile_data.insert(self.0, cached.clone());
+        cached
+    }
+}
+
+impl CacheValue<CachedGuildMember> for (Id<GuildMarker>, CachedGuildMember) {
+    fn insert_and_return(self, cache: &Arc<Cache>) -> Cached<CachedGuildMember> {
+        let cached_member = self.1;
+        if let Some(existing_members) = cache.guild_members.get(&self.0) {
+            existing_members.modify(|members| {
+                let cached_member_id = cached_member.user.load().id;
+                if let Some(existing_member) = members
+                    .iter()
+                    .find(|member| member.load().user.load().id == cached_member_id)
+                {
+                    let arc_member = Arc::new(cached_member);
+                    existing_member.store(Arc::clone(&arc_member));
+                    existing_member.clone()
+                } else {
+                    let cached = Cached::new(cached_member);
+                    members.push(cached.clone());
+                    cached
+                }
+            })
+        } else {
+            let cached = Cached::new(cached_member);
+            cache
+                .guild_members
+                .insert(self.0, Cached::new(vec![cached.clone()]));
+            cached
+        }
+    }
+}
+
+impl CacheValue<GuildMemberProfile> for (Id<UserMarker>, Id<GuildMarker>, GuildMemberProfile) {
+    fn insert_and_return(self, cache: &Arc<Cache>) -> Cached<GuildMemberProfile> {
+        if let Some(existing_profile) = cache.guild_member_profiles.get(&(self.0, self.1)) {
+            existing_profile.store_and_return(self.2)
+        } else {
+            let cached = Cached::new(self.2);
+            cache
+                .guild_member_profiles
+                .insert((self.0, self.1), cached.clone());
+            cached
+        }
     }
 }

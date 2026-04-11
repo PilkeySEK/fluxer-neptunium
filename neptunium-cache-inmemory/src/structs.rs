@@ -1,7 +1,7 @@
 use std::{collections::HashMap, sync::Arc};
 
 use atomic_once_cell::AtomicOnceCell;
-use neptunium_http::endpoints::users::MutualGuild;
+use neptunium_http::endpoints::users::{MutualGuild, UserProfileFullResponse};
 use neptunium_model::{
     channel::{
         Channel, ChannelType, PermissionOverwrite, VoiceRegion,
@@ -457,13 +457,57 @@ impl From<CachedGuildMember> for GuildMember {
 pub struct CachedUserProfileFullResponse {
     pub user: Cached<PartialUser>,
     pub user_profile: Cached<UserProfileData>,
-    pub guild_member: Option<Cached<GuildMember>>,
+    pub guild_member: Option<Cached<CachedGuildMember>>,
     pub guild_member_profile: Option<Cached<GuildMemberProfile>>,
     pub premium_type: Option<UserPremiumType>,
     pub premium_since: Option<Timestamp<Iso8601>>,
     /// Visionary ID.
     pub premium_lifetime_seqence: Option<u32>,
-    pub mutual_friends: Option<Vec<PartialUser>>,
+    pub mutual_friends: Option<Vec<Cached<PartialUser>>>,
     pub mutual_guilds: Option<Vec<MutualGuild>>,
     pub connected_accounts: Option<Vec<UserExternalAccountConnection>>,
+}
+
+impl CachedUserProfileFullResponse {
+    pub fn from_user_profile_full_response(
+        value: UserProfileFullResponse,
+        guild_id: Option<Id<GuildMarker>>,
+        cache: &Arc<Cache>,
+    ) -> Self {
+        let user_id = value.user.id;
+        let user = value.user.insert_and_return(cache);
+        let user_profile = (user_id, value.user_profile).insert_and_return(cache);
+        let guild_member = if let Some(guild_id) = guild_id {
+            value.guild_member.map(|member| {
+                (
+                    guild_id,
+                    CachedGuildMember::from_guild_member(member, cache),
+                )
+                    .insert_and_return(cache)
+            })
+        } else {
+            None
+        };
+        let guild_member_profile = if let Some(guild_id) = guild_id {
+            value
+                .guild_member_profile
+                .map(|profile| (user_id, guild_id, profile).insert_and_return(cache))
+        } else {
+            None
+        };
+        let mutual_friends = cache_option_vec!(value.mutual_friends, cache);
+
+        Self {
+            user,
+            user_profile,
+            guild_member,
+            guild_member_profile,
+            premium_type: value.premium_type,
+            premium_since: value.premium_since,
+            premium_lifetime_seqence: value.premium_lifetime_seqence,
+            mutual_friends,
+            mutual_guilds: value.mutual_guilds,
+            connected_accounts: value.connected_accounts,
+        }
+    }
 }
