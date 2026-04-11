@@ -9,12 +9,18 @@ use neptunium_model::{
             MessageSnapshot, MessageSticker, MessageType, attachment::MessageAttachment,
             embed::MessageEmbed, nonce::Nonce,
         },
-    }, gateway::payload::incoming::UserPremiumType, guild::member::{GuildMember, GuildMemberProfile, GuildMemberProfileFlags}, id::{
+    },
+    gateway::payload::incoming::UserPremiumType,
+    guild::member::{GuildMember, GuildMemberProfile, GuildMemberProfileFlags},
+    id::{
         Id,
         marker::{
             ChannelMarker, GuildMarker, MessageMarker, RoleMarker, UserMarker, WebhookMarker,
         },
-    }, misc::{HexColor32, ImageHash}, time::timestamp::{Timestamp, representations::Iso8601}, user::{PartialUser, UserExternalAccountConnection, UserProfileData}
+    },
+    misc::{HexColor32, ImageHash},
+    time::timestamp::{Timestamp, representations::Iso8601},
+    user::{PartialUser, UserExternalAccountConnection, UserProfileData},
 };
 
 use crate::{Cache, CacheValue, Cached, gateway::cached_payload::cache_option_vec};

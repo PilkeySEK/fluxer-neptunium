@@ -7,7 +7,7 @@ use mini_moka::sync::Cache as MokaCache;
 use neptunium_http::endpoints::users::UserProfileFullResponse;
 use neptunium_model::{
     gateway::payload::incoming::UserPrivateResponse,
-    guild::{Guild, member::{GuildMember, GuildMemberProfile}, permissions::GuildRole},
+    guild::{Guild, member::GuildMemberProfile, permissions::GuildRole},
     id::{
         Id,
         marker::{ChannelMarker, GuildMarker, MessageMarker, RoleMarker, UserMarker},
@@ -119,7 +119,8 @@ pub struct Cache {
     pub users: MokaCache<Id<UserMarker>, Cached<PartialUser>>,
     pub guild_members: MokaCache<Id<GuildMarker>, Vec<Cached<CachedGuildMember>>>,
     pub user_profile_data: MokaCache<Id<UserMarker>, Cached<UserProfileData>>,
-    pub guild_member_profiles: MokaCache<(Id<UserMarker>, Id<GuildMarker>), Cached<GuildMemberProfile>>,
+    pub guild_member_profiles:
+        MokaCache<(Id<UserMarker>, Id<GuildMarker>), Cached<GuildMemberProfile>>,
     pub user_profiles:
         MokaCache<(Id<UserMarker>, Option<Id<GuildMarker>>), Cached<UserProfileFullResponse>>,
     pub channels: MokaCache<Id<ChannelMarker>, Cached<CachedChannel>>,
@@ -148,6 +149,12 @@ pub struct CacheConfig {
     pub guilds: u64,
     #[builder(default = u64::MAX)]
     pub roles: u64,
+    #[builder(default = u64::MAX)]
+    pub guild_members: u64,
+    #[builder(default = 8192)]
+    pub user_profile_data: u64,
+    #[builder(default = 8192)]
+    pub guild_member_profiles: u64,
 }
 
 impl Default for CacheConfig {
@@ -169,6 +176,9 @@ impl Cache {
             invites: MokaCache::new(config.invites),
             guilds: MokaCache::new(config.guilds),
             roles: MokaCache::new(config.roles),
+            guild_member_profiles: MokaCache::new(config.guild_member_profiles),
+            guild_members: MokaCache::new(config.guild_members),
+            user_profile_data: MokaCache::new(config.user_profile_data),
         }
     }
 

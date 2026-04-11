@@ -1,9 +1,11 @@
 use serde::{Deserialize, Serialize};
-use time::OffsetDateTime;
+use time::UtcDateTime;
 
 use crate::time::timestamp::representations::TimestampRepr;
 
+mod atomic;
 pub mod representations;
+pub use atomic::*;
 
 /// Represents a timestamp. The representation represents the behavior of this type when being serialized or deserialized.
 #[derive(Copy, Debug, Clone)]
@@ -24,8 +26,8 @@ impl<Repr: TimestampRepr> Timestamp<Repr> {
     }
 }
 
-impl<Repr: TimestampRepr + From<OffsetDateTime>> From<OffsetDateTime> for Timestamp<Repr> {
-    fn from(value: OffsetDateTime) -> Self {
+impl<Repr: TimestampRepr> From<UtcDateTime> for Timestamp<Repr> {
+    fn from(value: UtcDateTime) -> Self {
         Self {
             value: Repr::from(value),
         }
@@ -41,7 +43,7 @@ impl<Repr: TimestampRepr + TryFrom<i64>> TryFrom<i64> for Timestamp<Repr> {
     }
 }
 
-impl<Repr: TimestampRepr> From<Timestamp<Repr>> for OffsetDateTime {
+impl<Repr: TimestampRepr> From<Timestamp<Repr>> for UtcDateTime {
     fn from(value: Timestamp<Repr>) -> Self {
         value.value.into()
     }

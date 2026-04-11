@@ -8,7 +8,7 @@ use neptunium_model::{
         marker::{ChannelMarker, GenericMarker},
     },
     time::{
-        OffsetDateTime,
+        UtcDateTime,
         timestamp::{Timestamp, representations::UnixMillis},
     },
 };
@@ -42,19 +42,19 @@ impl Endpoint for ListChannelMessages {
         if let Some(before) = self.params.before {
             params.insert(
                 String::from("before"),
-                Id::<GenericMarker>::from(OffsetDateTime::from(before)).to_string(),
+                Id::<GenericMarker>::from(UtcDateTime::from(before)).to_string(),
             );
         }
         if let Some(after) = self.params.after {
             params.insert(
                 String::from("after"),
-                Id::<GenericMarker>::from(OffsetDateTime::from(after)).to_string(),
+                Id::<GenericMarker>::from(UtcDateTime::from(after)).to_string(),
             );
         }
         if let Some(around) = self.params.around {
             params.insert(
                 String::from("around"),
-                Id::<GenericMarker>::from(OffsetDateTime::from(around)).to_string(),
+                Id::<GenericMarker>::from(UtcDateTime::from(around)).to_string(),
             );
         }
 

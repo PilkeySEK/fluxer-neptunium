@@ -1,4 +1,4 @@
 pub mod duration;
 pub mod timestamp;
 
-pub use time::OffsetDateTime;
+pub use time::{OffsetDateTime, UtcDateTime};

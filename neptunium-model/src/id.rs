@@ -4,7 +4,7 @@ use serde::{
     Deserialize, Serialize,
     de::{Unexpected, Visitor},
 };
-use time::OffsetDateTime;
+use time::{OffsetDateTime, UtcDateTime};
 
 use crate::id::marker::IdMarker;
 
@@ -146,6 +146,18 @@ impl<'de, T: IdMarker> Deserialize<'de> for Id<T> {
 
 impl<T: IdMarker> From<OffsetDateTime> for Id<T> {
     fn from(value: OffsetDateTime) -> Self {
+        let millis = (value.unix_timestamp() * 1000) + i64::from(value.millisecond());
+        let millis = millis - Self::FLUXER_EPOCH;
+        Self {
+            // We assume that the millis will not be negative and won't be too large to fit in the snowflake.
+            value: millis.cast_unsigned() << 22,
+            _marker: PhantomData,
+        }
+    }
+}
+
+impl<T: IdMarker> From<UtcDateTime> for Id<T> {
+    fn from(value: UtcDateTime) -> Self {
         let millis = (value.unix_timestamp() * 1000) + i64::from(value.millisecond());
         let millis = millis - Self::FLUXER_EPOCH;
         Self {
