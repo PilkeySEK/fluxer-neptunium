@@ -19,9 +19,12 @@ use neptunium_model::gateway::{
         },
     },
 };
-use tokio::sync::{
-    mpsc::{UnboundedReceiver, UnboundedSender, error::SendError, unbounded_channel},
-    oneshot,
+use tokio::{
+    sync::{
+        mpsc::{UnboundedReceiver, UnboundedSender, error::SendError, unbounded_channel},
+        oneshot,
+    },
+    time::timeout,
 };
 use zeroize::Zeroizing;
 
@@ -58,7 +61,6 @@ pub(crate) enum ClientMessage {
 #[derive(Clone, Debug)]
 struct ResumeInfo {
     session_id: Zeroizing<String>,
-    heartbeat_interval: Duration,
     // Doesn't appear to be a thing
     // resume_url: String,
 }
@@ -79,6 +81,7 @@ pub struct Client {
     expecting_heartbeat_ack: bool,
     expecting_heartbeat_ack_second_chance: bool,
     currently_resuming: bool,
+    connection_process_timeout: Duration,
 }
 
 impl Deref for Client {
@@ -152,6 +155,7 @@ impl Client {
             expecting_heartbeat_ack: false,
             expecting_heartbeat_ack_second_chance: false,
             currently_resuming: false,
+            connection_process_timeout: client_config.connection_process_timeout,
         }
     }
 
@@ -186,6 +190,9 @@ impl Client {
             self.expecting_heartbeat_ack_second_chance = false;
             let was_currently_resuming = self.currently_resuming;
             self.currently_resuming = false;
+            if let Err(e) = self.shard.close().await {
+                tracing::warn!("Error closing shard connection: {e}");
+            }
             let error = match result {
                 Ok(()) => {
                     tracing::debug!("Restarting client.");
@@ -214,16 +221,10 @@ impl Client {
                     "Reconnecting in {} seconds because auto-reconnect is enabled.",
                     self.auto_reconnect_wait_time.as_secs()
                 );
-                if let Err(e) = self.shard.close().await {
-                    tracing::warn!("Error closing shard connection: {e}");
-                }
                 tokio::time::sleep(self.auto_reconnect_wait_time).await;
                 continue;
             }
             tracing::debug!("Client error occured and auto-reconnect is disabled. Returning.");
-            if let Err(e) = self.shard.close().await {
-                tracing::warn!("Error closing shard connection: {e}");
-            }
             break Err(error);
         }
     }
@@ -231,51 +232,25 @@ impl Client {
     #[expect(clippy::too_many_lines)]
     async fn inner_start(&mut self) -> Result<(), self::error::Error> {
         tracing::debug!("Starting client...");
-        let heartbeat_interval = if let Some(resume_info) = self.resume_info.clone() {
-            let heartbeat_interval = resume_info.heartbeat_interval;
-            self.resume(resume_info).await?;
-
-            tokio::spawn(Self::heartbeat_task(self.tx.clone(), heartbeat_interval));
-            heartbeat_interval
-        } else {
-            tracing::debug!(
-                "Starting new session instead of resuming because no resume info is present."
-            );
-            let hello_event = match self.shard.next_event().await? {
-                GatewayEvent::Hello(event) => event,
-                event => {
-                    return Err(Error::new(error::ClientErrorKind::UnexpectedEventReceived(
-                        Box::new(event),
+        let heartbeat_interval =
+            // Box::pin to prevent large future on the stack
+            match Box::pin(timeout(self.connection_process_timeout, self.connect())).await {
+                Ok(Ok(Ok(heartbeat_interval))) => heartbeat_interval,
+                Ok(Ok(Err(()))) => {
+                    tracing::debug!("Connection process triggered reconnect.");
+                    return Ok(());
+                }
+                Ok(Err(e)) => {
+                    tracing::debug!("Error in connection process.");
+                    return Err(e);
+                }
+                Err(_) => {
+                    tracing::debug!("Connection process timed out.");
+                    return Err(Error::new(ClientErrorKind::TimedOut(
+                        "connecting to gateway".to_owned(),
                     )));
                 }
             };
-
-            let heartbeat_interval: Duration = hello_event.heartbeat_interval.into();
-
-            tracing::debug!(
-                "Received Hello message from gateway. Heartbeat interval: {} ms",
-                heartbeat_interval.as_millis()
-            );
-
-            let tx_clone = self.tx.clone();
-            tokio::spawn(async move {
-                #[expect(clippy::cast_possible_truncation)]
-                let millis = rand::random_range(0..heartbeat_interval.as_millis() as u64);
-                tokio::time::sleep(Duration::from_millis(millis)).await;
-                let _ = tx_clone.send(ClientMessage::ScheduledHeartbeat);
-            });
-
-            tokio::spawn(Self::heartbeat_task(self.tx.clone(), heartbeat_interval));
-
-            self.shard
-                .identify(ConnectionProperties {
-                    os: String::from(std::env::consts::OS),
-                    browser: String::from("fluxer-neptunium"),
-                    device: String::from("fluxer-neptunium"),
-                })
-                .await?;
-            heartbeat_interval
-        };
 
         loop {
             tokio::select! {
@@ -363,12 +338,102 @@ impl Client {
                         }
                     };
                     tracing::trace!("Received message: {message:?}");
-                    if self.handle_event(message, heartbeat_interval).await.map_err(|e| *e)?.is_break() {
+                    if self.handle_event(message).await.map_err(|e| *e)?.is_break() {
                         return Ok(());
                     }
                 }
             }
         }
+    }
+
+    /// Returns `Ok(Ok(...))` if connecting was successful, `Ok(Err(()))` if the client should restart,
+    /// and `Err(...)` if an error occurred.
+    async fn connect(&mut self) -> Result<Result<Duration, ()>, Error> {
+        Ok(Ok(if let Some(resume_info) = self.resume_info.clone() {
+            tracing::debug!("Waiting for `Hello` event from gateway.");
+            let hello_event = match self.shard.next_event().await? {
+                GatewayEvent::Hello(event) => event,
+                event => {
+                    return Err(Error::new(error::ClientErrorKind::UnexpectedEventReceived(
+                        Box::new(event),
+                    )));
+                }
+            };
+            let mut heartbeat_interval: Duration = hello_event.heartbeat_interval.into();
+            tracing::debug!(
+                "Received Hello message from gateway. Heartbeat interval: {} ms. Now resuming.",
+                heartbeat_interval.as_millis()
+            );
+            self.resume(resume_info).await?;
+
+            tracing::debug!("Waiting for second `Hello` event from gateway.");
+            let hello_event = if let Ok(event) =
+                timeout(Duration::from_secs(5), self.shard.next_event()).await
+            {
+                match event? {
+                    GatewayEvent::Hello(event) => Some(event),
+                    other => {
+                        if self.handle_event(other).await?.is_break() {
+                            tracing::debug!(
+                                "Handling other event while resuming triggered a restart. Clearing resume info."
+                            );
+                            self.resume_info = None;
+                            return Ok(Err(()));
+                        }
+                        None
+                    }
+                }
+            } else {
+                tracing::debug!("Timed out waiting for another `Hello` from the gateway.");
+                None
+            };
+
+            if let Some(hello_event) = hello_event {
+                tracing::debug!("Received second `Hello` event from gateway.");
+                heartbeat_interval = hello_event.heartbeat_interval.into();
+            }
+
+            tokio::spawn(Self::heartbeat_task(self.tx.clone(), heartbeat_interval));
+            heartbeat_interval
+        } else {
+            tracing::debug!(
+                "Starting new session instead of resuming because no resume info is present."
+            );
+            let hello_event = match self.shard.next_event().await? {
+                GatewayEvent::Hello(event) => event,
+                event => {
+                    return Err(Error::new(error::ClientErrorKind::UnexpectedEventReceived(
+                        Box::new(event),
+                    )));
+                }
+            };
+
+            let heartbeat_interval: Duration = hello_event.heartbeat_interval.into();
+
+            tracing::debug!(
+                "Received Hello message from gateway. Heartbeat interval: {} ms",
+                heartbeat_interval.as_millis()
+            );
+
+            let tx_clone = self.tx.clone();
+            tokio::spawn(async move {
+                #[expect(clippy::cast_possible_truncation)]
+                let millis = rand::random_range(0..heartbeat_interval.as_millis() as u64);
+                tokio::time::sleep(Duration::from_millis(millis)).await;
+                let _ = tx_clone.send(ClientMessage::ScheduledHeartbeat);
+            });
+
+            tokio::spawn(Self::heartbeat_task(self.tx.clone(), heartbeat_interval));
+
+            self.shard
+                .identify(ConnectionProperties {
+                    os: String::from(std::env::consts::OS),
+                    browser: String::from("fluxer-neptunium"),
+                    device: String::from("fluxer-neptunium"),
+                })
+                .await?;
+            heartbeat_interval
+        }))
     }
 
     async fn heartbeat_task(tx: UnboundedSender<ClientMessage>, heartbeat_interval: Duration) {
@@ -389,7 +454,6 @@ impl Client {
     async fn handle_event(
         &mut self,
         event: GatewayEvent,
-        heartbeat_interval: Duration,
     ) -> Result<ControlFlow<()>, Box<self::error::Error>> {
         match event {
             GatewayEvent::Heartbeat => {
@@ -434,7 +498,7 @@ impl Client {
             GatewayEvent::Dispatch(payload) => {
                 // TODO: Maybe check if the current sequence number is bigger than the received one because that shouldn't happen? Or something...
                 self.last_sequence_number = Some(payload.sequence_number);
-                self.handle_dispatch_event(payload.event, heartbeat_interval);
+                self.handle_dispatch_event(payload.event);
                 return Ok(ControlFlow::Continue(()));
             }
             GatewayEvent::GatewayError(payload) => {
@@ -458,7 +522,7 @@ impl Client {
     }
 
     #[expect(clippy::too_many_lines)]
-    fn handle_dispatch_event(&mut self, event: DispatchEvent, heartbeat_interval: Duration) {
+    fn handle_dispatch_event(&mut self, event: DispatchEvent) {
         tracing::trace!("Dispatch Event: {event:?}");
         macro_rules! call_event_handlers {
             ($always_propagate_event_errors:expr, $tx:expr, $handlers:expr, $ctx:expr, $data:expr => $func_name:ident) => {{
@@ -513,7 +577,6 @@ impl Client {
             CachedDispatchEvent::Ready(data) => {
                 self.resume_info = Some(ResumeInfo {
                     session_id: data.session_id.clone(),
-                    heartbeat_interval,
                 });
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_ready);
             }

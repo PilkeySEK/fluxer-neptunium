@@ -19,6 +19,8 @@ pub struct ClientConfig {
     pub auto_reconnect_wait_time: Duration,
     #[builder(default = CacheConfig::default())]
     pub cache_config: CacheConfig,
+    #[builder(default = Duration::from_secs(60))]
+    pub connection_process_timeout: Duration,
 }
 
 impl Default for ClientConfig {
@@ -31,6 +33,7 @@ impl Default for ClientConfig {
             auto_reconnect: true,
             auto_reconnect_wait_time: Duration::from_secs(30),
             cache_config: CacheConfig::default(),
+            connection_process_timeout: Duration::from_secs(60),
         }
     }
 }
