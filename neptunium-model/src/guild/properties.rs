@@ -9,6 +9,7 @@ use crate::{
         Id,
         marker::{EmojiMarker, StickerMarker},
     },
+    serde_bitflags,
     user::PartialUser,
 };
 
@@ -117,29 +118,8 @@ bitflags! {
     }
 }
 
-impl Serialize for GuildOperations {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        self.bits() /*.to_string()*/
-            .serialize(serializer)
-    }
-}
-
-impl<'de> Deserialize<'de> for GuildOperations {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        Ok(Self::from_bits_truncate(
-            /*String::deserialize(deserializer)?
-            .parse()
-            .map_err(serde::de::Error::custom)?*/
-            u32::deserialize(deserializer)?,
-        ))
-    }
-}
+serde_bitflags! {GuildOperations, u32}
+/* serde_bitflags! {GuildOperations, String} */
 
 bitflags! {
     #[derive(Copy, Clone, Debug)]
@@ -148,23 +128,7 @@ bitflags! {
     }
 }
 
-impl Serialize for SystemChannelFlags {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        self.bits().serialize(serializer)
-    }
-}
-
-impl<'de> Deserialize<'de> for SystemChannelFlags {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        Ok(Self::from_bits_truncate(u32::deserialize(deserializer)?))
-    }
-}
+serde_bitflags! {SystemChannelFlags, u32}
 
 /// A guild feature flag.
 #[derive(Deserialize, Serialize, Clone, Debug)]

@@ -1,12 +1,10 @@
 use bitflags::bitflags;
-use serde::{
-    Deserialize, Serialize,
-    de::{self, Unexpected},
-};
+use serde::{Deserialize, Serialize};
 
 use crate::{
     id::{Id, marker::RoleMarker},
     misc::{HexColor32, ImageHash},
+    serde_bitflags,
 };
 
 bitflags! {
@@ -88,27 +86,7 @@ bitflags! {
     }
 }
 
-impl<'de> Deserialize<'de> for Permissions {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        let string = String::deserialize(deserializer)?;
-        let number = string.parse::<u64>().map_err(|_| {
-            de::Error::invalid_value(Unexpected::Str(&string), &"a permissions bitfield")
-        })?;
-        Ok(Self::from_bits_truncate(number))
-    }
-}
-
-impl Serialize for Permissions {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        serializer.serialize_str(&self.bits().to_string())
-    }
-}
+serde_bitflags! {Permissions, String(u64)}
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct GuildRole {

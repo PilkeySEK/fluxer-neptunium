@@ -1,5 +1,6 @@
 use bitflags::bitflags;
-use serde::{Deserialize, Serialize};
+
+use crate::serde_bitflags;
 
 bitflags! {
     #[derive(Copy, Clone, Debug)]
@@ -13,20 +14,4 @@ bitflags! {
     }
 }
 
-impl Serialize for PublicUserFlags {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        serializer.serialize_u32(self.bits())
-    }
-}
-
-impl<'de> Deserialize<'de> for PublicUserFlags {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        Ok(Self::from_bits_truncate(u32::deserialize(deserializer)?))
-    }
-}
+serde_bitflags! {PublicUserFlags, u32}

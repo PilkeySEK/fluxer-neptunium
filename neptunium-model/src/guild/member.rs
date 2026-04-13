@@ -5,6 +5,7 @@ use serde_repr::{Deserialize_repr, Serialize_repr};
 use crate::{
     id::{Id, marker::RoleMarker},
     misc::{HexColor32, ImageHash},
+    serde_bitflags,
     time::timestamp::{Timestamp, representations::Iso8601},
     user::PartialUser,
 };
@@ -33,23 +34,7 @@ bitflags! {
     }
 }
 
-impl Serialize for GuildMemberProfileFlags {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        self.bits().serialize(serializer)
-    }
-}
-
-impl<'de> Deserialize<'de> for GuildMemberProfileFlags {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        Ok(Self::from_bits_truncate(u32::deserialize(deserializer)?))
-    }
-}
+serde_bitflags! {GuildMemberProfileFlags, u32}
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct GuildMember {

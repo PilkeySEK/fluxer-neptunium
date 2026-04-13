@@ -12,6 +12,7 @@ use crate::{
             ChannelMarker, EmojiMarker, MessageMarker, RoleMarker, StickerMarker, WebhookMarker,
         },
     },
+    serde_bitflags,
     time::timestamp::{Timestamp, representations::Iso8601},
     user::PartialUser,
 };
@@ -58,23 +59,7 @@ impl Default for MessageFlags {
     }
 }
 
-impl Serialize for MessageFlags {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        self.bits().serialize(serializer)
-    }
-}
-
-impl<'de> Deserialize<'de> for MessageFlags {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        Ok(Self::from_bits_truncate(u32::deserialize(deserializer)?))
-    }
-}
+serde_bitflags! {MessageFlags, u32}
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Message {

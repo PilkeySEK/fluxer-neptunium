@@ -1,5 +1,6 @@
 use bitflags::bitflags;
-use serde::{Deserialize, Serialize};
+
+use crate::serde_bitflags;
 
 // TODO: Find out which of these actually exist in Fluxer
 // Source of these bitflags: https://docs.discord.com/developers/events/gateway#gateway-intents
@@ -125,20 +126,6 @@ bitflags! {
     }
 }
 
-impl<'de> Deserialize<'de> for GatewayEventFlags {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        Ok(Self::from_bits_truncate(u64::deserialize(deserializer)?))
-    }
-}
-
-impl Serialize for GatewayEventFlags {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        serializer.serialize_u64(self.bits())
-    }
-}
+// I am not covering this API so IDK, but is this meant to be as a string?
+/* serde_bitflags! {GatewayEventFlags, String(u64)} */
+serde_bitflags! {GatewayEventFlags, u64}

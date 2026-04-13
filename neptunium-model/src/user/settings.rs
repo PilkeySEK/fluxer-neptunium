@@ -11,6 +11,7 @@ use crate::{
         marker::{ChannelMarker, GuildMarker},
     },
     misc::HexColor32,
+    serde_bitflags,
     time::{
         duration::{Duration, representation::Seconds},
         timestamp::{Timestamp, representations::Iso8601},
@@ -143,23 +144,7 @@ bitflags! {
     }
 }
 
-impl Serialize for FriendSourceFlags {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        serializer.serialize_u32(self.bits())
-    }
-}
-
-impl<'de> Deserialize<'de> for FriendSourceFlags {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        Ok(Self::from_bits_truncate(u32::deserialize(deserializer)?))
-    }
-}
+serde_bitflags! {FriendSourceFlags, u32}
 
 bitflags! {
     #[derive(Copy, Clone, Debug, PartialEq, Eq)]
@@ -177,23 +162,7 @@ bitflags! {
     }
 }
 
-impl Serialize for GroupDmAddPermissionFlags {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        serializer.serialize_u32(self.bits())
-    }
-}
-
-impl<'de> Deserialize<'de> for GroupDmAddPermissionFlags {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        Ok(Self::from_bits_truncate(u32::deserialize(deserializer)?))
-    }
-}
+serde_bitflags! {GroupDmAddPermissionFlags, u32}
 
 bitflags! {
     #[derive(Copy, Clone, Debug, PartialEq, Eq)]
@@ -203,23 +172,7 @@ bitflags! {
     }
 }
 
-impl Serialize for GuildFolderFlags {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        serializer.serialize_u32(self.bits())
-    }
-}
-
-impl<'de> Deserialize<'de> for GuildFolderFlags {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        Ok(Self::from_bits_truncate(u32::deserialize(deserializer)?))
-    }
-}
+serde_bitflags! {GuildFolderFlags, u32}
 
 // In the Fluxer source, this is called `GuildFolderIconSchema`.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -269,23 +222,7 @@ bitflags! {
     }
 }
 
-impl Serialize for IncomingCallFlags {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        serializer.serialize_u32(self.bits())
-    }
-}
-
-impl<'de> Deserialize<'de> for IncomingCallFlags {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        Ok(Self::from_bits_truncate(u32::deserialize(deserializer)?))
-    }
-}
+serde_bitflags! {IncomingCallFlags, u32}
 
 /// Spoiler rendering preference.
 #[derive(Serialize_repr, Deserialize_repr, Copy, Clone, Debug, PartialEq, Eq)]
