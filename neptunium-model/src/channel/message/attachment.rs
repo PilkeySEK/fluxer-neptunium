@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     id::{Id, marker::AttachmentMarker},
-    serde_bitflags,
+    misc::serde_bitflags,
     time::{
         duration::{Duration, representation::Seconds},
         timestamp::{Timestamp, representations::Iso8601},

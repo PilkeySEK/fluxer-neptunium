@@ -12,7 +12,7 @@ use crate::{
             ChannelMarker, EmojiMarker, MessageMarker, RoleMarker, StickerMarker, WebhookMarker,
         },
     },
-    serde_bitflags,
+    misc::serde_bitflags,
     time::timestamp::{Timestamp, representations::Iso8601},
     user::PartialUser,
 };

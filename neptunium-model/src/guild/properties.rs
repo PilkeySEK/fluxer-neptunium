@@ -9,7 +9,7 @@ use crate::{
         Id,
         marker::{EmojiMarker, StickerMarker},
     },
-    serde_bitflags,
+    misc::serde_bitflags,
     user::PartialUser,
 };
 

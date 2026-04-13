@@ -11,8 +11,7 @@ use crate::{
         Id,
         marker::{ChannelMarker, GuildMarker},
     },
-    misc::HexColor32,
-    serde_bitflags,
+    misc::{HexColor32, serde_bitflags},
     time::{
         duration::{Duration, representation::Seconds},
         timestamp::{Timestamp, representations::Iso8601},

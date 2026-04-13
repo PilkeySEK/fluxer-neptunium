@@ -1,6 +1,6 @@
 use bitflags::bitflags;
 
-use crate::serde_bitflags;
+use crate::misc::serde_bitflags;
 
 bitflags! {
     #[derive(Copy, Clone, Debug)]

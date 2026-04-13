@@ -3,8 +3,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     id::{Id, marker::RoleMarker},
-    misc::{HexColor32, ImageHash},
-    serde_bitflags,
+    misc::{HexColor32, ImageHash, serde_bitflags},
 };
 
 bitflags! {

@@ -4,8 +4,7 @@ use serde_repr::{Deserialize_repr, Serialize_repr};
 
 use crate::{
     id::{Id, marker::RoleMarker},
-    misc::{HexColor32, ImageHash},
-    serde_bitflags,
+    misc::{HexColor32, ImageHash, serde_bitflags},
     time::timestamp::{Timestamp, representations::Iso8601},
     user::PartialUser,
 };

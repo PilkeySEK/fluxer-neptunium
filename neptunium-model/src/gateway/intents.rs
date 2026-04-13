@@ -1,6 +1,6 @@
 use bitflags::bitflags;
 
-use crate::serde_bitflags;
+use crate::misc::serde_bitflags;
 
 // TODO: Find out which of these actually exist in Fluxer
 // Source of these bitflags: https://docs.discord.com/developers/events/gateway#gateway-intents
