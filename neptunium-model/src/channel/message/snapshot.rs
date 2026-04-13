@@ -16,7 +16,9 @@ use crate::{
 pub struct MessageSnapshot {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub attachments: Option<Vec<MessageAttachment>>,
-    pub content: String,
+    // TODO: Maybe default to "" if no content is present, instead of doing Option<T>.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub content: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub edited_timestamp: Option<Timestamp<Iso8601>>,
     #[serde(skip_serializing_if = "Option::is_none")]
