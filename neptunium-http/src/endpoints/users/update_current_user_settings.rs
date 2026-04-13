@@ -1,5 +1,4 @@
 use bon::Builder;
-use language_tags::LanguageTag;
 use neptunium_model::{
     gateway::presence::{CustomStatus, PresenceStatus},
     id::{Id, marker::GuildMarker},
@@ -9,7 +8,7 @@ use neptunium_model::{
     },
     user::settings::{
         FriendSourceFlags, GroupDmAddPermissionFlags, GuildFoldersItem, IncomingCallFlags,
-        RenderSpoilers, StickerAnimationOptions, TimeFormatTypes, UserSettings,
+        LanguageTag, RenderSpoilers, StickerAnimationOptions, TimeFormatTypes, UserSettings,
     },
 };
 use reqwest::Method;

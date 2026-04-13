@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use bitflags::bitflags;
-use language_tags::LanguageTag;
+pub use language_tags::LanguageTag;
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 
