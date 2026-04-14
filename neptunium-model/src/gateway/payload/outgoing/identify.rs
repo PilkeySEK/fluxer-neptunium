@@ -4,7 +4,9 @@ use serde_repr::{Deserialize_repr, Serialize_repr};
 use zeroize::Zeroizing;
 
 use crate::{
-    gateway::{intents::GatewayEventFlags, shard::ShardInfo},
+    gateway::{
+        intents::GatewayEventFlags, payload::outgoing::PresenceUpdateOutgoing, shard::ShardInfo,
+    },
     id::{
         Id,
         marker::{ApplicationMarker, EmojiMarker},
@@ -183,17 +185,6 @@ pub struct Activity {
     pub buttons: Option<Vec<ActivityButton>>,
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, Builder)]
-pub struct UpdatePresence {
-    /// Time when the client went idle, or `None` if the client is not idle
-    pub since: Option<u64>,
-    // pub activities: Vec<Activity>,
-    #[builder(into)]
-    pub status: String,
-    #[builder(default = false)]
-    pub afk: bool,
-}
-
 // TODO: This has more (optional) fields when logging in as a user
 #[derive(serde::Serialize, Clone, Debug, Builder)]
 pub struct ConnectionProperties {
@@ -222,7 +213,7 @@ pub struct Identify {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub shard: Option<ShardInfo>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub presence: Option<UpdatePresence>,
+    pub presence: Option<PresenceUpdateOutgoing>,
     // TODO: Check whether this is actually `Intents`...
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ignored_events: Option<GatewayEventFlags>,

@@ -15,7 +15,7 @@ use neptunium_model::gateway::{
         incoming::GuildMembersChunk,
         outgoing::{
             ConnectionProperties, Heartbeat, LazyRequest, OutgoingGatewayMessage,
-            PresenceUpdateOutgoing, RequestGuildMembers, UpdatePresence,
+            PresenceUpdateOutgoing, RequestGuildMembers,
         },
     },
 };
@@ -83,7 +83,7 @@ pub struct Client {
     expecting_heartbeat_ack_second_chance: bool,
     currently_resuming: bool,
     connection_process_timeout: Duration,
-    identify_presence: Option<UpdatePresence>,
+    identify_presence: Option<PresenceUpdateOutgoing>,
     send_identify_presence_on_reconnect: bool,
 }
 

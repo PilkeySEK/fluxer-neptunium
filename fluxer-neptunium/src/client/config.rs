@@ -3,7 +3,7 @@ use std::time::Duration;
 use bon::Builder;
 use neptunium_cache_inmemory::CacheConfig;
 use neptunium_http::DEFAULT_API_BASE_URL;
-use neptunium_model::gateway::payload::outgoing::UpdatePresence;
+use neptunium_model::gateway::payload::outgoing::PresenceUpdateOutgoing;
 
 #[derive(Builder, Debug)]
 pub struct ClientConfig {
@@ -22,7 +22,7 @@ pub struct ClientConfig {
     pub cache_config: CacheConfig,
     #[builder(default = Duration::from_secs(60))]
     pub connection_process_timeout: Duration,
-    pub initial_presence: Option<UpdatePresence>,
+    pub initial_presence: Option<PresenceUpdateOutgoing>,
     #[builder(default = true)]
     pub send_initial_presence_on_every_reconnect: bool,
 }

@@ -19,11 +19,16 @@ pub enum Status {
 
 #[derive(Builder, Serialize, Deserialize, Clone, Debug)]
 pub struct PresenceUpdateOutgoing {
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub since: Option<Timestamp<UnixMillis>>,
     // #[builder(default = vec![])]
     // pub activities: Vec<Activity>,
+    #[builder(default = Status::Online)]
     pub status: Status,
-    pub custom_status: CustomStatus,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub custom_status: Option<CustomStatus>,
     #[builder(default = false)]
     pub afk: bool,
+    #[builder(default = false)]
+    pub mobile: bool,
 }

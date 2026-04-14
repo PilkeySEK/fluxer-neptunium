@@ -5,7 +5,7 @@ use futures_util::{
 use neptunium_model::gateway::{
     event::gateway::GatewayEvent,
     payload::outgoing::{
-        ConnectionProperties, Identify, OutgoingGatewayMessage, Resume, UpdatePresence,
+        ConnectionProperties, Identify, OutgoingGatewayMessage, PresenceUpdateOutgoing, Resume,
     },
 };
 use tokio::{net::TcpStream, time::timeout};
@@ -181,7 +181,7 @@ impl Shard {
     pub async fn identify(
         &mut self,
         connection_properties: ConnectionProperties,
-        presence: Option<UpdatePresence>,
+        presence: Option<PresenceUpdateOutgoing>,
     ) -> Result<(), Error> {
         self.send_gateway_message(OutgoingGatewayMessage::Identify(Identify {
             token: self.config.token.clone(),

@@ -1,7 +1,8 @@
 use std::{env, sync::Arc, time::Duration};
 
 use fluxer_neptunium::{
-    cached_payload::CachedMessageCreate, model::gateway::payload::outgoing::UpdatePresence,
+    cached_payload::CachedMessageCreate,
+    model::gateway::{payload::outgoing::PresenceUpdateOutgoing, presence::CustomStatus},
     prelude::*,
 };
 use tracing_subscriber::filter::LevelFilter;
@@ -37,7 +38,11 @@ async fn main() {
             // Convenience when testing reconnecting (e.g. by turning off internet and back on),
             // will make the reconnection process faster
             .auto_reconnect_wait_time(Duration::from_secs(5))
-            .initial_presence(UpdatePresence::builder().status("Fluxin' it").build())
+            .initial_presence(
+                PresenceUpdateOutgoing::builder()
+                    .custom_status(CustomStatus::builder().text("Fluxin' it").build())
+                    .build(),
+            )
             .send_initial_presence_on_every_reconnect(true)
             .build(),
     );
