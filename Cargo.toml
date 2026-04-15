@@ -4,15 +4,15 @@ members = ["neptunium-gateway", "neptunium-http", "neptunium-model", "fluxer-nep
 
 [workspace.package]
 # ! When updating this, update the [workspace.dependencies] too !
-version = "0.5.6"
+version = "0.5.7"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/PilkeySEK/fluxer-neptunium"
 
 [workspace.dependencies]
-neptunium-model = { path = "neptunium-model", version = "0.5.6" }
-neptunium-gateway = { path = "neptunium-gateway", version = "0.5.6" }
-neptunium-http = { path = "neptunium-http", version = "0.5.6" }
-neptunium-cache-inmemory = { path = "neptunium-cache-inmemory", version = "0.5.6" }
+neptunium-model = { path = "neptunium-model", version = "0.5.7" }
+neptunium-gateway = { path = "neptunium-gateway", version = "0.5.7" }
+neptunium-http = { path = "neptunium-http", version = "0.5.7" }
+neptunium-cache-inmemory = { path = "neptunium-cache-inmemory", version = "0.5.7" }
 
 [workspace.lints.clippy]
 cargo = { level = "warn", priority = 0 }
