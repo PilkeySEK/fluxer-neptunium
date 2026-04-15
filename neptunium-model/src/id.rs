@@ -13,6 +13,11 @@ pub mod composite;
 pub mod marker;
 pub use atomic::*;
 
+/// The Fluxer epoch. Subtract this from a UNIX timestamp (millis) to get the timestamp that should be used inside of a snowflake (`Id` in this crate).
+///
+/// [Source](https://github.com/fluxerapp/fluxer/blob/5da26d4ed5ef9f3fe8bef993c0f10ea4f4ee9c1d/packages/constants/src/Core.tsx#L20)
+pub const FLUXER_EPOCH: i64 = 1_420_070_400_000;
+
 /// "Snowflake" is a format for uniquely identifiable descriptors (IDs). These IDs are guaranteed to be unique across all of Fluxer, except
 /// in some unique scenarios in which child objects share their parent's ID. Snowflakes are always returned as a String in the HTTP and Gateway API,
 /// but are stored internally as a `u64` in this struct.
@@ -31,10 +36,6 @@ impl<T: IdMarker> Display for Id<T> {
 }
 
 impl<T: IdMarker> Id<T> {
-    /// The Fluxer epoch. Subtract this from a UNIX timestamp (millis) to get the timestamp that should be used inside of a snowflake.
-    /// [Source](https://github.com/fluxerapp/fluxer/blob/5da26d4ed5ef9f3fe8bef993c0f10ea4f4ee9c1d/packages/constants/src/Core.tsx#L20)
-    pub const FLUXER_EPOCH: i64 = 1_420_070_400_000;
-
     /// Create a new ID with the given `value`.
     #[must_use]
     pub fn new(value: u64) -> Self {
@@ -153,7 +154,7 @@ impl<'de, T: IdMarker> Deserialize<'de> for Id<T> {
 impl<T: IdMarker> From<OffsetDateTime> for Id<T> {
     fn from(value: OffsetDateTime) -> Self {
         let millis = (value.unix_timestamp() * 1000) + i64::from(value.millisecond());
-        let millis = millis - Self::FLUXER_EPOCH;
+        let millis = millis - FLUXER_EPOCH;
         Self {
             // We assume that the millis will not be negative and won't be too large to fit in the snowflake.
             value: millis.cast_unsigned() << 22,
