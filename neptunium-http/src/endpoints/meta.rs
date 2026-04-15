@@ -144,6 +144,7 @@ pub struct InstanceDiscoveryDocumentResponse {
     pub endpoints: InstanceDiscoveryDocumentEndpoints,
     pub captcha: InstanceDiscoveryDocumentCaptchaConfig,
     pub features: InstanceDiscoveryDocumentFeatures,
+    pub gif: InstanceDiscoveryDocumentGifProviders,
     pub sso: InstanceDiscoveryDocumentSSOConfiguration,
     pub push: InstanceDiscoveryDocumentPushNotificationConfig,
     pub app_public: InstanceDiscoveryDocumentAppPublic,
