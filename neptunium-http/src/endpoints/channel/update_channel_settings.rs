@@ -7,7 +7,7 @@ use neptunium_model::{
         Id,
         marker::{ChannelMarker, UserMarker},
     },
-    time::duration::{Duration, representation::Seconds},
+    time::duration::{Duration, Seconds},
 };
 use reqwest::Method;
 use serde::Serialize;

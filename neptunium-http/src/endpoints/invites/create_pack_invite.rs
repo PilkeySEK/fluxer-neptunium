@@ -1,7 +1,7 @@
 use bon::Builder;
 use neptunium_model::{
     invites::InviteWithMetadata,
-    time::duration::{Duration, representation::Seconds},
+    time::duration::{Duration, Seconds},
 };
 use reqwest::Method;
 use serde::Serialize;

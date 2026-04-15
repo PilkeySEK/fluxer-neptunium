@@ -26,8 +26,6 @@ pub use traits::*;
 #[cfg(feature = "statistics")]
 use crate::stats::CacheStats;
 
-// pub type Cached<T> = Arc<tokio::sync::RwLock<T>>;
-
 pub use arc_swap::Guard;
 
 pub struct Cached<T> {

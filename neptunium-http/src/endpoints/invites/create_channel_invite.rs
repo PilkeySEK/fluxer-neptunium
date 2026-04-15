@@ -2,7 +2,7 @@ use bon::Builder;
 use neptunium_model::{
     id::{Id, marker::ChannelMarker},
     invites::InviteWithMetadata,
-    time::duration::{Duration, representation::Seconds},
+    time::duration::{Duration, Seconds},
 };
 use reqwest::Method;
 use serde::Serialize;

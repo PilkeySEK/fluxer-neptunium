@@ -15,7 +15,7 @@ use crate::{
     },
     misc::ImageHash,
     time::{
-        duration::{Duration, representation::Seconds},
+        duration::{Duration, Seconds},
         timestamp::{Timestamp, representations::Iso8601},
     },
 };

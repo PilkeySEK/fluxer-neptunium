@@ -3,7 +3,7 @@ use neptunium_model::{
     gateway::presence::{CustomStatus, PresenceStatus},
     id::{Id, marker::GuildMarker},
     time::{
-        duration::{Duration, representation::Seconds},
+        duration::{Duration, Seconds},
         timestamp::{Timestamp, representations::Iso8601},
     },
     user::settings::{

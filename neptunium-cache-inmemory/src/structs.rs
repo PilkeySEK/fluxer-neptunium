@@ -56,8 +56,6 @@ pub struct CachedChannel {
 }
 
 impl CachedChannel {
-    /// Converts this cached channel into a normal `Channel`. This is async because it needs to
-    /// access all cached recipients to clone them, which are behind an `RwLock`.
     #[must_use]
     pub fn into_channel(self) -> Channel {
         let recipients = if let Some(cached_recipients) = self.recipients {

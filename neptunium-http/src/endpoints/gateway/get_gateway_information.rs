@@ -1,4 +1,4 @@
-use neptunium_model::time::duration::{Duration, representation::Millis};
+use neptunium_model::time::duration::{Duration, Millis};
 use reqwest::Method;
 use serde::Deserialize;
 

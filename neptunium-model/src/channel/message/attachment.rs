@@ -5,7 +5,7 @@ use crate::{
     id::{Id, marker::AttachmentMarker},
     misc::serde_bitflags,
     time::{
-        duration::{Duration, representation::Seconds},
+        duration::{Duration, Seconds},
         timestamp::{Timestamp, representations::Iso8601},
     },
 };

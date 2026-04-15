@@ -4,7 +4,7 @@ use bon::Builder;
 use neptunium_model::{
     channel::message::attachment::MessageAttachmentFlags,
     id::{Id, marker::GenericMarker},
-    time::duration::{Duration, representation::Seconds},
+    time::duration::{Duration, Seconds},
 };
 use serde::Serialize;
 

@@ -8,7 +8,7 @@ use crate::{
         marker::{PackMarker, UserMarker},
     },
     time::{
-        duration::{Duration, representation::Seconds},
+        duration::{Duration, Seconds},
         timestamp::{Timestamp, representations::Iso8601},
     },
     user::PartialUser,
