@@ -11,14 +11,14 @@ publish = true
 categories = ["api-bindings"]
 
 [dependencies]
-tokio = { version = "1.50.0", features = ["rt-multi-thread", "macros"] } # `time` for when we need sleep()
+tokio = { version = "1.52.1", features = ["rt-multi-thread", "macros"] } # `time` for when we need sleep()
 neptunium-gateway = { workspace = true }
 neptunium-model = { workspace = true }
 neptunium-http = { workspace = true }
 neptunium-cache-inmemory = { workspace = true }
-tokio-tungstenite = "0.28.0"
+tokio-tungstenite = "0.29.0"
 serde_json = "1.0.149"
-rand = "0.10.0"
+rand = "0.10.1"
 tracing = "0.1.44"
 async-trait = "0.1.89"
 zeroize = "1.8.2"
