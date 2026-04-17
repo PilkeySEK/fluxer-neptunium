@@ -113,9 +113,9 @@ pub struct InstanceDiscoveryDocumentAppPublic {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct InstanceDiscoveryDocumentGateway {
     #[serde(rename = "session_retry_min_ms")]
-    pub session_retry_min: Duration<Millis>,
+    pub session_retry_minimum: Duration<Millis>,
     #[serde(rename = "session_retry_max_ms")]
-    pub session_retry_max: Duration<Millis>,
+    pub session_retry_maximum: Duration<Millis>,
     #[serde(rename = "session_retry_jitter_ms")]
     pub session_retry_jitter: Duration<Millis>,
 }
