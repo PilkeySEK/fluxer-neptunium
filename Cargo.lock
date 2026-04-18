@@ -688,12 +688,6 @@ dependencies = [
 
 [[package]]
 name = "hashbrown"
-version = "0.16.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "841d1cc9bed7f9236f321df977030373f4a4163ae1a7dbfe1a51a2c1a51d9100"
-
-[[package]]
-name = "hashbrown"
 version = "0.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4f467dd6dccf739c208452f8014c75c18bb8301b050ad1cfb27153803edb0f51"
@@ -1156,6 +1150,7 @@ dependencies = [
  "async-trait",
  "bon",
  "futures",
+ "hashbrown 0.17.0",
  "language-tags",
  "neptunium-model",
  "percent-encoding",
@@ -1165,8 +1160,9 @@ dependencies = [
  "serde_json",
  "serde_path_to_error",
  "serde_repr",
+ "tokio",
+ "tokio-util",
  "tracing",
- "twilight-http-ratelimiting",
  "zeroize",
 ]
 
@@ -2231,18 +2227,6 @@ dependencies = [
  "rustls-pki-types",
  "sha1",
  "thiserror 2.0.18",
-]
-
-[[package]]
-name = "twilight-http-ratelimiting"
-version = "0.17.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0515b0c30814068a7540fcb5f58b634259ca453fa335d42c3b2c8f2b06ac6a59"
-dependencies = [
- "hashbrown 0.16.1",
- "tokio",
- "tokio-util",
- "tracing",
 ]
 
 [[package]]

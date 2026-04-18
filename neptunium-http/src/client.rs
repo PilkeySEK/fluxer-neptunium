@@ -1,9 +1,9 @@
-#[cfg(all(feature = "rate-limiting", not(debug_assertions)))]
+#[cfg(feature = "rate-limiting")]
 use crate::endpoints::MethodExt;
+#[cfg(feature = "rate-limiting")]
+use crate::ratelimiting::RateLimiter;
 use reqwest::StatusCode;
 use serde_json::Deserializer;
-#[cfg(all(feature = "rate-limiting", not(debug_assertions)))]
-use twilight_http_ratelimiting::RateLimiter;
 
 use crate::{
     DEFAULT_API_BASE_URL, DEFAULT_USER_AGENT, VERSION,
@@ -27,7 +27,7 @@ pub struct HttpClient {
     pub token_type: TokenType,
     pub(crate) reqwest_client: reqwest::Client,
     pub(crate) user_agent: String,
-    #[cfg(all(feature = "rate-limiting", not(debug_assertions)))]
+    #[cfg(feature = "rate-limiting")]
     pub(crate) rate_limiter: RateLimiter,
     /// How many times the client should retry if an error is received that is
     /// likely due to network conditions or rate limits. Set to 0 for no retries.
@@ -38,8 +38,8 @@ impl HttpClient {
     /// The Fluxer global rate limit. This applies to all users unless they have a private `HIGH_GLOBAL_RATE_LIMIT` flag set.
     ///
     /// [Source](https://github.com/fluxerapp/fluxer/blob/ee1f27fe1a372b5291aead8042944afd706bf5db/packages/api/src/middleware/RateLimitMiddleware.tsx#L72)
-    #[cfg(all(feature = "rate-limiting", not(debug_assertions)))]
-    const GLOBAL_RATE_LIMIT: u16 = 50;
+    #[cfg(feature = "rate-limiting")]
+    const DEFAULT_GLOBAL_RATE_LIMIT: u16 = 50;
     #[must_use]
     pub fn new(token: String, #[cfg(feature = "user_api")] token_type: TokenType) -> Self {
         Self {
@@ -49,8 +49,8 @@ impl HttpClient {
             #[cfg(feature = "user_api")]
             token_type,
             user_agent: format!("{DEFAULT_USER_AGENT}/{VERSION}"),
-            #[cfg(all(feature = "rate-limiting", not(debug_assertions)))]
-            rate_limiter: RateLimiter::new(Self::GLOBAL_RATE_LIMIT),
+            #[cfg(feature = "rate-limiting")]
+            rate_limiter: RateLimiter::new(Self::DEFAULT_GLOBAL_RATE_LIMIT),
             retry_times: 3,
         }
     }
@@ -75,7 +75,7 @@ impl HttpClient {
         loop {
             let request = endpoint.clone().into_request();
             // Disable rate limiting in debug mode because of twilight-http-ratelimiting bug
-            #[cfg(all(feature = "rate-limiting", not(debug_assertions)))]
+            #[cfg(feature = "rate-limiting")]
             let permit = 'rate_limiting_blk: {
                 let path_for_rate_limiter = request.path.strip_prefix('/').unwrap_or(&request.path);
                 let Some(method_for_rate_limiter) =
@@ -89,7 +89,7 @@ impl HttpClient {
                 };
                 Some(
                     self.rate_limiter
-                        .acquire(twilight_http_ratelimiting::Endpoint {
+                        .acquire(crate::ratelimiting::Endpoint {
                             method: method_for_rate_limiter,
                             path: path_for_rate_limiter.to_owned(),
                         })
@@ -109,9 +109,9 @@ impl HttpClient {
             };
             tracing::trace!("API response: {:?}", response);
 
-            #[cfg(all(feature = "rate-limiting", not(debug_assertions)))]
+            #[cfg(feature = "rate-limiting")]
             if let Some(permit) = permit {
-                use twilight_http_ratelimiting::RateLimitHeaders;
+                use crate::ratelimiting::RateLimitHeaders;
 
                 use crate::endpoints::RateLimitHeadersExt;
 

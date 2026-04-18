@@ -21,8 +21,6 @@ Run an example using `FLUXER_TOKEN="<token>" cargo run --example <example>`, rep
 
 To run the `user-bot` example, you need to specify `FLUXER_USER_TOKEN` instead.
 
-**NOTE:** `rest-rate-limiting` must be run with `--release` currently
-
 # Coverage
 Note that many of the APIs are user-only, so not interesting for bots. While this crate aims to support everything in the API eventually, it is mainly intended to be used for bots, which is why the bot-usable APIs are prioritized.
 - **Gateway:**
@@ -71,7 +69,7 @@ This is the current support for different APIs (Categories named after [The offi
 So, basically, while trying to cover parts of the API, I am sometimes discovering not yet documented features. Most of them are just not *documented*, but actually do exist in the fluxer code, which is fine. But, some others, like the GUILD_AUDIT_LOG_ENTRY_CREATE (related structs in `model/src/guild/audit_log`) dispatch event are not even in the fluxer codebase yet and instead only in the private `fluxer-v2` repository which is only available to Fluxer visionaries. I'm sadly not a visionary, so I don't fully know the structure of this event. I'm still including it for the future, but you shouldn't rely on it currently.
 
 # Third party code
-I have copied certain audit log schemas from twilight-rs, along with using `twilight-http-ratelimiting` for the rate limiting.
+I have copied certain audit log schemas from twilight-rs, along with using `twilight-http-ratelimiting` for the rate limiting (currently `twilight-http-ratelimiting` is a modified version directly in `neptunium-http` until the next version releases which will fix a wrong debug assertion).
 
 Copyright (c) 2019 (c) The Twilight Contributors. See [THIRD_PARTY_LICENSES](./THIRD_PARTY_LICENSES) for the full license text.
 

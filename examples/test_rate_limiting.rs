@@ -4,12 +4,8 @@ use tracing_subscriber::filter::LevelFilter;
 
 const NUM_REQUESTS: usize = 500;
 
-// This must be run in release mode to work, because rate limiting is disabled in debug mode due to a twilight-http-ratelimiting bug currently
 #[tokio::main]
 async fn main() {
-    #[cfg(debug_assertions)]
-    panic!("This example must be run in release mode currently");
-    #[allow(unreachable_code)]
     tracing_subscriber::fmt()
         .with_max_level(LevelFilter::DEBUG)
         .init();

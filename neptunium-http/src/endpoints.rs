@@ -1,10 +1,10 @@
 use std::string::FromUtf8Error;
 
-#[cfg(all(feature = "rate-limiting", not(debug_assertions)))]
+#[cfg(feature = "rate-limiting")]
+use crate::ratelimiting::RateLimitHeaders;
+#[cfg(feature = "rate-limiting")]
 use reqwest::Response;
 use serde::de::DeserializeOwned;
-#[cfg(all(feature = "rate-limiting", not(debug_assertions)))]
-use twilight_http_ratelimiting::RateLimitHeaders;
 
 use crate::{
     error::{ApiErrorResponse, ApiRateLimitedResponse},
@@ -112,16 +112,16 @@ impl From<serde_path_to_error::Error<serde_json::Error>> for ExecuteEndpointRequ
     }
 }
 
-#[cfg(all(feature = "rate-limiting", not(debug_assertions)))]
+#[cfg(feature = "rate-limiting")]
 pub(crate) trait MethodExt {
-    fn into_rate_limiter_method(self) -> Option<twilight_http_ratelimiting::Method>;
+    fn into_rate_limiter_method(self) -> Option<crate::ratelimiting::Method>;
 }
 
-#[cfg(all(feature = "rate-limiting", not(debug_assertions)))]
+#[cfg(feature = "rate-limiting")]
 impl MethodExt for reqwest::Method {
-    fn into_rate_limiter_method(self) -> Option<twilight_http_ratelimiting::Method> {
+    fn into_rate_limiter_method(self) -> Option<crate::ratelimiting::Method> {
+        use crate::ratelimiting::Method as TwilightMethod;
         use reqwest::Method as ReqwestMethod;
-        use twilight_http_ratelimiting::Method as TwilightMethod;
         Some(match self {
             ReqwestMethod::GET => TwilightMethod::Get,
             ReqwestMethod::POST => TwilightMethod::Post,
@@ -133,28 +133,28 @@ impl MethodExt for reqwest::Method {
     }
 }
 
-#[cfg(all(feature = "rate-limiting", not(debug_assertions)))]
+#[cfg(feature = "rate-limiting")]
 pub(crate) trait RateLimitHeadersExt: Sized {
     fn from_response(res: &Response) -> Option<Self>;
 }
 
-#[cfg(all(feature = "rate-limiting", not(debug_assertions)))]
+#[cfg(feature = "rate-limiting")]
 impl RateLimitHeadersExt for RateLimitHeaders {
     fn from_response(res: &Response) -> Option<Self> {
         let headers = res.headers();
         Some(RateLimitHeaders {
             bucket: headers
-                .get("X-RateLimit-Bucket")?
+                .get(RateLimitHeaders::BUCKET)?
                 .to_str()
                 .map_or(None, |value| Some(parse_bucket(value)))??,
             limit: headers
-                .get("X-RateLimit-Limit")?
+                .get(RateLimitHeaders::LIMIT)?
                 .to_str()
                 .ok()?
                 .parse::<u16>()
                 .ok()?,
             remaining: headers
-                .get("X-RateLimit-Remaining")?
+                .get(RateLimitHeaders::REMAINING)?
                 .to_str()
                 .ok()?
                 .parse::<u16>()
@@ -162,7 +162,7 @@ impl RateLimitHeadersExt for RateLimitHeaders {
             reset_at: {
                 use std::time::{Duration, Instant};
                 let reset_after = headers
-                    .get("X-RateLimit-Reset-After")?
+                    .get(RateLimitHeaders::RESET_AFTER)?
                     .to_str()
                     .ok()?
                     .parse::<f64>()
@@ -173,7 +173,7 @@ impl RateLimitHeadersExt for RateLimitHeaders {
     }
 }
 
-#[cfg(all(feature = "rate-limiting", not(debug_assertions)))]
+#[cfg(feature = "rate-limiting")]
 fn parse_bucket(s: &str) -> Option<Vec<u8>> {
     if !s.len().is_multiple_of(2) {
         return None;

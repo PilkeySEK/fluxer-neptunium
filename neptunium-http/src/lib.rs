@@ -17,6 +17,8 @@ pub mod client;
 pub mod common_types;
 pub mod endpoints;
 pub mod error;
+#[cfg(feature = "rate-limiting")]
+mod ratelimiting;
 pub mod request;
 // pub mod requests;
 // pub mod responses;
