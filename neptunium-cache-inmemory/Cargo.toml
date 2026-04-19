@@ -27,6 +27,8 @@ atomic_once_cell = "0.2.0"
 workspace = true
 
 [features]
-default = ["statistics"]
+default = ["statistics", "rustls"]
 user_api = ["neptunium-model/user_api", "neptunium-http/user_api"]
+native-tls = ["neptunium-http/native-tls"]
+rustls = ["neptunium-http/rustls"]
 statistics = []

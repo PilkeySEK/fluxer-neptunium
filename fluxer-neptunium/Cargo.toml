@@ -11,7 +11,10 @@ publish = true
 categories = ["api-bindings"]
 
 [dependencies]
-tokio = { version = "1.52.1", features = ["rt-multi-thread", "macros"] } # `time` for when we need sleep()
+tokio = { version = "1.52.1", features = [
+    "rt-multi-thread",
+    "macros",
+] } # `time` for when we need sleep()
 neptunium-gateway = { workspace = true }
 neptunium-model = { workspace = true }
 neptunium-http = { workspace = true }
@@ -22,18 +25,30 @@ rand = "0.10.1"
 tracing = "0.1.44"
 async-trait = "0.1.89"
 zeroize = "1.8.2"
-reqwest = "0.13.2"
+reqwest = { version = "0.13.2", default-features = false }
 serde_path_to_error = "0.1.20"
 bon = "3.9.1"
 
 [features]
-default = ["webpki-roots", "rate-limiting", "cache-statistics"]
-user_api = ["neptunium-http/user_api", "neptunium-model/user_api", "neptunium-cache-inmemory/user_api"]
+default = ["webpki-roots", "rate-limiting", "cache-statistics", "rustls"]
+user_api = [
+    "neptunium-http/user_api",
+    "neptunium-model/user_api",
+    "neptunium-cache-inmemory/user_api",
+]
 staff_api = ["neptunium-http/staff_api", "neptunium-model/staff_api"]
 webpki-roots = ["neptunium-gateway/webpki-roots"]
 native-roots = ["neptunium-gateway/native-roots"]
 rate-limiting = ["neptunium-http/rate-limiting"]
 cache-statistics = ["neptunium-cache-inmemory/statistics"]
+native-tls = [
+    "neptunium-gateway/native-tls",
+    "neptunium-http/native-tls",
+    "tokio-tungstenite/native-tls",
+    "reqwest/native-tls",
+    "neptunium-cache-inmemory/native-tls",
+]
+rustls = ["neptunium-http/rustls", "neptunium-cache-inmemory/rustls"]
 
 [lints]
 workspace = true
