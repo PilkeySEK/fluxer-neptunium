@@ -30,7 +30,7 @@ serde_path_to_error = "0.1.20"
 bon = "3.9.1"
 
 [features]
-default = ["webpki-roots", "rate-limiting", "cache-statistics"]
+default = ["webpki-roots", "rate-limiting", "cache-statistics", "rustls"]
 user_api = [
     "neptunium-http/user_api",
     "neptunium-model/user_api",
@@ -48,6 +48,7 @@ native-tls = [
     "reqwest/native-tls",
     "neptunium-cache-inmemory/native-tls",
 ]
+rustls = ["neptunium-http/rustls", "neptunium-cache-inmemory/rustls"]
 
 [lints]
 workspace = true
