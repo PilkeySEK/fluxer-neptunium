@@ -29,4 +29,5 @@ workspace = true
 [features]
 default = ["statistics"]
 user_api = ["neptunium-model/user_api", "neptunium-http/user_api"]
+native-tls = ["neptunium-http/native-tls"]
 statistics = []
