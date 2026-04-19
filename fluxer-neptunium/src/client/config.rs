@@ -37,6 +37,8 @@ pub struct ClientConfig {
         }
     }))]
     pub gateway_retry_wait_time_fn: Box<dyn Fn(usize) -> Duration>,
+    /// Override the heartbeat interval (ignore the heartbeat interval requested by the gateway).
+    pub heartbeat_interval_override: Option<Duration>,
 }
 
 impl Debug for ClientConfig {
@@ -63,7 +65,11 @@ impl Debug for ClientConfig {
             "send_initial_presence_on_every_reconnect: {:?}, ",
             self.send_initial_presence_on_every_reconnect
         ))?;
-        f.write_str("gateway_retry_wait_time_fn: <closure> }")?;
+        f.write_str("gateway_retry_wait_time_fn: <closure> }, ")?;
+        f.write_fmt(format_args!(
+            "heartbeat_interval_override: {:?} ",
+            self.heartbeat_interval_override
+        ))?;
         Ok(())
     }
 }

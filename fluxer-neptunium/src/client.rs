@@ -87,6 +87,7 @@ pub struct Client {
     send_identify_presence_on_reconnect: bool,
     gateway_retry_wait_time_fn: Box<dyn Fn(usize) -> Duration>,
     latency_measurements: Vec<oneshot::Sender<()>>,
+    heartbeat_interval_override: Option<Duration>,
 }
 
 impl Deref for Client {
@@ -165,6 +166,7 @@ impl Client {
                 .send_initial_presence_on_every_reconnect,
             gateway_retry_wait_time_fn: client_config.gateway_retry_wait_time_fn,
             latency_measurements: Vec::new(),
+            heartbeat_interval_override: client_config.heartbeat_interval_override,
         }
     }
 
@@ -194,7 +196,13 @@ impl Client {
             // (clippy lint large_futures)
             let result = Box::pin(self.inner_start(is_reconnect, got_past_connecting_tx)).await;
             if got_past_connecting_rx.await.is_ok() {
-                num_tries = 0;
+                if let Err(e) = &result
+                    && let ClientErrorKind::SessionInvalidated = e.kind()
+                {
+                    num_tries += 1;
+                } else {
+                    num_tries = 0;
+                }
             } else {
                 num_tries += 1;
             }
@@ -255,7 +263,7 @@ impl Client {
         got_past_connecting_tx: oneshot::Sender<()>,
     ) -> Result<(), self::error::Error> {
         tracing::debug!("Starting client...");
-        let heartbeat_interval =
+        let mut heartbeat_interval =
             // Box::pin to prevent large future on the stack
             match Box::pin(timeout(self.connection_process_timeout, self.connect(is_reconnect))).await {
                 Ok(Ok(Ok(heartbeat_interval))) => heartbeat_interval,
@@ -275,6 +283,10 @@ impl Client {
                 }
             };
         let _ = got_past_connecting_tx.send(());
+
+        if let Some(heartbeat_interval_override) = self.heartbeat_interval_override {
+            heartbeat_interval = heartbeat_interval_override;
+        }
 
         loop {
             tokio::select! {
