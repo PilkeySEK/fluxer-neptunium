@@ -194,7 +194,13 @@ impl Client {
             // (clippy lint large_futures)
             let result = Box::pin(self.inner_start(is_reconnect, got_past_connecting_tx)).await;
             if got_past_connecting_rx.await.is_ok() {
-                num_tries = 0;
+                if let Err(e) = &result
+                    && let ClientErrorKind::SessionInvalidated = e.kind()
+                {
+                    num_tries += 1;
+                } else {
+                    num_tries = 0;
+                }
             } else {
                 num_tries += 1;
             }
