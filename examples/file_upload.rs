@@ -27,6 +27,9 @@ impl EventHandler for Handler {
     ) -> Result<(), EventError> {
         let file = b"abcdefg".to_vec();
         let message = event.message.load();
+        if message.content != "n?do-upload" {
+            return Ok(());
+        }
         let attachments = ctx
             .upload_files(
                 message.channel_id,
