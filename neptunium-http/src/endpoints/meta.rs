@@ -95,6 +95,7 @@ pub enum InstanceDiscoveryDocumentGifProviders {
     Tenor,
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct InstanceDiscoveryDocumentGifProvider {
     pub provider: InstanceDiscoveryDocumentGifProviders,
 }
@@ -154,7 +155,7 @@ pub struct InstanceDiscoveryDocumentResponse {
     pub endpoints: InstanceDiscoveryDocumentEndpoints,
     pub captcha: InstanceDiscoveryDocumentCaptchaConfig,
     pub features: InstanceDiscoveryDocumentFeatures,
-    pub gif: InstanceDiscoveryDocumentGifProviders,
+    pub gif: InstanceDiscoveryDocumentGifProvider,
     pub sso: InstanceDiscoveryDocumentSSOConfiguration,
     pub push: InstanceDiscoveryDocumentPushNotificationConfig,
     pub app_public: InstanceDiscoveryDocumentAppPublic,
