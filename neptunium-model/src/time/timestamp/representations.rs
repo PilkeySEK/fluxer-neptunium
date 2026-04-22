@@ -1,5 +1,8 @@
 use serde::{Deserialize, Serialize, de};
-use time::OffsetDateTime;
+use time::{
+    OffsetDateTime,
+    format_description::well_known::iso8601::{Config, EncodedConfig},
+};
 
 /// A representation of a timestamp sent to or received by the HTTP or Gateway API.
 /// There are two representations implemented by this crate:
@@ -48,7 +51,14 @@ impl Serialize for Iso8601 {
     where
         S: serde::Serializer,
     {
-        time::serde::iso8601::serialize(&self.inner, serializer)
+        const SERDE_CONFIG: EncodedConfig = Config::DEFAULT
+            .set_year_is_six_digits(false)
+            .set_use_separators(false)
+            .encode();
+        self.inner
+            .format(&time::format_description::well_known::Iso8601::<SERDE_CONFIG>)
+            .map_err(serde::ser::Error::custom)?
+            .serialize(serializer)
     }
 }
 
