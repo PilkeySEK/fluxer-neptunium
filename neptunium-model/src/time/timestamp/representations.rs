@@ -51,14 +51,19 @@ impl Serialize for Iso8601 {
     where
         S: serde::Serializer,
     {
-        const SERDE_CONFIG: EncodedConfig = Config::DEFAULT
-            .set_year_is_six_digits(false)
-            .set_use_separators(false)
-            .encode();
-        self.inner
+        const SERDE_CONFIG: EncodedConfig = Config::DEFAULT.set_year_is_six_digits(false).encode();
+        let s = self
+            .inner
             .format(&time::format_description::well_known::Iso8601::<SERDE_CONFIG>)
-            .map_err(serde::ser::Error::custom)?
-            .serialize(serializer)
+            .map_err(serde::ser::Error::custom)?;
+        // Remove leading + or - manually
+        if let Some(s) = s.strip_prefix('+') {
+            s.serialize(serializer)
+        } else if let Some(s) = s.strip_prefix('-') {
+            s.serialize(serializer)
+        } else {
+            s.serialize(serializer)
+        }
     }
 }
 
