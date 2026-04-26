@@ -81,6 +81,11 @@ pub struct Guild {
     /// The current user permissions in this guild.
     #[serde(skip_serializing_if = "Option::is_none", rename = "permissions")]
     pub current_user_permissions: Option<Permissions>,
+    // TODO: Are these ever null?
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub member_count: Option<usize>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub online_count: Option<usize>,
 }
 
 #[derive(Deserialize, Clone, Debug)]

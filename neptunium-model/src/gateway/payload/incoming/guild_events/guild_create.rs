@@ -57,6 +57,8 @@ pub struct GuildProperties {
     pub system_channel_id: Option<Id<ChannelMarker>>,
     pub vanity_url_code: Option<String>,
     pub verification_level: GuildVerificationLevel,
+    pub member_count: Option<usize>,
+    pub online_count: Option<usize>,
 }
 
 // Figured out by looking at guild response... :(
@@ -108,6 +110,8 @@ impl From<GuildProperties> for Guild {
             system_channel_id: value.system_channel_id,
             vanity_url_code: value.vanity_url_code,
             verification_level: value.verification_level,
+            member_count: value.member_count,
+            online_count: value.online_count,
         }
     }
 }
