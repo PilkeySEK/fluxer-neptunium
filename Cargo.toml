@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["neptunium-gateway", "neptunium-http", "neptunium-model", "fluxer-neptunium", "examples", "neptunium-cache-inmemory"]
+members = ["neptunium-gateway", "neptunium-http", "neptunium-model", "fluxer-neptunium", "examples", "neptunium-cache-inmemory", "neptunium-voice"]
 
 [workspace.package]
 # ! When updating this, update the [workspace.dependencies] too !

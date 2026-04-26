@@ -8,6 +8,7 @@ mod lazy_request;
 mod presence_update;
 mod request_guild_members;
 mod resume;
+mod update_voice_state;
 
 pub use heartbeat::*;
 pub use identify::*;
@@ -15,6 +16,7 @@ pub use lazy_request::*;
 pub use presence_update::*;
 pub use request_guild_members::*;
 pub use resume::*;
+pub use update_voice_state::*;
 
 #[derive(Clone, Debug)]
 pub enum OutgoingGatewayMessage {
@@ -24,6 +26,7 @@ pub enum OutgoingGatewayMessage {
     Resume(Resume),
     LazyRequest(LazyRequest),
     RequestGuildMembers(RequestGuildMembers),
+    UpdateVoiceState(UpdateVoiceState),
 }
 
 impl Serialize for OutgoingGatewayMessage {
@@ -40,6 +43,7 @@ impl Serialize for OutgoingGatewayMessage {
             Self::Resume(_) => OpCode::Resume,
             Self::LazyRequest(_) => OpCode::LazyRequest,
             Self::RequestGuildMembers(_) => OpCode::RequestGuildMembers,
+            Self::UpdateVoiceState(_) => OpCode::VoiceStateUpdate,
         } as u8;
         s.serialize_field("op", &op)?;
         match self {
@@ -49,6 +53,7 @@ impl Serialize for OutgoingGatewayMessage {
             Self::Resume(d) => s.serialize_field("d", d),
             Self::LazyRequest(d) => s.serialize_field("d", d),
             Self::RequestGuildMembers(d) => s.serialize_field("d", d),
+            Self::UpdateVoiceState(d) => s.serialize_field("d", d),
         }?;
 
         s.end()

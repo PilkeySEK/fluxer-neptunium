@@ -1,4 +1,4 @@
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 
 use crate::{
     guild::member::GuildMember,
@@ -8,16 +8,13 @@ use crate::{
     },
 };
 
-// TODO: Probably make a seperate type "GuildVoiceState" which is flattened into this struct so that type stuff is nicer.
 #[expect(clippy::struct_excessive_bools)]
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug)]
 pub struct VoiceStateUpdate {
     /// Only present for guild voice.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub guild_id: Option<Id<GuildMarker>>,
-    // TODO: Check what "null" means here, undefined or null?
-    /// Channel ID the user is in (null if disconnected).
-    #[serde(skip_serializing_if = "Option::is_none")]
+    /// Channel ID the user is in (`None` if disconnected).
     pub channel_id: Option<Id<ChannelMarker>>,
     pub user_id: Id<UserMarker>,
     pub connection_id: String,
@@ -35,7 +32,6 @@ pub struct VoiceStateUpdate {
     pub is_mobile: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub viewer_stream_keys: Option<Vec<String>>,
-    // TODO: What is this actually?
     /// Voice state version number, incremented on each update.
     pub version: u64,
 }
