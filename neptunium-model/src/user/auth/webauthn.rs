@@ -46,7 +46,7 @@ pub enum WebauthnPublicKeyCredentialType {
     PublicKey,
 }
 
-/// [Source](https://github.com/MasterKale/SimpleWebAuthn/blob/8b7622948c87c4c26e74b24f218e80b2e72adf70/packages/types/src/index.ts#L133)
+/// [Source](https://github.com/MasterKale/SimpleWebAuthn/blob/8b7622948c87c4c26e74b24f218e80b2e72adf70/packages/types/src/index.ts#L133).
 #[derive(Serialize, Builder, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct WebauthnAuthenticationResponse {

@@ -66,7 +66,7 @@ pub enum StatusDisplayType {
 pub struct ActivityParty {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub id: Option<String>,
-    /// `(current_size, max_size)`
+    /// `(current_size, max_size)`.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub size: Option<(i32, i32)>,
 }
@@ -155,7 +155,7 @@ pub struct Activity {
     pub created_at: u64,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub timestamps: Option<Timestamps>,
-    /// Application ID for the game
+    /// Application ID for the game.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub application_id: Option<Id<ApplicationMarker>>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -180,7 +180,7 @@ pub struct Activity {
     pub instance: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub flags: Option<ActivityFlags>,
-    /// Max. 2 buttons
+    /// Max. 2 buttons.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub buttons: Option<Vec<ActivityButton>>,
 }

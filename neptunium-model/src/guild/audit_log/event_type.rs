@@ -2,7 +2,7 @@ use serde_repr::{Deserialize_repr, Serialize_repr};
 
 /// Action to cause an `AuditLogEntry`.
 ///
-/// [Source](https://github.com/fluxerapp/fluxer/blob/d91388b979e7709575f929218dd053e081aa684e/packages/constants/src/AuditLogActionType.tsx#L20)
+/// [Source](https://github.com/fluxerapp/fluxer/blob/d91388b979e7709575f929218dd053e081aa684e/packages/constants/src/AuditLogActionType.tsx#L20).
 #[derive(Serialize_repr, Deserialize_repr, Copy, Clone, Debug, PartialEq, Eq, Hash)]
 #[repr(u8)]
 pub enum AuditLogActionType {

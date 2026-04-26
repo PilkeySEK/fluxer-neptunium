@@ -37,7 +37,7 @@ pub struct GuildProperties {
     pub embed_splash_width: Option<u32>,
     pub explicit_content_filter: GuildExplicitContentFilter,
     pub features: Vec<GuildFeatureFlag>,
-    /// Hash of the guild icon
+    /// Hash of the guild icon.
     pub icon: Option<String>,
     pub id: Id<GuildMarker>,
     pub message_history_cutoff: Option<Timestamp<Iso8601>>,

@@ -28,20 +28,20 @@ use crate::{Cache, CacheValue, Cached, gateway::cached_payload::cache_option_vec
 
 #[derive(Clone, Debug)]
 pub struct CachedChannel {
-    /// The bitrate of the voice channel in bits per second
+    /// The bitrate of the voice channel in bits per second.
     pub bitrate: Option<i32>,
     /// `None` if this is a DM channel.
     pub guild_id: Option<Id<GuildMarker>>,
-    /// The icon hash of the channel (for group DMs)
+    /// The icon hash of the channel (for group DMs).
     pub icon: Option<String>,
     pub id: Id<ChannelMarker>,
     pub last_message_id: AtomicOnceCell<AtomicId<MessageMarker>>,
     pub last_pin_timestamp: Option<Timestamp<Iso8601>>,
     pub name: Option<String>,
-    /// Custom nicknames for users in this channel (for group DMs)
+    /// Custom nicknames for users in this channel (for group DMs).
     pub nicks: Option<HashMap<Id<UserMarker>, String>>,
     pub nsfw: Option<bool>,
-    /// The ID of the owner of the channel (for group DMs)
+    /// The ID of the owner of the channel (for group DMs).
     pub owner_id: Option<Id<UserMarker>>,
     pub parent_id: Option<Id<ChannelMarker>>,
     pub permission_overwrites: Option<Vec<PermissionOverwrite>>,

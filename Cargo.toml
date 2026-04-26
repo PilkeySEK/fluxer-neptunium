@@ -20,3 +20,4 @@ pedantic = { level = "warn", priority = 0 }
 new_without_default = { level = "allow", priority = 1 }
 multiple_crate_versions = { level = "allow", priority = 1 }
 cargo_common_metadata = { level = "allow", priority = 2 }
+doc_paragraphs_missing_punctuation = { level = "warn", priority = 0 }

@@ -94,7 +94,7 @@ pub struct GuildRole {
     pub permissions: Permissions,
     pub position: u16,
     pub color: HexColor,
-    /// Hash of the icon
+    /// Hash of the icon.
     pub icon: Option<String>,
     pub unicode_emoji: Option<String>,
     pub hoist: bool,

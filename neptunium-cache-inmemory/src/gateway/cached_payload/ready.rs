@@ -42,7 +42,7 @@ pub struct CachedReady {
     pub notes: Option<HashMap<Id<UserMarker>, String>>,
     pub country_code: Option<String>,
     pub pinned_dms: Option<Vec<Id<ChannelMarker>>>,
-    pub favorite_memes: Option<Vec<SavedMedia>>,
+    pub saved_media: Option<Vec<SavedMedia>>,
     pub auth_session_id_hash: Option<String>,
     pub rtc_regions: Option<Vec<RtcRegion>>,
     #[cfg(feature = "user_api")]
@@ -85,7 +85,7 @@ impl CachedPayload for CachedReady {
             notes: non_cached.notes,
             country_code: non_cached.country_code,
             pinned_dms: non_cached.pinned_dms,
-            favorite_memes: non_cached.favorite_memes,
+            saved_media: non_cached.saved_media,
             auth_session_id_hash: non_cached.auth_session_id_hash,
             rtc_regions: non_cached.rtc_regions,
             #[cfg(feature = "user_api")]

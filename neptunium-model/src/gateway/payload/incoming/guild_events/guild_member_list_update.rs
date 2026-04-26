@@ -26,7 +26,7 @@ pub struct GuildMemberListUpdate {
 #[derive(Deserialize, Clone, Debug)]
 pub struct MemberListGroup {
     /// This is usually the role ID, but it may also be
-    /// "online" or "offline"
+    /// "online" or "offline".
     pub id: MemberListGroupId,
     pub count: usize,
 }

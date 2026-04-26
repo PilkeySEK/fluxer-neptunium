@@ -113,21 +113,21 @@ pub trait EventHandler: Send {
     ) -> Result<(), EventError> {
         Ok(())
     }
-    async fn on_favorite_meme_create(
+    async fn on_saved_media_create(
         &self,
         ctx: Context,
         data: Arc<SavedMedia>,
     ) -> Result<(), EventError> {
         Ok(())
     }
-    async fn on_favorite_meme_update(
+    async fn on_saved_media_update(
         &self,
         ctx: Context,
         data: Arc<SavedMedia>,
     ) -> Result<(), EventError> {
         Ok(())
     }
-    async fn on_favorite_meme_delete(
+    async fn on_saved_media_delete(
         &self,
         ctx: Context,
         data: Arc<SavedMediaDelete>,

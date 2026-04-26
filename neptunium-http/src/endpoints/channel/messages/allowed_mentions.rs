@@ -14,7 +14,7 @@ pub enum AllowedMentionParseType {
     Everyone,
 }
 
-/// [Source](https://github.com/fluxerapp/fluxer/blob/03813bbe17db008452f0f1be3090a7d2970a5447/packages/schema/src/domains/message/SharedMessageSchemas.tsx#L34)
+/// [Source](https://github.com/fluxerapp/fluxer/blob/03813bbe17db008452f0f1be3090a7d2970a5447/packages/schema/src/domains/message/SharedMessageSchemas.tsx#L34).
 #[derive(Serialize, Deserialize, Clone, Debug, Builder)]
 pub struct AllowedMentions {
     #[serde(skip_serializing_if = "Option::is_none")]

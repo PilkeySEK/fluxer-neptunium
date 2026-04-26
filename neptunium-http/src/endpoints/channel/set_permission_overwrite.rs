@@ -18,7 +18,7 @@ pub struct PermissionOverwriteUpdate {
     pub allow: Option<Permissions>,
     /// Set to `None` to reset.
     pub deny: Option<Permissions>,
-    /// Can be either a role ID or a user ID
+    /// Can be either a role ID or a user ID.
     pub id: Id<GenericMarker>,
     /// The type of entity this overwrite applies to.
     pub r#type: PermissionOverwriteEntity,

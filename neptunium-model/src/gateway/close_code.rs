@@ -1,52 +1,53 @@
 /// When the gateway closes a connection, it sends a close code indicating why it
 /// closed the connection. Some close codes are recoverable (the client should reconnect),
 /// while others are not. Determine whether a close code is recoverable using [`is_recoverable`](Self::is_recoverable).
+#[expect(clippy::doc_paragraphs_missing_punctuation)]
 pub enum GatewayCloseCode {
-    /// Unknown error occurred
+    /// Unknown error occurred.
     ///
     ///  **Should reconnect:** Yes
     UnknownError = 4000,
-    /// Sent an invalid gateway opcode
+    /// Sent an invalid gateway opcode.
     ///
     ///  **Should reconnect:** Yes
     UnknownOpcode = 4001,
-    /// Sent an invalid payload
+    /// Sent an invalid payload.
     ///
     ///  **Should reconnect:** Yes
     DecodeError = 4002,
-    /// Sent a payload before identifying
+    /// Sent a payload before identifying.
     ///
     ///  **Should reconnect:** Yes
     NotAuthenticated = 4003,
-    /// Account token is invalid
+    /// Account token is invalid.
     ///
     ///  **Should reconnect:** No
     AuthenticationFailed = 4004,
-    /// Sent more than one identify payload
+    /// Sent more than one identify payload.
     ///
     ///  **Should reconnect:** Yes
     AlreadyAuthenticated = 4005,
-    /// Sent an invalid sequence when resuming
+    /// Sent an invalid sequence when resuming.
     ///
     ///  **Should reconnect:** Yes
     InvalidSequence = 4007,
-    /// Sending payloads too quickly
+    /// Sending payloads too quickly.
     ///
     ///  **Should reconnect:** Yes
     RateLimited = 4008,
-    /// Session timed out; reconnect and start a new one
+    /// Session timed out; reconnect and start a new one.
     ///
     ///  **Should reconnect:** Yes
     SessionTimeout = 4009,
-    /// Sent an invalid shard when identifying
+    /// Sent an invalid shard when identifying.
     ///
     ///  **Should reconnect:** No
     InvalidShard = 4010,
-    /// Session would have handled too many guilds; sharding is required
+    /// Session would have handled too many guilds; sharding is required.
     ///
     ///  **Should reconnect:** No
     ShardingRequired = 4011,
-    /// Sent an invalid gateway version
+    /// Sent an invalid gateway version.
     ///
     ///  **Should reconnect:** No
     InvalidApiVersion = 4012,

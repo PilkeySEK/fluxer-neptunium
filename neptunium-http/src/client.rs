@@ -37,7 +37,7 @@ pub struct HttpClient {
 impl HttpClient {
     /// The Fluxer global rate limit. This applies to all users unless they have a private `HIGH_GLOBAL_RATE_LIMIT` flag set.
     ///
-    /// [Source](https://github.com/fluxerapp/fluxer/blob/ee1f27fe1a372b5291aead8042944afd706bf5db/packages/api/src/middleware/RateLimitMiddleware.tsx#L72)
+    /// [Source](https://github.com/fluxerapp/fluxer/blob/ee1f27fe1a372b5291aead8042944afd706bf5db/packages/api/src/middleware/RateLimitMiddleware.tsx#L72).
     #[cfg(feature = "rate-limiting")]
     const DEFAULT_GLOBAL_RATE_LIMIT: u16 = 50;
     #[must_use]

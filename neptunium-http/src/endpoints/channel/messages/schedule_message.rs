@@ -62,9 +62,8 @@ pub struct ScheduleMessageResponsePayload {
     pub sticker_ids: Option<Id<StickerMarker>>,
     #[serde(default)]
     pub tts: bool,
-    // TODO: Which marker is this?
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub favorite_meme_id: Option<Id<GenericMarker>>,
+    #[serde(skip_serializing_if = "Option::is_none", rename = "favorite_meme_id")]
+    pub saved_media_id: Option<Id<GenericMarker>>,
 }
 
 #[derive(Deserialize, Clone, Debug)]

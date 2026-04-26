@@ -91,7 +91,7 @@ pub struct GuildFoldersItem {
     pub guild_ids: Option<Vec<Id<GuildMarker>>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub icon: Option<GuildFoldersItemIcon>,
-    /// The unique identifier for the folder (-1 means uncategorized)
+    /// The unique identifier for the folder (-1 means uncategorized).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub id: Option<i32>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -141,25 +141,25 @@ pub enum TimeFormatTypes {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SavedMedia {
-    /// Unique identifier for the favorite meme
+    /// Unique identifier for the saved media.
     pub id: String,
-    /// ID of the user who owns this favorite meme
+    /// ID of the user who owns this saved media.
     pub user_id: String,
-    /// Display name of the meme
+    /// Display name of the saved media.
     pub name: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub alt_text: Option<String>,
-    /// Tags for categorizing and searching the meme
+    /// Tags for categorizing and searching the saved media.
     pub tags: Vec<String>,
-    /// ID of the attachment storing the meme
+    /// ID of the attachment storing the saved media.
     pub attachment_id: String,
-    /// Original filename of the meme
+    /// Original filename of the saved media.
     pub filename: String,
-    /// MIME type of the meme file
+    /// MIME type of the saved media.
     pub content_type: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub content_hash: Option<String>,
-    /// File size in bytes
+    /// File size in bytes.
     pub size: u64,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub width: Option<i32>,
@@ -167,9 +167,9 @@ pub struct SavedMedia {
     pub height: Option<i32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub duration: Option<f64>,
-    /// CDN URL to access the meme
+    /// CDN URL to access the saved media.
     pub url: String,
-    /// Whether the meme is a video converted from GIF
+    /// Whether the saved media is a video converted from GIF.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub is_gifv: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -241,20 +241,20 @@ pub struct UserGuildSettingsChannelOverride {
 pub struct UserGuildSettings {
     /// `None` if these are the settings for the user DMs.
     pub guild_id: Option<Id<GuildMarker>>,
-    /// The default notification level for the guild
+    /// The default notification level for the guild.
     pub message_notifications: UserNotificationSettings,
-    /// Whether the guild is muted
+    /// Whether the guild is muted.
     pub muted: bool,
     pub mute_config: Option<UserGuildSettingsMuteConfig>,
-    /// Whether mobile push notifications are enabled
+    /// Whether mobile push notifications are enabled.
     pub mobile_push: bool,
-    /// Whether @everyone mentions are suppressed
+    /// Whether @everyone mentions are suppressed.
     pub suppress_everyone: bool,
-    /// Whether role mentions are suppressed
+    /// Whether role mentions are suppressed.
     pub suppress_roles: bool,
-    /// Whether muted channels are hidden in the sidebar
+    /// Whether muted channels are hidden in the sidebar.
     pub hide_muted_channels: bool,
     pub channel_overrides: Option<HashMap<Id<ChannelMarker>, UserGuildSettingsChannelOverride>>,
-    /// The version number of these settings for sync
+    /// The version number of these settings for sync.
     pub version: i32,
 }

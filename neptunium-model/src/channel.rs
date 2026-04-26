@@ -67,7 +67,7 @@ pub enum PermissionOverwriteEntity {
 pub struct PermissionOverwrite {
     pub allow: Permissions,
     pub deny: Permissions,
-    /// Can be either a role ID or a user ID
+    /// Can be either a role ID or a user ID.
     pub id: Id<GenericMarker>,
     /// The type of entity this overwrite applies to.
     #[serde(rename = "type")]
@@ -91,13 +91,13 @@ pub enum ChannelType {
 // Maybe find out why twilight does it in this way too (and not an enum)
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Channel {
-    /// The bitrate of the voice channel in bits per second
+    /// The bitrate of the voice channel in bits per second.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub bitrate: Option<i32>,
     /// `None` if this is a DM channel.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub guild_id: Option<Id<GuildMarker>>,
-    /// The icon hash of the channel (for group DMs)
+    /// The icon hash of the channel (for group DMs).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub icon: Option<String>,
     pub id: Id<ChannelMarker>,
@@ -107,12 +107,12 @@ pub struct Channel {
     pub last_pin_timestamp: Option<Timestamp<Iso8601>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
-    /// Custom nicknames for users in this channel (for group DMs)
+    /// Custom nicknames for users in this channel (for group DMs).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub nicks: Option<HashMap<Id<UserMarker>, String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub nsfw: Option<bool>,
-    /// The ID of the owner of the channel (for group DMs)
+    /// The ID of the owner of the channel (for group DMs).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub owner_id: Option<Id<UserMarker>>,
     #[serde(skip_serializing_if = "Option::is_none")]

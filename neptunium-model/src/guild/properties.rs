@@ -1,4 +1,4 @@
-//! Various properties of a guild
+//! Various properties of a guild.
 
 use bitflags::bitflags;
 use serde::{Deserialize, Serialize};
@@ -69,7 +69,7 @@ pub enum GuildExplicitContentFilter {
     AllMembers = 2,
 }
 
-/// Required MFA level for moderation actions
+/// Required MFA level for moderation actions.
 #[derive(Deserialize_repr, Serialize_repr, Copy, Clone, Debug)]
 #[repr(u8)]
 pub enum GuildMfaLevel {

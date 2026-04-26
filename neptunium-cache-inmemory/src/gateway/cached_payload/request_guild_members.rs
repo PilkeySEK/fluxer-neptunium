@@ -13,7 +13,7 @@ use crate::{CacheValue, Cached, CachedGuildMember, gateway::cached_payload::Cach
 pub struct CachedGuildMembersChunk {
     pub guild_id: Id<GuildMarker>,
     pub members: Vec<Cached<CachedGuildMember>>,
-    /// The chunk index in the expected chunks for this response (`0 <= chunk_index < chunk_count`)
+    /// The chunk index in the expected chunks for this response (`0 <= chunk_index < chunk_count`).
     pub chunk_index: u64,
     /// The total number of expected chunks for this response.
     pub chunk_count: u64,

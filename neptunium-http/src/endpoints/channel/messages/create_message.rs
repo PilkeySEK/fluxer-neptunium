@@ -20,7 +20,7 @@ use crate::{
     request::Request,
 };
 
-/// [Source](https://github.com/fluxerapp/fluxer/blob/03813bbe17db008452f0f1be3090a7d2970a5447/packages/schema/src/domains/message/MessageRequestSchemas.tsx#L247)
+/// [Source](https://github.com/fluxerapp/fluxer/blob/03813bbe17db008452f0f1be3090a7d2970a5447/packages/schema/src/domains/message/MessageRequestSchemas.tsx#L247).
 #[derive(Builder, Serialize, Clone, Debug)]
 pub struct CreateMessageBody {
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -38,8 +38,8 @@ pub struct CreateMessageBody {
     pub flags: MessageFlags,
     #[builder(default = Nonce::generate())]
     pub nonce: Nonce,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub favorite_meme_id: Option<String>, // TODO make this be Id<...>
+    #[serde(skip_serializing_if = "Option::is_none", rename = "favorite_meme_id")]
+    pub saved_media_id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub sticker_ids: Option<Vec<Id<StickerMarker>>>,
     // #[serde(skip_serializing_if = "Option::is_none")]
@@ -59,7 +59,7 @@ impl From<String> for CreateMessageBody {
             allowed_mentions: None,
             flags: MessageFlags::empty(),
             nonce: Nonce::generate(),
-            favorite_meme_id: None,
+            saved_media_id: None,
             sticker_ids: None,
             tts: false,
         }
@@ -88,7 +88,7 @@ impl From<Vec<MessageEmbed>> for CreateMessageBody {
             allowed_mentions: None,
             flags: MessageFlags::empty(),
             nonce: Nonce::generate(),
-            favorite_meme_id: None,
+            saved_media_id: None,
             sticker_ids: None,
             tts: false,
         }

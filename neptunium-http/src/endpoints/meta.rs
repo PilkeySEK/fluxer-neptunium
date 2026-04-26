@@ -159,7 +159,7 @@ pub struct InstanceDiscoveryDocumentResponse {
     pub sso: InstanceDiscoveryDocumentSSOConfiguration,
     pub push: InstanceDiscoveryDocumentPushNotificationConfig,
     pub app_public: InstanceDiscoveryDocumentAppPublic,
-    /// Undocumented
+    /// Undocumented.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub gateway: Option<InstanceDiscoveryDocumentGateway>,
     #[serde(skip_serializing_if = "Option::is_none")]

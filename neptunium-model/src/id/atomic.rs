@@ -38,7 +38,7 @@ impl<T: IdMarker> Hash for AtomicId<T> {
 
 impl<T: IdMarker> AtomicId<T> {
     /// The Fluxer epoch. Subtract this from a UNIX timestamp (millis) to get the timestamp that should be used inside of a snowflake.
-    /// [Source](https://github.com/fluxerapp/fluxer/blob/5da26d4ed5ef9f3fe8bef993c0f10ea4f4ee9c1d/packages/constants/src/Core.tsx#L20)
+    /// [Source](https://github.com/fluxerapp/fluxer/blob/5da26d4ed5ef9f3fe8bef993c0f10ea4f4ee9c1d/packages/constants/src/Core.tsx#L20).
     pub const FLUXER_EPOCH: i64 = 1_420_070_400_000;
 
     /// Create a new ID with the given `value`.

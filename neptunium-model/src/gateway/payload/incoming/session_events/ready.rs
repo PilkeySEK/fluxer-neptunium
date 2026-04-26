@@ -62,7 +62,7 @@ pub enum UserAuthenticatorType {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UserPrivateResponse {
     pub accent_color: Option<i32>,
-    /// Access control list entries for the user
+    /// Access control list entries for the user.
     pub acls: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub authenticator_types: Option<Vec<UserAuthenticatorType>>,
@@ -108,7 +108,7 @@ pub struct UserPrivateResponse {
     pub unread_gift_inventory_count: u32,
     pub used_mobile_client: bool,
     pub username: String,
-    /// Whether the email address has been verified
+    /// Whether the email address has been verified.
     pub verified: bool,
     // Undocumented.
     // TODO: Is this optional?
@@ -180,8 +180,8 @@ pub struct Ready {
     pub country_code: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub pinned_dms: Option<Vec<Id<ChannelMarker>>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub favorite_memes: Option<Vec<SavedMedia>>,
+    #[serde(skip_serializing_if = "Option::is_none", rename = "favorite_memes")]
+    pub saved_media: Option<Vec<SavedMedia>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub auth_session_id_hash: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]

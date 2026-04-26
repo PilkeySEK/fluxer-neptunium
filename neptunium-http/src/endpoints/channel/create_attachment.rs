@@ -16,7 +16,7 @@ pub struct CreateAttachmentsInChannelAttachment {
     #[builder(into)]
     pub filename: String,
     pub file_size: usize,
-    /// Is usually `application/octet-stream`
+    /// Is usually `application/octet-stream`.
     #[builder(into, default = "application/octet-stream".to_owned())]
     pub content_type: String,
 }

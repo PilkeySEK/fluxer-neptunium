@@ -23,7 +23,7 @@ use crate::{endpoints::Endpoint, request::Request};
 pub struct UpdateGuildSettingsBody {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
-    /// Hash of the guild icon
+    /// Hash of the guild icon.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub icon: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
