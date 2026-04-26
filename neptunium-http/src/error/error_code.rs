@@ -202,8 +202,9 @@ pub enum ApiErrorCode {
     MaxCategoryChannels,
     /// Maximum emojis limit reached.
     MaxEmojis,
-    /// Maximum favourite memes limit reached.
-    MaxFavoriteMemes,
+    /// Maximum saved media limit reached.
+    #[serde(rename = "MAX_FAVORITE_MEMES")]
+    MaxSavedMedia,
     /// Maximum friends limit reached.
     MaxFriends,
     /// Maximum group DM recipients limit reached.
@@ -396,8 +397,9 @@ pub enum ApiErrorCode {
     UnknownChannel,
     /// Unknown emoji.
     UnknownEmoji,
-    /// Unknown favourite meme.
-    UnknownFavoriteMeme,
+    /// Unknown saved media.
+    #[serde(rename = "UNKNOWN_FAVORITE_MEME")]
+    UnknownSavedMedia,
     /// Unknown gift code.
     UnknownGiftCode,
     /// Unknown guild.

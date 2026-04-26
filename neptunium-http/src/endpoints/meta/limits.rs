@@ -23,8 +23,10 @@ pub enum LimitKey {
     MaxCreatedPacks,
     MaxCustomBackgrounds,
     MaxEmbedsPerMessage,
-    MaxFavoriteMemeTags,
-    MaxFavoriteMemes,
+    #[serde(rename = "max_favorite_meme_tags")]
+    MaxSavedMediaTags,
+    #[serde(rename = "max_favorite_memes")]
+    MaxSavedMedia,
     MaxGroupDmRecipients,
     MaxGroupDmsPerUser,
     MaxGuildChannels,

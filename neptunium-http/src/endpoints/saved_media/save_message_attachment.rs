@@ -4,7 +4,7 @@ use neptunium_model::{
         Id,
         marker::{AttachmentMarker, ChannelMarker, MessageMarker},
     },
-    user::settings::FavoriteMeme,
+    user::settings::SavedMedia,
 };
 use reqwest::Method;
 use serde::Serialize;
@@ -35,7 +35,7 @@ pub struct SaveMessageAttachment {
 }
 
 impl Endpoint for SaveMessageAttachment {
-    type Response = FavoriteMeme;
+    type Response = SavedMedia;
 
     fn into_request(self) -> crate::request::Request {
         Request::builder()

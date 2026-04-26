@@ -1,4 +1,4 @@
-use neptunium_model::user::settings::FavoriteMeme;
+use neptunium_model::user::settings::SavedMedia;
 use reqwest::Method;
 
 use crate::{endpoints::Endpoint, request::Request};
@@ -7,7 +7,7 @@ use crate::{endpoints::Endpoint, request::Request};
 pub struct ListSavedMedia;
 
 impl Endpoint for ListSavedMedia {
-    type Response = Vec<FavoriteMeme>;
+    type Response = Vec<SavedMedia>;
 
     fn into_request(self) -> crate::request::Request {
         Request::builder()

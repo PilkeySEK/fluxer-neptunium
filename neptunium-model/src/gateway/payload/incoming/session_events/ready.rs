@@ -18,7 +18,7 @@ use crate::{
         flags::PublicUserFlags,
         read_state::ReadState,
         relationship::RelationshipType,
-        settings::{FavoriteMeme, UserGuildSettings, UserSettings},
+        settings::{SavedMedia, UserGuildSettings, UserSettings},
     },
 };
 
@@ -181,7 +181,7 @@ pub struct Ready {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub pinned_dms: Option<Vec<Id<ChannelMarker>>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub favorite_memes: Option<Vec<FavoriteMeme>>,
+    pub favorite_memes: Option<Vec<SavedMedia>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub auth_session_id_hash: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]

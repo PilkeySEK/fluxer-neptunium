@@ -1,5 +1,5 @@
 use bon::Builder;
-use neptunium_model::user::settings::FavoriteMeme;
+use neptunium_model::user::settings::SavedMedia;
 use reqwest::Method;
 use serde::Serialize;
 
@@ -22,7 +22,7 @@ pub struct UpdateSavedMedia {
 }
 
 impl Endpoint for UpdateSavedMedia {
-    type Response = FavoriteMeme;
+    type Response = SavedMedia;
 
     fn into_request(self) -> crate::request::Request {
         Request::builder()

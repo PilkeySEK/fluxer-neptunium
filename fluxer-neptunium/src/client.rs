@@ -664,13 +664,13 @@ impl Client {
             CachedDispatchEvent::SavedMessageDelete(data) => {
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_saved_message_delete);
             }
-            CachedDispatchEvent::FavoriteMemeCreate(data) => {
+            CachedDispatchEvent::SavedMediaCreate(data) => {
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_favorite_meme_create);
             }
-            CachedDispatchEvent::FavoriteMemeUpdate(data) => {
+            CachedDispatchEvent::SavedMediaUpdate(data) => {
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_favorite_meme_update);
             }
-            CachedDispatchEvent::FavoriteMemeDelete(data) => {
+            CachedDispatchEvent::SavedMediaDelete(data) => {
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_favorite_meme_delete);
             }
             CachedDispatchEvent::AuthSessionChange(data) => {

@@ -139,9 +139,8 @@ pub enum TimeFormatTypes {
     TwentyFourHour = 2,
 }
 
-// TODO: Rename this struct and others to be more consistently named after "saved media"
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct FavoriteMeme {
+pub struct SavedMedia {
     /// Unique identifier for the favorite meme
     pub id: String,
     /// ID of the user who owns this favorite meme

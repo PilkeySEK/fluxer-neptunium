@@ -14,7 +14,7 @@ use neptunium_model::{
     user::{
         PartialUser,
         read_state::ReadState,
-        settings::{FavoriteMeme, UserGuildSettings, UserSettings},
+        settings::{SavedMedia, UserGuildSettings, UserSettings},
     },
 };
 use serde_json::Value;
@@ -42,7 +42,7 @@ pub struct CachedReady {
     pub notes: Option<HashMap<Id<UserMarker>, String>>,
     pub country_code: Option<String>,
     pub pinned_dms: Option<Vec<Id<ChannelMarker>>>,
-    pub favorite_memes: Option<Vec<FavoriteMeme>>,
+    pub favorite_memes: Option<Vec<SavedMedia>>,
     pub auth_session_id_hash: Option<String>,
     pub rtc_regions: Option<Vec<RtcRegion>>,
     #[cfg(feature = "user_api")]

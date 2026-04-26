@@ -129,8 +129,9 @@ pub enum ApiValidationErrorCode {
     VoiceMessagesCannotHaveContent,
     /// Voice messages cannot have embeds.
     VoiceMessagesCannotHaveEmbeds,
-    /// Voice messages cannot have favourite memes.
-    VoiceMessagesCannotHaveFavoriteMemes,
+    /// Voice messages cannot have saved media.
+    #[serde(rename = "VOICE_MESSAGES_CANNOT_HAVE_FAVORITE_MEMES")]
+    VoiceMessagesCannotHaveSavedMedia,
     /// Voice messages cannot have stickers.
     VoiceMessagesCannotHaveStickers,
     /// Voice message duration exceeds limit.
@@ -161,10 +162,12 @@ pub enum ApiValidationErrorCode {
     FailedToParseMultipartPayload,
     /// Failed to upload image.
     FailedToUploadImage,
-    /// Favourite meme name is required.
-    FavoriteMemeNameRequired,
-    /// Favourite meme was not found.
-    FavoriteMemeNotFound,
+    /// Saved media name is required.
+    #[serde(rename = "FAVORITE_MEME_NAME_REQUIRED")]
+    SavedMediaNameRequired,
+    /// Saved media was not found.
+    #[serde(rename = "FAVORITE_MEME_NOT_FOUND")]
+    SavedMediaNotFound,
     /// File index exceeds maximum.
     FileIndexExceedsMaximum,
     /// File not found for scanning.
@@ -293,8 +296,9 @@ pub enum ApiValidationErrorCode {
     JobIsAlreadyProcessed,
     /// Job was not found.
     JobNotFound,
-    /// Media is already in favourite memes.
-    MediaAlreadyInFavoriteMemes,
+    /// Media is already in saved media.
+    #[serde(rename = "MEDIA_ALREADY_IN_FAVORITE_MEMES")]
+    MediaAlreadyInSavedMedia,
     /// Message IDs cannot be empty.
     MessageIdsCannotBeEmpty,
     /// Messages array is required and cannot be empty.

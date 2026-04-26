@@ -6,11 +6,11 @@ use neptunium_model::{
         payload::incoming::{
             AuthSessionChange, CallCreate, CallDelete, CallUpdate, ChannelPinsAck,
             ChannelPinsUpdate, ChannelRecipientAdd, ChannelRecipientRemove, ChannelUpdateBulk,
-            FavoriteMemeDelete, GuildAuditLogEntryCreate, GuildBanAdd, GuildBanRemove, GuildDelete,
-            GuildEmojisUpdate, GuildMemberRemove, GuildRoleCreate, GuildRoleDelete,
-            GuildStickersUpdate, InviteDelete, MessageAck, MessageDelete, MessageDeleteBulk,
-            MessageReactionRemoveAll, MessageReactionRemoveEmoji, PresenceUpdateIncoming,
-            RecentMentionDelete, RelationshipRemove, Resumed, SavedMessageDelete, UserNoteUpdate,
+            GuildAuditLogEntryCreate, GuildBanAdd, GuildBanRemove, GuildDelete, GuildEmojisUpdate,
+            GuildMemberRemove, GuildRoleCreate, GuildRoleDelete, GuildStickersUpdate, InviteDelete,
+            MessageAck, MessageDelete, MessageDeleteBulk, MessageReactionRemoveAll,
+            MessageReactionRemoveEmoji, PresenceUpdateIncoming, RecentMentionDelete,
+            RelationshipRemove, Resumed, SavedMediaDelete, SavedMessageDelete, UserNoteUpdate,
             UserPrivateResponse, VoiceServerUpdate, VoiceStateUpdate, WebhooksUpdate,
         },
     },
@@ -19,7 +19,7 @@ use neptunium_model::{
     invites::InviteWithMetadata,
     user::{
         relationship::Relationship,
-        settings::{FavoriteMeme, UserGuildSettings, UserSettings},
+        settings::{SavedMedia, UserGuildSettings, UserSettings},
     },
 };
 
@@ -71,14 +71,14 @@ impl CachedDispatchEvent {
             DispatchEvent::SavedMessageDelete(payload) => {
                 CachedDispatchEvent::SavedMessageDelete(payload)
             }
-            DispatchEvent::FavoriteMemeCreate(payload) => {
-                CachedDispatchEvent::FavoriteMemeCreate(payload)
+            DispatchEvent::SavedMediaCreate(payload) => {
+                CachedDispatchEvent::SavedMediaCreate(payload)
             }
-            DispatchEvent::FavoriteMemeUpdate(payload) => {
-                CachedDispatchEvent::FavoriteMemeUpdate(payload)
+            DispatchEvent::SavedMediaUpdate(payload) => {
+                CachedDispatchEvent::SavedMediaUpdate(payload)
             }
-            DispatchEvent::FavoriteMemeDelete(payload) => {
-                CachedDispatchEvent::FavoriteMemeDelete(payload)
+            DispatchEvent::SavedMediaDelete(payload) => {
+                CachedDispatchEvent::SavedMediaDelete(payload)
             }
             DispatchEvent::AuthSessionChange(payload) => {
                 CachedDispatchEvent::AuthSessionChange(payload)
@@ -228,9 +228,9 @@ pub enum CachedDispatchEvent {
     RecentMentionDelete(RecentMentionDelete),
     SavedMessageCreate(Cached<CachedMessage>),
     SavedMessageDelete(SavedMessageDelete),
-    FavoriteMemeCreate(FavoriteMeme),
-    FavoriteMemeUpdate(FavoriteMeme),
-    FavoriteMemeDelete(FavoriteMemeDelete),
+    SavedMediaCreate(SavedMedia),
+    SavedMediaUpdate(SavedMedia),
+    SavedMediaDelete(SavedMediaDelete),
     AuthSessionChange(AuthSessionChange),
     PresenceUpdate(PresenceUpdateIncoming),
     GuildCreate(CachedGuildCreate),

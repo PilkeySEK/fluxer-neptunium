@@ -13,11 +13,11 @@ use neptunium_cache_inmemory::{
 use neptunium_model::{
     gateway::payload::incoming::{
         AuthSessionChange, CallCreate, CallDelete, CallUpdate, ChannelPinsAck, ChannelPinsUpdate,
-        ChannelRecipientAdd, ChannelRecipientRemove, ChannelUpdateBulk, FavoriteMemeDelete,
-        GuildAuditLogEntryCreate, GuildBanAdd, GuildBanRemove, GuildDelete, GuildEmojisUpdate,
-        GuildMemberRemove, GuildRoleDelete, GuildStickersUpdate, InviteDelete, MessageAck,
-        MessageDelete, MessageDeleteBulk, MessageReactionRemoveAll, MessageReactionRemoveEmoji,
-        PresenceUpdateIncoming, RecentMentionDelete, RelationshipRemove, Resumed,
+        ChannelRecipientAdd, ChannelRecipientRemove, ChannelUpdateBulk, GuildAuditLogEntryCreate,
+        GuildBanAdd, GuildBanRemove, GuildDelete, GuildEmojisUpdate, GuildMemberRemove,
+        GuildRoleDelete, GuildStickersUpdate, InviteDelete, MessageAck, MessageDelete,
+        MessageDeleteBulk, MessageReactionRemoveAll, MessageReactionRemoveEmoji,
+        PresenceUpdateIncoming, RecentMentionDelete, RelationshipRemove, Resumed, SavedMediaDelete,
         SavedMessageDelete, UserNoteUpdate, UserPrivateResponse, VoiceServerUpdate,
         VoiceStateUpdate, WebhooksUpdate,
     },
@@ -26,7 +26,7 @@ use neptunium_model::{
     invites::InviteWithMetadata,
     user::{
         relationship::Relationship,
-        settings::{FavoriteMeme, UserGuildSettings, UserSettings},
+        settings::{SavedMedia, UserGuildSettings, UserSettings},
     },
 };
 
@@ -116,21 +116,21 @@ pub trait EventHandler: Send {
     async fn on_favorite_meme_create(
         &self,
         ctx: Context,
-        data: Arc<FavoriteMeme>,
+        data: Arc<SavedMedia>,
     ) -> Result<(), EventError> {
         Ok(())
     }
     async fn on_favorite_meme_update(
         &self,
         ctx: Context,
-        data: Arc<FavoriteMeme>,
+        data: Arc<SavedMedia>,
     ) -> Result<(), EventError> {
         Ok(())
     }
     async fn on_favorite_meme_delete(
         &self,
         ctx: Context,
-        data: Arc<FavoriteMemeDelete>,
+        data: Arc<SavedMediaDelete>,
     ) -> Result<(), EventError> {
         Ok(())
     }
