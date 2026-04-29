@@ -183,8 +183,10 @@ impl Client {
     /// Start the client. This will run indefinetly unless the connection is closed or some other
     /// error occurs.
     ///
-    /// If auto-reconnect is enabled (the default), the client will never return and instead always try reconnecting after the
-    /// configured auto reconnect wait time (the default is 30 seconds) if an error occurs.
+    /// If auto-reconnect is enabled (the default), the client will never return and instead always try reconnecting.
+    /// To determine the time to wait between reconnects, an exponential backoff function is used, which can be changed
+    /// in the client config.
+    ///
     /// # Errors
     /// Returns an error if unexpected data is received, or if a network error occurs.
     pub async fn start(&mut self) -> Result<(), self::error::Error> {
