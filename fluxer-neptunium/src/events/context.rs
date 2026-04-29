@@ -146,6 +146,25 @@ impl Context {
         }
     }
 
+    /// Send the `RequestGuildCounts` message without waiting for the result. You will need to handle
+    /// receiving the result yourself.
+    pub async fn request_guild_counts_raw(&self, data: RequestGuildCounts) -> Result<(), Error> {
+        let (oneshot_tx, oneshot_rx) = oneshot::channel();
+        if self
+            .tx
+            .send(ClientMessage::RequestGuildCounts(data, oneshot_tx, None))
+            .is_err()
+        {
+            return Err(Error::new(ClientErrorKind::ClientNotPresent));
+        }
+
+        match oneshot_rx.await {
+            Ok(Err(e)) => Err(Error::new(ClientErrorKind::NetworkError(e))),
+            Err(_) => Err(Error::new(ClientErrorKind::ClientNotPresent)),
+            Ok(Ok(())) => Ok(()),
+        }
+    }
+
     pub async fn upload_files(
         &self,
         channel_id: Id<ChannelMarker>,
