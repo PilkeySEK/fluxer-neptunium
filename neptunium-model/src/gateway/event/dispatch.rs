@@ -5,14 +5,14 @@ use crate::{
     gateway::payload::incoming::{
         AuthSessionChange, CallCreate, CallDelete, CallUpdate, ChannelPinsAck, ChannelPinsUpdate,
         ChannelRecipientAdd, ChannelRecipientRemove, ChannelUpdateBulk, GuildAuditLogEntryCreate,
-        GuildBanAdd, GuildBanRemove, GuildCreate, GuildDelete, GuildEmojisUpdate,
-        GuildMemberListUpdate, GuildMemberRemove, GuildMembersChunk, GuildRoleCreate,
-        GuildRoleDelete, GuildRoleUpdate, GuildRoleUpdateBulk, GuildStickersUpdate, InviteDelete,
-        MessageAck, MessageCreate, MessageDelete, MessageDeleteBulk, MessageReactionAdd,
-        MessageReactionRemove, MessageReactionRemoveAll, MessageReactionRemoveEmoji,
-        PresenceUpdateIncoming, Ready, RecentMentionDelete, RelationshipRemove, Resumed,
-        SavedMediaDelete, SavedMessageDelete, TypingStart, UserNoteUpdate, UserPrivateResponse,
-        VoiceServerUpdate, VoiceStateUpdate, WebhooksUpdate,
+        GuildBanAdd, GuildBanRemove, GuildCountsUpdate, GuildCreate, GuildDelete,
+        GuildEmojisUpdate, GuildMemberListUpdate, GuildMemberRemove, GuildMembersChunk,
+        GuildRoleCreate, GuildRoleDelete, GuildRoleUpdate, GuildRoleUpdateBulk,
+        GuildStickersUpdate, InviteDelete, MessageAck, MessageCreate, MessageDelete,
+        MessageDeleteBulk, MessageReactionAdd, MessageReactionRemove, MessageReactionRemoveAll,
+        MessageReactionRemoveEmoji, PresenceUpdateIncoming, Ready, RecentMentionDelete,
+        RelationshipRemove, Resumed, SavedMediaDelete, SavedMessageDelete, TypingStart,
+        UserNoteUpdate, UserPrivateResponse, VoiceServerUpdate, VoiceStateUpdate, WebhooksUpdate,
     },
     guild::{Guild, member::GuildMember},
     id::{Id, marker::ChannelMarker},
@@ -110,6 +110,7 @@ pub enum DispatchEvent {
     /// Sent in response to `RequestGuildMembers`.
     GuildMembersChunk(GuildMembersChunk),
     GuildMemberListUpdate(GuildMemberListUpdate),
+    GuildCountsUpdate(GuildCountsUpdate),
 }
 
 #[derive(Deserialize, Clone, Debug)]

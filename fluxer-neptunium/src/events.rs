@@ -14,9 +14,9 @@ use neptunium_model::{
     gateway::payload::incoming::{
         AuthSessionChange, CallCreate, CallDelete, CallUpdate, ChannelPinsAck, ChannelPinsUpdate,
         ChannelRecipientAdd, ChannelRecipientRemove, ChannelUpdateBulk, GuildAuditLogEntryCreate,
-        GuildBanAdd, GuildBanRemove, GuildDelete, GuildEmojisUpdate, GuildMemberRemove,
-        GuildRoleDelete, GuildStickersUpdate, InviteDelete, MessageAck, MessageDelete,
-        MessageDeleteBulk, MessageReactionRemoveAll, MessageReactionRemoveEmoji,
+        GuildBanAdd, GuildBanRemove, GuildCountsUpdate, GuildDelete, GuildEmojisUpdate,
+        GuildMemberRemove, GuildRoleDelete, GuildStickersUpdate, InviteDelete, MessageAck,
+        MessageDelete, MessageDeleteBulk, MessageReactionRemoveAll, MessageReactionRemoveEmoji,
         PresenceUpdateIncoming, RecentMentionDelete, RelationshipRemove, Resumed, SavedMediaDelete,
         SavedMessageDelete, UserNoteUpdate, UserPrivateResponse, VoiceServerUpdate,
         VoiceStateUpdate, WebhooksUpdate,
@@ -455,6 +455,13 @@ pub trait EventHandler: Send {
         &self,
         ctx: Context,
         data: Arc<CachedGuildMemberListUpdate>,
+    ) -> Result<(), EventError> {
+        Ok(())
+    }
+    async fn on_guild_counts_update(
+        &self,
+        ctx: Context,
+        data: Arc<GuildCountsUpdate>,
     ) -> Result<(), EventError> {
         Ok(())
     }

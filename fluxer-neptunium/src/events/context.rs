@@ -53,9 +53,10 @@ use neptunium_model::{
 use neptunium_model::{
     channel::message::nonce::Nonce,
     gateway::payload::{
-        incoming::UserPrivateResponse,
+        incoming::{GuildCountsUpdateItem, UserPrivateResponse},
         outgoing::{
-            GuildSubscriptionRequest, LazyRequest, PresenceUpdateOutgoing, RequestGuildMembers,
+            GuildSubscriptionRequest, LazyRequest, PresenceUpdateOutgoing, RequestGuildCounts,
+            RequestGuildMembers,
         },
     },
     guild::Guild,
@@ -104,6 +105,45 @@ impl Context {
     #[must_use]
     pub fn get_http_client(&self) -> &Arc<HttpClient> {
         &self.http_client
+    }
+
+    /// Request the member and online count for the specified guild IDs.
+    ///
+    /// # Cancel safety
+    /// This function is cancel safe. If it is cancelled then
+    /// the response will be sent as a normal event instead of being handled by this function.
+    pub async fn request_guild_counts(
+        &self,
+        guild_ids: Vec<Id<GuildMarker>>,
+    ) -> Result<HashMap<Id<GuildMarker>, GuildCountsUpdateItem>, Error> {
+        let request = RequestGuildCounts {
+            guild_ids,
+            nonce: Some(Nonce::generate().0),
+        };
+        let (oneshot_tx, oneshot_rx) = oneshot::channel();
+        let (tx, rx) = oneshot::channel();
+        if self
+            .tx
+            .send(ClientMessage::RequestGuildCounts(
+                request,
+                oneshot_tx,
+                Some(tx),
+            ))
+            .is_err()
+        {
+            return Err(Error::new(ClientErrorKind::ClientNotPresent));
+        }
+
+        match oneshot_rx.await {
+            Ok(Err(e)) => return Err(Error::new(ClientErrorKind::NetworkError(e))),
+            Err(_) => return Err(Error::new(ClientErrorKind::ClientNotPresent)),
+            Ok(Ok(())) => {}
+        }
+
+        match rx.await {
+            Ok(data) => Ok(data.counts),
+            Err(_) => Err(Error::new(ClientErrorKind::ClientNotPresent)),
+        }
     }
 
     pub async fn upload_files(
@@ -210,6 +250,10 @@ impl Context {
     /// and then returns the list of members. For a lower-level version, use `request_guild_members_raw`.
     ///
     /// **Note:** You do not need to set a `nonce` in the request, this function will overwrite it.
+    ///
+    /// # Cancel safety
+    /// This function is cancel safe. If it is cancelled then the response(s) will be sent to normal
+    /// event handlers instead of being handled by this function.
     pub async fn request_guild_members(
         &self,
         mut data: RequestGuildMembers,

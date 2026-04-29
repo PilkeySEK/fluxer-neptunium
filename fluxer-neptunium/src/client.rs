@@ -14,9 +14,12 @@ use neptunium_http::client::HttpClient;
 use neptunium_model::gateway::{
     close_code::GatewayCloseCode,
     event::{dispatch::DispatchEvent, gateway::GatewayEvent, invalid_session::InvalidSessionEvent},
-    payload::outgoing::{
-        ConnectionProperties, Heartbeat, LazyRequest, OutgoingGatewayMessage,
-        PresenceUpdateOutgoing, RequestGuildMembers,
+    payload::{
+        incoming::GuildCountsUpdate,
+        outgoing::{
+            ConnectionProperties, Heartbeat, LazyRequest, OutgoingGatewayMessage,
+            PresenceUpdateOutgoing, RequestGuildCounts, RequestGuildMembers,
+        },
     },
 };
 use tokio::{
@@ -58,6 +61,11 @@ pub(crate) enum ClientMessage {
     ),
     PropagateEventError(EventError),
     LatencyMeasurement(oneshot::Sender<()>),
+    RequestGuildCounts(
+        RequestGuildCounts,
+        oneshot::Sender<Result<(), neptunium_gateway::shard::Error>>,
+        Option<oneshot::Sender<GuildCountsUpdate>>,
+    ),
 }
 
 #[derive(Clone, Debug)]
@@ -79,6 +87,7 @@ pub struct Client {
     resume_info: Option<ResumeInfo>,
     auto_reconnect: bool,
     guild_members_chunk_listeners: HashMap<String, UnboundedSender<CachedGuildMembersChunk>>,
+    guild_counts_update_listeners: HashMap<String, oneshot::Sender<GuildCountsUpdate>>,
     expecting_heartbeat_ack: bool,
     expecting_heartbeat_ack_second_chance: bool,
     currently_resuming: bool,
@@ -167,6 +176,7 @@ impl Client {
             gateway_retry_wait_time_fn: client_config.gateway_retry_wait_time_fn,
             latency_measurements: Vec::new(),
             heartbeat_interval_override: client_config.heartbeat_interval_override,
+            guild_counts_update_listeners: HashMap::new(),
         }
     }
 
@@ -346,15 +356,21 @@ impl Client {
                             }
                             return Err(Error::new(ClientErrorKind::EventError(Box::new(error))));
                         }
-                        ClientMessage::RequestGuildMembers(data, sender, tx) => {
+                        ClientMessage::RequestGuildMembers(data, result_sender, tx) => {
                             if let Some(tx) = tx {
                                 self.guild_members_chunk_listeners.insert(data.nonce.clone().unwrap(), tx);
                             }
-                            let _ = sender.send(self.shard.send_gateway_message(OutgoingGatewayMessage::RequestGuildMembers(data)).await);
+                            let _ = result_sender.send(self.shard.send_gateway_message(OutgoingGatewayMessage::RequestGuildMembers(data)).await);
                         }
                         ClientMessage::LatencyMeasurement(tx) => {
                             self.latency_measurements.push(tx);
                             self.shard.send_gateway_message(OutgoingGatewayMessage::Heartbeat(Heartbeat { last_sequence_number: self.last_sequence_number })).await?;
+                        }
+                        ClientMessage::RequestGuildCounts(data, result_sender, tx) => {
+                            if let Some(tx) = tx {
+                                self.guild_counts_update_listeners.insert(data.nonce.clone().unwrap(), tx);
+                            }
+                            let _ = result_sender.send(self.shard.send_gateway_message(OutgoingGatewayMessage::RequestGuildCounts(data)).await);
                         }
                     }
                 },
@@ -840,6 +856,21 @@ impl Client {
             }
             CachedDispatchEvent::GuildMemberListUpdate(data) => {
                 call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_guild_member_list_update);
+            }
+            CachedDispatchEvent::GuildCountsUpdate(data) => {
+                let maybe_data = if let Some(nonce) = &data.nonce {
+                    if let Some(listener_tx) = self.guild_counts_update_listeners.remove(nonce) {
+                        // If this returns an error it means that the future listening to the response has been cancelled.
+                        listener_tx.send(data).err()
+                    } else {
+                        Some(data)
+                    }
+                } else {
+                    Some(data)
+                };
+                if let Some(data) = maybe_data {
+                    call_event_handlers!(self.always_propagate_event_errors, self.tx, self.event_handlers, self.context, data => on_guild_counts_update);
+                }
             }
         }
     }

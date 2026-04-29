@@ -16,6 +16,7 @@ pub enum OpCode {
     HeartbeatAck = 11,
     GatewayError = 12,
     LazyRequest = 14,
+    RequestGuildCounts = 15,
 }
 
 impl OpCode {
@@ -35,6 +36,7 @@ impl OpCode {
             11 => Self::HeartbeatAck,
             12 => Self::GatewayError,
             14 => Self::LazyRequest,
+            15 => Self::RequestGuildCounts,
             _ => return None,
         })
     }

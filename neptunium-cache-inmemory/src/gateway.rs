@@ -6,12 +6,13 @@ use neptunium_model::{
         payload::incoming::{
             AuthSessionChange, CallCreate, CallDelete, CallUpdate, ChannelPinsAck,
             ChannelPinsUpdate, ChannelRecipientAdd, ChannelRecipientRemove, ChannelUpdateBulk,
-            GuildAuditLogEntryCreate, GuildBanAdd, GuildBanRemove, GuildDelete, GuildEmojisUpdate,
-            GuildMemberRemove, GuildRoleCreate, GuildRoleDelete, GuildStickersUpdate, InviteDelete,
-            MessageAck, MessageDelete, MessageDeleteBulk, MessageReactionRemoveAll,
-            MessageReactionRemoveEmoji, PresenceUpdateIncoming, RecentMentionDelete,
-            RelationshipRemove, Resumed, SavedMediaDelete, SavedMessageDelete, UserNoteUpdate,
-            UserPrivateResponse, VoiceServerUpdate, VoiceStateUpdate, WebhooksUpdate,
+            GuildAuditLogEntryCreate, GuildBanAdd, GuildBanRemove, GuildCountsUpdate, GuildDelete,
+            GuildEmojisUpdate, GuildMemberRemove, GuildRoleCreate, GuildRoleDelete,
+            GuildStickersUpdate, InviteDelete, MessageAck, MessageDelete, MessageDeleteBulk,
+            MessageReactionRemoveAll, MessageReactionRemoveEmoji, PresenceUpdateIncoming,
+            RecentMentionDelete, RelationshipRemove, Resumed, SavedMediaDelete, SavedMessageDelete,
+            UserNoteUpdate, UserPrivateResponse, VoiceServerUpdate, VoiceStateUpdate,
+            WebhooksUpdate,
         },
     },
     guild::{Guild, member::GuildMember, permissions::GuildRole},
@@ -209,6 +210,9 @@ impl CachedDispatchEvent {
                     CachedGuildMemberListUpdate::cache_payload(payload, cache),
                 )
             }
+            DispatchEvent::GuildCountsUpdate(payload) => {
+                CachedDispatchEvent::GuildCountsUpdate(payload)
+            }
         }
     }
 }
@@ -295,4 +299,5 @@ pub enum CachedDispatchEvent {
     /// Sent in response to `RequestGuildMembers`.
     GuildMembersChunk(CachedGuildMembersChunk),
     GuildMemberListUpdate(CachedGuildMemberListUpdate),
+    GuildCountsUpdate(GuildCountsUpdate),
 }
