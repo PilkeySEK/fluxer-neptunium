@@ -7,6 +7,7 @@ use reqwest::Method;
 
 use crate::{endpoints::Endpoint, request::Request};
 
+// Deleting a message does not support a reason currently
 #[derive(Builder, Copy, Clone, Debug)]
 pub struct DeleteMessage {
     pub channel_id: Id<ChannelMarker>,

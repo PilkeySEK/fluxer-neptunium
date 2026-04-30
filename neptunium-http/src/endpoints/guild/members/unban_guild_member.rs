@@ -11,6 +11,9 @@ use crate::{endpoints::Endpoint, request::Request};
 pub struct UnbanGuildMember {
     pub guild_id: Id<GuildMarker>,
     pub user_id: Id<UserMarker>,
+    /// The reason for the audit log.
+    #[builder(into)]
+    pub reason: Option<String>,
 }
 
 impl Endpoint for UnbanGuildMember {
@@ -20,6 +23,7 @@ impl Endpoint for UnbanGuildMember {
         Request::builder()
             .method(Method::DELETE)
             .path(format!("/guilds/{}/bans/{}", self.guild_id, self.user_id))
+            .maybe_audit_log_reason(self.reason)
             .build()
     }
 }

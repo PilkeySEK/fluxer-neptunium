@@ -19,6 +19,7 @@ pub struct Request {
     #[builder(default = true)]
     pub use_authorization_token: bool,
     pub params: Option<HashMap<String, String>>,
+    pub audit_log_reason: Option<String>,
 }
 
 impl Request {
@@ -46,6 +47,9 @@ impl Request {
         }
         if let Some(body) = self.body {
             request = request.body(body);
+        }
+        if let Some(audit_log_reason) = self.audit_log_reason {
+            request = request.header("X-Audit-Log-Reason", audit_log_reason);
         }
         if let Some(params) = self.params
             && !params.is_empty()

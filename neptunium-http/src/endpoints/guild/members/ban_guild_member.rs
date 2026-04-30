@@ -28,10 +28,21 @@ pub struct BanGuildMemberBody {
     pub ban_duration: Option<Duration<Seconds>>,
 }
 
+impl Default for BanGuildMemberBody {
+    fn default() -> Self {
+        Self {
+            delete_message_days: None,
+            reason: None,
+            ban_duration: None,
+        }
+    }
+}
+
 #[derive(Builder, Clone, Debug)]
 pub struct BanGuildMember {
     pub guild_id: Id<GuildMarker>,
     pub user_id: Id<UserMarker>,
+    #[builder(default = BanGuildMemberBody::default())]
     pub body: BanGuildMemberBody,
 }
 

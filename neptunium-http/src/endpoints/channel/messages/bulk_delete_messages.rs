@@ -8,6 +8,7 @@ use serde_json::json;
 
 use crate::{endpoints::Endpoint, request::Request};
 
+// Bulk deleting messages does not support a reason currently
 #[derive(Builder, Clone, Debug)]
 pub struct BulkDeleteMessages {
     pub channel_id: Id<ChannelMarker>,

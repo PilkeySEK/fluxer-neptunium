@@ -55,6 +55,7 @@ pub trait GuildExt {
         body: BanGuildMemberBody,
     ) -> Result<(), Error>;
     async fn unban_member(&self, ctx: &Context, user_id: Id<UserMarker>) -> Result<(), Error>;
+    async fn unban_member_with_reason(&self, ctx: &Context, user_id: Id<UserMarker>, reason: impl Into<String> + Send) -> Result<(), Error>;
     async fn list_channels(&self, ctx: &Context) -> Result<Vec<Cached<CachedChannel>>, Error>;
     async fn create_channel(
         &self,
@@ -109,6 +110,13 @@ pub trait GuildExt {
         ctx: &Context,
         member_id: Id<UserMarker>,
         body: UpdateGuildMemberBody,
+    ) -> Result<Cached<CachedGuildMember>, Error>;
+    async fn update_member_with_reason(
+        &self,
+        ctx: &Context,
+        member_id: Id<UserMarker>,
+        body: UpdateGuildMemberBody,
+        reason: impl Into<String> + Send
     ) -> Result<Cached<CachedGuildMember>, Error>;
     async fn add_role_to_member(
         &self,
@@ -269,6 +277,18 @@ impl<T: GuildTrait> GuildExt for T {
             .execute(UnbanGuildMember {
                 guild_id: self.get_guild_id(),
                 user_id,
+                reason: None,
+            })
+            .await?)
+    }
+
+    async fn unban_member_with_reason(&self, ctx: &Context, user_id: Id<UserMarker>, reason: impl Into<String> + Send) -> Result<(), Error> {
+        Ok(ctx
+            .get_http_client()
+            .execute(UnbanGuildMember {
+                guild_id: self.get_guild_id(),
+                user_id,
+                reason: Some(reason.into())
             })
             .await?)
     }
@@ -424,6 +444,24 @@ impl<T: GuildTrait> GuildExt for T {
             guild_id: self.get_guild_id(),
             user_id: member_id,
             body,
+            reason: None,
+        }
+        .execute_cached(ctx.get_http_client(), &ctx.cache)
+        .await?)
+    }
+
+    async fn update_member_with_reason(
+        &self,
+        ctx: &Context,
+        member_id: Id<UserMarker>,
+        body: UpdateGuildMemberBody,
+        reason: impl Into<String> + Send
+    ) -> Result<Cached<CachedGuildMember>, Error> {
+        Ok(UpdateGuildMember {
+            guild_id: self.get_guild_id(),
+            user_id: member_id,
+            body,
+            reason: Some(reason.into()),
         }
         .execute_cached(ctx.get_http_client(), &ctx.cache)
         .await?)
