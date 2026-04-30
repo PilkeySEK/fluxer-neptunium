@@ -4,6 +4,8 @@ use bon::Builder;
 use neptunium_cache_inmemory::CacheConfig;
 use neptunium_model::gateway::payload::outgoing::PresenceUpdateOutgoing;
 
+use crate::client::ResumeInfo;
+
 #[derive(Builder)]
 pub struct ClientConfig {
     #[builder(into)]
@@ -39,6 +41,9 @@ pub struct ClientConfig {
     pub gateway_retry_wait_time_fn: Box<dyn Fn(usize) -> Duration>,
     /// Override the heartbeat interval (ignore the heartbeat interval requested by the gateway).
     pub heartbeat_interval_override: Option<Duration>,
+    /// Add resume info so that the client will try to resume on the first start instead
+    /// of creating a new session.
+    pub resume_info: Option<ResumeInfo>,
 }
 
 impl Debug for ClientConfig {
@@ -70,6 +75,7 @@ impl Debug for ClientConfig {
             "heartbeat_interval_override: {:?} ",
             self.heartbeat_interval_override
         ))?;
+        f.write_fmt(format_args!("resume_info: {:?} ", self.resume_info))?;
         Ok(())
     }
 }

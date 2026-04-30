@@ -5,6 +5,7 @@ use std::{
     time::Duration,
 };
 
+use bon::Builder;
 use neptunium_cache_inmemory::{
     Cache,
     gateway::{CachedDispatchEvent, cached_payload::CachedGuildMembersChunk},
@@ -68,11 +69,10 @@ pub(crate) enum ClientMessage {
     ),
 }
 
-#[derive(Clone, Debug)]
-struct ResumeInfo {
-    session_id: Zeroizing<String>,
-    // Doesn't appear to be a thing
-    // resume_url: String,
+#[derive(Clone, Debug, Builder)]
+pub struct ResumeInfo {
+    #[builder(into)]
+    pub session_id: Zeroizing<String>,
 }
 
 #[expect(clippy::struct_excessive_bools)]
@@ -163,7 +163,7 @@ impl Client {
             tx,
             rx,
             always_propagate_event_errors: client_config.always_propagate_event_errors,
-            resume_info: None,
+            resume_info: client_config.resume_info,
             auto_reconnect: client_config.auto_reconnect,
             guild_members_chunk_listeners: HashMap::new(),
             expecting_heartbeat_ack: false,
