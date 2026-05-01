@@ -57,6 +57,10 @@ pub struct UpdateGuildSettingsBody {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub features: Option<Vec<GuildFeatureFlag>>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub add_features: Option<Vec<GuildFeatureFlag>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub remove_features: Option<Vec<GuildFeatureFlag>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub message_history_cutoff: Option<Timestamp<Iso8601>>,
 }
 
