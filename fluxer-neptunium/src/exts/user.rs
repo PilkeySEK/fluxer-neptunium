@@ -16,7 +16,10 @@ use neptunium_model::user::relationship::Relationship;
 use neptunium_model::{
     channel::{PermissionOverwrite, PermissionOverwriteEntity},
     guild::permissions::Permissions,
-    id::{Id, marker::GenericMarker},
+    id::{
+        Id,
+        marker::{GenericMarker, RoleMarker},
+    },
     user::PartialUser,
 };
 
@@ -236,6 +239,8 @@ pub trait GuildMemberExt {
         channel: T,
         permissions: Permissions,
     ) -> Result<bool, Error>;
+    async fn add_role(&self, ctx: &Context, role_id: Id<RoleMarker>) -> Result<(), Error>;
+    async fn remove_role(&self, ctx: &Context, role_id: Id<RoleMarker>) -> Result<(), Error>;
 }
 
 #[async_trait]
@@ -363,5 +368,17 @@ impl GuildMemberExt for CachedGuildMember {
             return Ok(true);
         }
         Ok(member_permissions.contains(permissions))
+    }
+
+    async fn add_role(&self, ctx: &Context, role_id: Id<RoleMarker>) -> Result<(), Error> {
+        self.guild_id
+            .add_role_to_member(ctx, self.id, role_id)
+            .await
+    }
+
+    async fn remove_role(&self, ctx: &Context, role_id: Id<RoleMarker>) -> Result<(), Error> {
+        self.guild_id
+            .remove_role_from_member(ctx, self.id, role_id)
+            .await
     }
 }
