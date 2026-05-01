@@ -2,6 +2,7 @@ use std::fmt::Display;
 
 use bon::Builder;
 use neptunium_model::{
+    guild::Emoji,
     id::{
         Id,
         marker::{ChannelMarker, EmojiMarker, MessageMarker, UserMarker},
@@ -60,6 +61,22 @@ impl From<Id<EmojiMarker>> for Reaction {
         Self::Custom {
             id: value,
             name: None,
+        }
+    }
+}
+
+impl From<Emoji> for Reaction {
+    fn from(value: Emoji) -> Self {
+        match value {
+            Emoji::Default(value) => Self::Unicode(value),
+            Emoji::Custom {
+                name,
+                id,
+                animated: _,
+            } => Self::Custom {
+                id,
+                name: Some(name),
+            },
         }
     }
 }
