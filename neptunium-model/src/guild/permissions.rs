@@ -82,6 +82,8 @@ bitflags! {
         const BYPASS_SLOWMODE = 1 << 52;
         /// Allows updating the voice region.
         const UPDATE_RTC_REGION = 1 << 53;
+        /// Allows viewing the member list in a guild or a specific channel.
+        const VIEW_CHANNEL_MEMBERS = 1 << 54;
     }
 }
 
