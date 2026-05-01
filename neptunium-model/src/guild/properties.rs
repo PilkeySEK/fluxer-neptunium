@@ -105,7 +105,6 @@ pub enum GuildVerificationLevel {
 }
 
 bitflags! {
-    /// Serializes/Deserializes as a string.
     #[derive(Copy, Clone, Debug)]
     pub struct GuildOperations: u32 {
         const PUSH_NOTIFICATIONS = 1 << 0;
@@ -139,6 +138,10 @@ pub enum GuildFeatureFlag {
     AnimatedBanner,
     /// Guild can have a banner.
     Banner,
+    /// Stickers cannot be cloned using the built-in feature.
+    CloneEmojiDisabled,
+    /// Stickers cannot be cloned using the built-in feature.
+    CloneStickerDisabled,
     /// Guild banner is detached from splash.
     DetachedBanner,
     // https://github.com/fluxerapp/fluxer/blob/03813bbe17db008452f0f1be3090a7d2970a5447/packages/constants/src/GuildConstants.tsx#L115
@@ -169,6 +172,8 @@ pub enum GuildFeatureFlag {
     UnavailableForEveryone,
     /// Guild is unavailable except for staff.
     UnavailableForEveryoneButStaff,
+    // TODO: What does this do?
+    UnavailableHidden,
     /// Guild is a visionary guild.
     Visionary,
     /// Guild is an operator guild.
@@ -177,12 +182,14 @@ pub enum GuildFeatureFlag {
     LargeGuildOverride,
     /// Guild has increased member capacity enabled.
     VeryLargeGuild,
-    /// Guild has managed message scheduling.
-    MtMessageScheduling,
-    /// Guild has managed expression packs.
-    MtExpressionPacks,
+    // /// Guild has managed message scheduling.
+    // MtMessageScheduling,
+    // /// Guild has managed expression packs.
+    // MtExpressionPacks,
     /// A raid has been detected in this guild.
     RaidDetected,
     /// The owner crown is hidden in the UI.
     HideOwnerCrown,
+    /// The guild is partnered.
+    Partnered,
 }
