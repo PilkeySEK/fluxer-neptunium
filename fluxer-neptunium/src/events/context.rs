@@ -1073,4 +1073,13 @@ impl Context {
 
         Ok(!response.taken)
     }
+
+    /// Create a theme with the given CSS text. Returns the theme ID on success.
+    #[cfg(feature = "user_api")]
+    pub async fn create_theme(&self, css: String) -> Result<String, Error> {
+        use neptunium_http::endpoints::themes::CreateTheme;
+
+        let response = self.http_client.execute(CreateTheme { css }).await?;
+        Ok(response.id)
+    }
 }

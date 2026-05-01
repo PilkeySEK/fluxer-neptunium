@@ -18,6 +18,8 @@ pub mod invites;
 pub mod meta;
 #[cfg(feature = "user_api")]
 pub mod saved_media;
+#[cfg(feature = "user_api")]
+pub mod themes;
 pub mod users;
 pub mod webhooks;
 
