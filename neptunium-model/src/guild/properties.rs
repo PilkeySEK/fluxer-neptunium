@@ -183,4 +183,6 @@ pub enum GuildFeatureFlag {
     MtExpressionPacks,
     /// A raid has been detected in this guild.
     RaidDetected,
+    /// The owner crown is hidden in the UI.
+    HideOwnerCrown,
 }
