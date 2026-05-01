@@ -21,12 +21,12 @@ pub enum TokenType {
 
 #[derive(Debug)]
 pub struct HttpClient {
-    pub(crate) api_base_url: String,
-    pub(crate) token: zeroize::Zeroizing<String>,
+    pub api_base_url: String,
+    pub token: zeroize::Zeroizing<String>,
     #[cfg(feature = "user_api")]
     pub token_type: TokenType,
     pub(crate) reqwest_client: reqwest::Client,
-    pub(crate) user_agent: String,
+    pub user_agent: String,
     #[cfg(feature = "rate-limiting")]
     pub(crate) rate_limiter: RateLimiter,
     /// How many times the client should retry if an error is received that is
