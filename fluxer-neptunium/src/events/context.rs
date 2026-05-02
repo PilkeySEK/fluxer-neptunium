@@ -1082,4 +1082,21 @@ impl Context {
         let response = self.http_client.execute(CreateTheme { css }).await?;
         Ok(response.id)
     }
+
+    /// Purge the personal notes. Returns the number of messages that were
+    /// deleted.
+    #[cfg(feature = "user_api")]
+    pub async fn purge_personal_notes(&self) -> Result<usize, Error> {
+        use neptunium_http::endpoints::channel::PurgeChannelMessages;
+
+        // The personal notes channel has the same ID as the user.
+        let current_user_id = self.get_own_profile().await?.load().id;
+        let response = self
+            .http_client
+            .execute(PurgeChannelMessages {
+                channel_id: current_user_id.cast(),
+            })
+            .await?;
+        Ok(response.deleted_count)
+    }
 }

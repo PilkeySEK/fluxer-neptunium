@@ -21,6 +21,8 @@ mod pin_dm_channel;
 mod preload_messages_for_channels;
 #[cfg(feature = "user_api")]
 mod preload_messages_for_channels_alternative;
+#[cfg(feature = "user_api")]
+mod purge_channel_messages;
 mod remove_user_from_group_dm;
 mod ring_call_recipients;
 mod set_permission_overwrite;
@@ -54,6 +56,8 @@ pub use pin_dm_channel::*;
 pub use preload_messages_for_channels::*;
 #[cfg(feature = "user_api")]
 pub use preload_messages_for_channels_alternative::*;
+#[cfg(feature = "user_api")]
+pub use purge_channel_messages::*;
 pub use remove_user_from_group_dm::*;
 pub use ring_call_recipients::*;
 pub use set_permission_overwrite::*;
