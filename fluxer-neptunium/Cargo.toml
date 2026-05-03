@@ -50,6 +50,7 @@ rustls = [
     "neptunium-cache-inmemory/rustls",
     "reqwest/rustls",
 ]
+experimental-macros = []
 
 [lints]
 workspace = true

@@ -6,7 +6,7 @@ use crate::time::timestamp::representations::TimestampRepr;
 pub mod representations;
 
 /// Represents a timestamp. The representation represents the behavior of this type when being serialized or deserialized.
-#[derive(Copy, Debug, Clone)]
+#[derive(Copy, Debug, Clone, PartialEq, Eq)]
 pub struct Timestamp<Repr: TimestampRepr> {
     value: Repr,
 }

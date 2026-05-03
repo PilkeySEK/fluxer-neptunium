@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 /// A hexadecimal color represented as a `u32`. Colors in the API are usually represented by numbers.
-#[derive(Serialize, Deserialize, Copy, Clone, Debug)]
+#[derive(Serialize, Deserialize, Copy, Clone, Debug, PartialEq, Eq)]
 #[serde(transparent)]
 pub struct HexColor(u32);
 

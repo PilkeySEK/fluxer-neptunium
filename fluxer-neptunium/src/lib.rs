@@ -31,8 +31,9 @@ pub mod client;
 pub mod events;
 pub mod exts;
 mod internal;
+#[cfg(any(test, feature = "experimental-macros"))]
+pub mod macros;
 pub use async_trait::async_trait;
-
 pub use neptunium_http as http;
 pub use neptunium_model as model;
 

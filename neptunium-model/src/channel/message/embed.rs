@@ -12,7 +12,7 @@ use crate::{
     },
 };
 
-#[derive(Serialize, Deserialize, Clone, Debug, Builder)]
+#[derive(Serialize, Deserialize, Clone, Debug, Builder, PartialEq, Eq)]
 pub struct MessageEmbed {
     #[serde(flatten)]
     pub base: MessageEmbedBase,
@@ -35,7 +35,7 @@ impl DerefMut for MessageEmbed {
 }
 
 bitflags! {
-    #[derive(Copy, Clone, Debug)]
+    #[derive(Copy, Clone, Debug, PartialEq, Eq)]
     pub struct EmbedMediaFlags: u32 {
         const CONTAINS_EXPLICIT_MEDIA = 1 << 4;
         const IS_ANIMATED = 1 << 5;
@@ -44,7 +44,7 @@ bitflags! {
 
 serde_bitflags! {EmbedMediaFlags, u32}
 
-#[derive(Serialize, Deserialize, Clone, Debug, Builder)]
+#[derive(Serialize, Deserialize, Clone, Debug, Builder, PartialEq, Eq)]
 pub struct EmbedMedia {
     #[builder(into)]
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -73,7 +73,7 @@ pub struct EmbedMedia {
     pub width: Option<u32>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, Builder)]
+#[derive(Serialize, Deserialize, Clone, Debug, Builder, PartialEq, Eq)]
 pub struct EmbedAuthor {
     #[builder(into)]
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -88,7 +88,7 @@ pub struct EmbedAuthor {
     pub url: Option<String>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, Builder)]
+#[derive(Serialize, Deserialize, Clone, Debug, Builder, PartialEq, Eq)]
 pub struct EmbedField {
     #[builder(default = true)]
     pub inline: bool,
@@ -98,7 +98,7 @@ pub struct EmbedField {
     pub value: String,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, Builder)]
+#[derive(Serialize, Deserialize, Clone, Debug, Builder, PartialEq, Eq)]
 pub struct EmbedChild {
     #[serde(flatten)]
     pub base: MessageEmbedBase,
@@ -117,7 +117,7 @@ impl DerefMut for EmbedChild {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, Builder)]
+#[derive(Serialize, Deserialize, Clone, Debug, Builder, PartialEq, Eq)]
 pub struct EmbedFooter {
     #[builder(into)]
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -130,7 +130,7 @@ pub struct EmbedFooter {
 }
 
 #[expect(clippy::doc_markdown)]
-#[derive(Serialize, Deserialize, Clone, Debug, Builder)]
+#[derive(Serialize, Deserialize, Clone, Debug, Builder, PartialEq, Eq)]
 pub struct MessageEmbedBase {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub audio: Option<EmbedMedia>,

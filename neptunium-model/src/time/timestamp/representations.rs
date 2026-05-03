@@ -12,11 +12,11 @@ use time::{
 /// Both of these represenations are sent to or received by the HTTP and Gateway API making them necessary
 /// to support in this crate.
 pub trait TimestampRepr:
-    for<'de> Deserialize<'de> + Serialize + Into<OffsetDateTime> + Clone + Copy
+    for<'de> Deserialize<'de> + Serialize + Into<OffsetDateTime> + Clone + Copy + PartialEq + Eq
 {
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct Iso8601 {
     inner: OffsetDateTime,
 }
@@ -67,7 +67,7 @@ impl Serialize for Iso8601 {
     }
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct UnixMillis {
     inner: OffsetDateTime,
 }
