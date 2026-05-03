@@ -13,7 +13,7 @@ macro_rules! create_embed {
             name: $field_name:expr,
             content: $field_content:expr
             $(, inline: $field_inline:expr)? $(,)?
-        ])+)?
+        ])+)? $(,)?
         $(footer: {
             text: $footer_text:expr
             $(, icon_url: $footer_icon_url:expr)?
