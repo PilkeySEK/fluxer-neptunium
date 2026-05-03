@@ -192,4 +192,5 @@ pub enum GuildFeatureFlag {
     HideOwnerCrown,
     /// The guild is partnered.
     Partnered,
+    ContentWarningsBackfilled,
 }
