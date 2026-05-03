@@ -5,6 +5,8 @@ use std::time::Duration;
 use bon::Builder;
 #[cfg(feature = "user_api")]
 use neptunium_cache_inmemory::CachedMessage;
+#[cfg(feature = "cache-statistics")]
+use neptunium_cache_inmemory::stats::CacheStats;
 use neptunium_cache_inmemory::{CachableEndpoint, Cached, CachedChannel, CachedGuildMember};
 #[cfg(feature = "user_api")]
 use neptunium_http::endpoints::{
@@ -105,6 +107,11 @@ impl Context {
     #[must_use]
     pub fn get_http_client(&self) -> &Arc<HttpClient> {
         &self.http_client
+    }
+
+    #[cfg(feature = "cache-statistics")]
+    pub fn get_cache_statistics(&self) -> CacheStats {
+        self.cache.stats()
     }
 
     /// Request the member and online count for the specified guild IDs.
