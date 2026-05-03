@@ -78,6 +78,12 @@ pub struct ResumeInfo {
 #[expect(clippy::struct_excessive_bools)]
 pub struct Client {
     shard: Shard,
+    // This is required to be `'static` because of reasons I am not
+    // qualified to explain properly. If you try to make this be the
+    // same lifetime as the lifetime of `Client`, Freddy will come
+    // to your house. If you somehow find a way to allow the lifetime
+    // of the event handlers be the lifetime of the client, then
+    // PLEASE tell me.
     event_handlers: Vec<Arc<dyn EventHandler + Sync + 'static>>,
     last_sequence_number: Option<u64>,
     context: Context,
