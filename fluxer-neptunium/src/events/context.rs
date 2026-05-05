@@ -42,7 +42,7 @@ use neptunium_http::{
 #[cfg(feature = "user_api")]
 use neptunium_model::{
     channel::message::Message,
-    id::marker::UserMarker,
+    id::marker::{MessageMarker, UserMarker},
     user::{
         auth::SudoVerification,
         data_harvest::DataHarvestResponse,
@@ -110,8 +110,23 @@ impl Context {
     }
 
     #[cfg(feature = "cache-statistics")]
+    #[must_use]
     pub fn get_cache_statistics(&self) -> CacheStats {
         self.cache.stats()
+    }
+
+    /// Bulk-acknowledge messages (mark as read).
+    #[cfg(feature = "user_api")]
+    pub async fn acknowledge_messages_bulk(
+        &self,
+        read_states: Vec<(Id<ChannelMarker>, Id<MessageMarker>)>,
+    ) -> Result<(), Error> {
+        use neptunium_http::endpoints::channel::AcknowledgeMessagesBulk;
+
+        Ok(self
+            .http_client
+            .execute(AcknowledgeMessagesBulk { read_states })
+            .await?)
     }
 
     /// Request the member and online count for the specified guild IDs.

@@ -1,5 +1,7 @@
 #[cfg(feature = "user_api")]
 mod acknowledge_message;
+#[cfg(feature = "user_api")]
+mod acknowledge_messages_bulk;
 mod allowed_mentions;
 mod attachment;
 mod bulk_delete_messages;
@@ -32,6 +34,8 @@ mod update_scheduled_message;
 
 #[cfg(feature = "user_api")]
 pub use acknowledge_message::*;
+#[cfg(feature = "user_api")]
+pub use acknowledge_messages_bulk::*;
 pub use allowed_mentions::*;
 pub use attachment::*;
 pub use bulk_delete_messages::*;
