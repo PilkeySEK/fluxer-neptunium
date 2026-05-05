@@ -11,6 +11,24 @@ pub struct Timestamp<Repr: TimestampRepr> {
     value: Repr,
 }
 
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub enum TimestampDisplayType {
+    /// "10:23".
+    Time,
+    /// "10:23:55".
+    TimeWithSeconds,
+    /// "5/5/2026" or "05.05.2026" depending on user language.
+    Date,
+    /// "May 5, 2026".
+    VerboseDate,
+    /// "May 5, 2026".
+    VerboseDateWithShortTime,
+    /// "Tuesday, May 5, 2026 at 10:00 AM".
+    VerboseDateWithDayOfWeekAndShortTime,
+    /// "5 minutes ago".
+    Relative,
+}
+
 impl<Repr: TimestampRepr> Timestamp<Repr> {
     pub fn new(value: impl Into<Repr>) -> Self {
         Self {
@@ -21,6 +39,23 @@ impl<Repr: TimestampRepr> Timestamp<Repr> {
     /// Get the inner value.
     pub fn get(self) -> Repr {
         self.value
+    }
+
+    /// Returns the time string for chat messages, e.g. `<t:1778005620:R>`.
+    pub fn time_string(self, display_type: TimestampDisplayType) -> String {
+        format!(
+            "<t:{}:{}>",
+            OffsetDateTime::from(self).unix_timestamp(),
+            match display_type {
+                TimestampDisplayType::Time => 't',
+                TimestampDisplayType::TimeWithSeconds => 'T',
+                TimestampDisplayType::Date => 'd',
+                TimestampDisplayType::VerboseDate => 'D',
+                TimestampDisplayType::VerboseDateWithShortTime => 'f',
+                TimestampDisplayType::VerboseDateWithDayOfWeekAndShortTime => 'F',
+                TimestampDisplayType::Relative => 'R',
+            }
+        )
     }
 }
 
@@ -64,5 +99,23 @@ impl<'de, Repr: TimestampRepr> Deserialize<'de> for Timestamp<Repr> {
         Ok(Self {
             value: Repr::deserialize(deserializer)?,
         })
+    }
+}
+
+#[cfg(feature = "chrono-timestamp-conversion")]
+impl<Repr: TimestampRepr, Tz: chrono::TimeZone> From<chrono::DateTime<Tz>> for Timestamp<Repr> {
+    fn from(value: chrono::DateTime<Tz>) -> Self {
+        use std::time::SystemTime;
+
+        OffsetDateTime::from(SystemTime::from(value)).into()
+    }
+}
+
+#[cfg(feature = "chrono-timestamp-conversion")]
+impl<Repr: TimestampRepr> From<Timestamp<Repr>> for chrono::DateTime<chrono::Utc> {
+    fn from(value: Timestamp<Repr>) -> Self {
+        use std::time::SystemTime;
+
+        SystemTime::from(OffsetDateTime::from(value)).into()
     }
 }

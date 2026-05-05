@@ -12,7 +12,14 @@ use time::{
 /// Both of these represenations are sent to or received by the HTTP and Gateway API making them necessary
 /// to support in this crate.
 pub trait TimestampRepr:
-    for<'de> Deserialize<'de> + Serialize + Into<OffsetDateTime> + Clone + Copy + PartialEq + Eq
+    for<'de> Deserialize<'de>
+    + Serialize
+    + Into<OffsetDateTime>
+    + From<OffsetDateTime>
+    + Clone
+    + Copy
+    + PartialEq
+    + Eq
 {
 }
 

@@ -51,6 +51,7 @@ rustls = [
     "reqwest/rustls",
 ]
 experimental-macros = []
+chrono-timestamp-conversion = ["neptunium-model/chrono-timestamp-conversion"]
 
 [lints]
 workspace = true
