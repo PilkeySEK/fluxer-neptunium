@@ -8,7 +8,7 @@ use bon::Builder;
 use mini_moka::sync::Cache as MokaCache;
 use neptunium_model::{
     gateway::payload::incoming::UserPrivateResponse,
-    guild::{Guild, member::GuildMemberProfile, permissions::GuildRole},
+    guild::{Guild, member::GuildMemberProfile},
     id::{
         Id,
         marker::{ChannelMarker, GuildMarker, MessageMarker, RoleMarker, UserMarker},
@@ -59,7 +59,7 @@ pub struct Cache {
     #[cfg(feature = "user_api")]
     pub guild_list_is_complete: AtomicBool,
     // TODO: Attach guild id
-    pub roles: MokaCache<Id<RoleMarker>, Cached<GuildRole>>,
+    pub roles: MokaCache<Id<RoleMarker>, Cached<CachedGuildRole>>,
 }
 
 #[derive(Builder, Copy, Clone, Debug)]

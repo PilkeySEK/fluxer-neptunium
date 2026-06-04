@@ -15,7 +15,7 @@ use neptunium_model::{
             WebhooksUpdate,
         },
     },
-    guild::{Guild, permissions::GuildRole},
+    guild::Guild,
     id::{Id, marker::ChannelMarker},
     invites::InviteWithMetadata,
     user::{
@@ -25,7 +25,7 @@ use neptunium_model::{
 };
 
 use crate::{
-    Cache, CacheValue, Cached, CachedChannel, CachedGuildMember, CachedMessage,
+    Cache, CacheValue, Cached, CachedChannel, CachedGuildMember, CachedGuildRole, CachedMessage,
     gateway::cached_payload::{
         CachedGuildCreate, CachedGuildMemberListUpdate, CachedGuildMembersChunk,
         CachedGuildRoleUpdateBulk, CachedMessageCreate, CachedMessageReactionAdd,
@@ -123,12 +123,18 @@ impl CachedDispatchEvent {
                 CachedDispatchEvent::GuildMemberRemove(payload)
             }
             DispatchEvent::GuildRoleCreate(payload) => CachedDispatchEvent::GuildRoleCreate(
-                Cached::<GuildRole>::cache_payload(payload, cache),
+                Cached::<CachedGuildRole>::cache_payload(payload, cache),
             ),
             DispatchEvent::GuildRoleUpdate(payload) => CachedDispatchEvent::GuildRoleUpdate(
                 // Need to convert GuildRoleUpdate to GuildRoleCreate because I can't have two types for
                 // CachedPayload::NonCached (obviously). But the result is the same, so this is fine™
-                Cached::<GuildRole>::cache_payload(GuildRoleCreate { role: payload.role }, cache),
+                Cached::<CachedGuildRole>::cache_payload(
+                    GuildRoleCreate {
+                        role: payload.role,
+                        guild_id: payload.guild_id,
+                    },
+                    cache,
+                ),
             ),
             DispatchEvent::GuildRoleUpdateBulk(payload) => {
                 CachedDispatchEvent::GuildRoleUpdateBulk(CachedGuildRoleUpdateBulk::cache_payload(
@@ -265,8 +271,8 @@ pub enum CachedDispatchEvent {
     GuildMemberAdd(Cached<CachedGuildMember>),
     GuildMemberUpdate(Cached<CachedGuildMember>),
     GuildMemberRemove(GuildMemberRemove),
-    GuildRoleCreate(Cached<GuildRole>),
-    GuildRoleUpdate(Cached<GuildRole>),
+    GuildRoleCreate(Cached<CachedGuildRole>),
+    GuildRoleUpdate(Cached<CachedGuildRole>),
     GuildRoleUpdateBulk(CachedGuildRoleUpdateBulk),
     GuildRoleDelete(GuildRoleDelete),
     GuildEmojisUpdate(GuildEmojisUpdate),

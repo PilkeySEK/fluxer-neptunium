@@ -46,16 +46,14 @@ use neptunium_http::{
 };
 use neptunium_model::{
     channel::PermissionOverwrite,
-    guild::{
-        Guild,
-        permissions::{GuildRole, Permissions},
-    },
+    guild::{Guild, permissions::Permissions},
     invites::InviteWithMetadata,
 };
 
 use crate::{
-    CachableEndpoint, Cache, Cached, CachedChannel, CachedGuildMember, CachedMessage,
-    CachedUserProfileFullResponse, gateway::cached_payload::cache_vec, traits::CacheValue,
+    CachableEndpoint, Cache, Cached, CachedChannel, CachedGuildMember, CachedGuildRole,
+    CachedMessage, CachedUserProfileFullResponse, gateway::cached_payload::cache_vec,
+    traits::CacheValue,
 };
 
 pub const USER_MAX_GUILDS: usize = 200;
@@ -623,28 +621,32 @@ impl CachableEndpoint for ToggleDetachedBanner {
 
 #[async_trait]
 impl CachableEndpoint for ListGuildRoles {
-    type Response = Vec<Cached<GuildRole>>;
+    type Response = Vec<Cached<CachedGuildRole>>;
     async fn execute_cached(
         self,
         client: &Arc<HttpClient>,
         cache: &Arc<Cache>,
     ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+        let guild_id = self.guild_id;
         let roles = client.execute(self).await?;
-        let cached_roles = cache_vec!(roles, cache);
-        Ok(cached_roles)
+        Ok(roles
+            .into_iter()
+            .map(|role| CachedGuildRole::from_guild_role(role, guild_id).insert_and_return(cache))
+            .collect())
     }
 }
 
 #[async_trait]
 impl CachableEndpoint for CreateGuildRole {
-    type Response = Cached<GuildRole>;
+    type Response = Cached<CachedGuildRole>;
     async fn execute_cached(
         self,
         client: &Arc<HttpClient>,
         cache: &Arc<Cache>,
     ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+        let guild_id = self.guild_id;
         let role = client.execute(self).await?;
-        Ok(role.insert_and_return(cache))
+        Ok(CachedGuildRole::from_guild_role(role, guild_id).insert_and_return(cache))
     }
 }
 
@@ -707,14 +709,15 @@ impl CachableEndpoint for DeleteGuildRole {
 
 #[async_trait]
 impl CachableEndpoint for UpdateGuildRole {
-    type Response = Cached<GuildRole>;
+    type Response = Cached<CachedGuildRole>;
     async fn execute_cached(
         self,
         client: &Arc<HttpClient>,
         cache: &Arc<Cache>,
     ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+        let guild_id = self.guild_id;
         let role = client.execute(self).await?;
-        Ok(role.insert_and_return(cache))
+        Ok(CachedGuildRole::from_guild_role(role, guild_id).insert_and_return(cache))
     }
 }
 

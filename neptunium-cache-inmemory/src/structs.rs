@@ -12,7 +12,10 @@ use neptunium_model::{
         },
     },
     gateway::payload::incoming::UserPremiumType,
-    guild::member::{GuildMember, GuildMemberProfile, GuildMemberProfileFlags},
+    guild::{
+        member::{GuildMember, GuildMemberProfile, GuildMemberProfileFlags},
+        permissions::{GuildRole, Permissions},
+    },
     id::{
         AtomicId, Id,
         marker::{
@@ -522,5 +525,40 @@ impl CachedUserProfileFullResponse {
 impl From<&CachedChannel> for Id<ChannelMarker> {
     fn from(value: &CachedChannel) -> Self {
         value.id
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct CachedGuildRole {
+    pub id: Id<RoleMarker>,
+    pub name: String,
+    pub permissions: Permissions,
+    pub position: u16,
+    pub color: HexColor,
+    /// Hash of the icon.
+    pub icon: Option<String>,
+    pub unicode_emoji: Option<String>,
+    pub hoist: bool,
+    pub hoist_position: Option<u16>,
+    pub mentionable: bool,
+    pub guild_id: Id<GuildMarker>,
+}
+
+impl CachedGuildRole {
+    #[must_use]
+    pub fn from_guild_role(value: GuildRole, guild_id: Id<GuildMarker>) -> Self {
+        Self {
+            id: value.id,
+            name: value.name,
+            permissions: value.permissions,
+            position: value.position,
+            color: value.color,
+            icon: value.icon,
+            unicode_emoji: value.unicode_emoji,
+            hoist: value.hoist,
+            hoist_position: value.hoist_position,
+            mentionable: value.mentionable,
+            guild_id,
+        }
     }
 }

@@ -1,19 +1,17 @@
-use neptunium_model::{
-    gateway::payload::incoming::{GuildRoleCreate, GuildRoleUpdateBulk},
-    guild::permissions::GuildRole,
-};
+use neptunium_model::gateway::payload::incoming::{GuildRoleCreate, GuildRoleUpdateBulk};
 
-use crate::{CacheValue, Cached, gateway::cached_payload::CachedPayload};
+use crate::{CacheValue, Cached, CachedGuildRole, gateway::cached_payload::CachedPayload};
 
-impl CachedPayload for Cached<GuildRole> {
+impl CachedPayload for Cached<CachedGuildRole> {
     type NonCached = GuildRoleCreate;
     fn cache_payload(non_cached: Self::NonCached, cache: &std::sync::Arc<crate::Cache>) -> Self {
-        non_cached.role.insert_and_return(cache)
+        CachedGuildRole::from_guild_role(non_cached.role, non_cached.guild_id)
+            .insert_and_return(cache)
     }
 }
 
 pub struct CachedGuildRoleUpdateBulk {
-    pub roles: Vec<Cached<GuildRole>>,
+    pub roles: Vec<Cached<CachedGuildRole>>,
 }
 
 impl CachedPayload for CachedGuildRoleUpdateBulk {
@@ -23,7 +21,10 @@ impl CachedPayload for CachedGuildRoleUpdateBulk {
             roles: non_cached
                 .roles
                 .into_iter()
-                .map(|role| role.insert_and_return(cache))
+                .map(|role| {
+                    CachedGuildRole::from_guild_role(role, non_cached.guild_id)
+                        .insert_and_return(cache)
+                })
                 .collect(),
         }
     }

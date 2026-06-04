@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::{Cache, Cached, CachedChannel, CachedGuildMember, CachedMessage};
+use crate::{Cache, Cached, CachedChannel, CachedGuildMember, CachedGuildRole, CachedMessage};
 use async_trait::async_trait;
 use neptunium_http::{
     client::HttpClient,
@@ -8,7 +8,7 @@ use neptunium_http::{
 };
 use neptunium_model::{
     gateway::payload::incoming::UserPrivateResponse,
-    guild::{Guild, member::GuildMemberProfile, permissions::GuildRole},
+    guild::{Guild, member::GuildMemberProfile},
     id::{
         Id,
         marker::{GuildMarker, UserMarker},
@@ -124,7 +124,7 @@ impl CacheValue for Guild {
     }
 }
 
-impl CacheValue for GuildRole {
+impl CacheValue for CachedGuildRole {
     fn insert_and_return(self, cache: &Arc<Cache>) -> Cached<Self> {
         let role_id = self.id;
         if let Some(existing_role) = cache.roles.get(&role_id) {

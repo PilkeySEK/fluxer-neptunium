@@ -3,7 +3,7 @@ use std::sync::Arc;
 use async_trait::async_trait;
 use bon::Builder;
 use neptunium_cache_inmemory::{
-    Cached, CachedChannel, CachedGuildMember, CachedMessage,
+    Cached, CachedChannel, CachedGuildMember, CachedGuildRole, CachedMessage,
     gateway::cached_payload::{
         CachedGuildCreate, CachedGuildMemberListUpdate, CachedGuildMembersChunk,
         CachedGuildRoleUpdateBulk, CachedMessageCreate, CachedMessageReactionAdd,
@@ -21,7 +21,7 @@ use neptunium_model::{
         SavedMessageDelete, UserNoteUpdate, UserPrivateResponse, VoiceServerUpdate,
         VoiceStateUpdate, WebhooksUpdate,
     },
-    guild::{Guild, permissions::GuildRole},
+    guild::Guild,
     id::{Id, marker::ChannelMarker},
     invites::InviteWithMetadata,
     user::{
@@ -196,14 +196,14 @@ pub trait EventHandler: Send {
     async fn on_guild_role_create(
         &self,
         ctx: Context,
-        data: Cached<GuildRole>,
+        data: Cached<CachedGuildRole>,
     ) -> Result<(), EventError> {
         Ok(())
     }
     async fn on_guild_role_update(
         &self,
         ctx: Context,
-        data: Cached<GuildRole>,
+        data: Cached<CachedGuildRole>,
     ) -> Result<(), EventError> {
         Ok(())
     }

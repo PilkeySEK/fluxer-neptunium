@@ -1,5 +1,7 @@
 use async_trait::async_trait;
-use neptunium_cache_inmemory::{CachableEndpoint, Cached, CachedChannel, CachedGuildMember};
+use neptunium_cache_inmemory::{
+    CachableEndpoint, Cached, CachedChannel, CachedGuildMember, CachedGuildRole,
+};
 #[cfg(feature = "user_api")]
 use neptunium_http::endpoints::users::{UpdateUserGuildSettings, UpdateUserGuildSettingsBody};
 use neptunium_http::endpoints::{
@@ -27,8 +29,8 @@ use neptunium_http::endpoints::{
 use neptunium_model::user::{auth::SudoVerification, settings::UserGuildSettings};
 use neptunium_model::{
     guild::{
-        Guild, audit_log::GuildAuditLogs, bans::GuildBanListEntry, permissions::GuildRole,
-        properties::GuildSticker, webhook::Webhook,
+        Guild, audit_log::GuildAuditLogs, bans::GuildBanListEntry, properties::GuildSticker,
+        webhook::Webhook,
     },
     id::{
         Id,
@@ -200,18 +202,18 @@ pub trait GuildExt {
         role_id: Id<RoleMarker>,
         reason: impl Into<String> + Send,
     ) -> Result<(), Error>;
-    async fn list_roles(&self, ctx: &Context) -> Result<Vec<Cached<GuildRole>>, Error>;
+    async fn list_roles(&self, ctx: &Context) -> Result<Vec<Cached<CachedGuildRole>>, Error>;
     async fn create_role(
         &self,
         ctx: &Context,
         body: CreateGuildRoleBody,
-    ) -> Result<Cached<GuildRole>, Error>;
+    ) -> Result<Cached<CachedGuildRole>, Error>;
     async fn create_role_with_reason(
         &self,
         ctx: &Context,
         body: CreateGuildRoleBody,
         reason: impl Into<String> + Send,
-    ) -> Result<Cached<GuildRole>, Error>;
+    ) -> Result<Cached<CachedGuildRole>, Error>;
     async fn update_role_positions(
         &self,
         ctx: &Context,
@@ -252,14 +254,14 @@ pub trait GuildExt {
         ctx: &Context,
         role_id: Id<RoleMarker>,
         updates: UpdateGuildRoleBody,
-    ) -> Result<Cached<GuildRole>, Error>;
+    ) -> Result<Cached<CachedGuildRole>, Error>;
     async fn update_role_with_reason(
         &self,
         ctx: &Context,
         role_id: Id<RoleMarker>,
         updates: UpdateGuildRoleBody,
         reason: impl Into<String> + Send,
-    ) -> Result<Cached<GuildRole>, Error>;
+    ) -> Result<Cached<CachedGuildRole>, Error>;
     async fn list_stickers(&self, ctx: &Context) -> Result<Vec<GuildSticker>, Error>;
     async fn create_sticker(
         &self,
@@ -745,7 +747,7 @@ impl<T: GuildTrait> GuildExt for T {
             .await?)
     }
 
-    async fn list_roles(&self, ctx: &Context) -> Result<Vec<Cached<GuildRole>>, Error> {
+    async fn list_roles(&self, ctx: &Context) -> Result<Vec<Cached<CachedGuildRole>>, Error> {
         Ok(ListGuildRoles {
             guild_id: self.get_guild_id(),
         }
@@ -757,7 +759,7 @@ impl<T: GuildTrait> GuildExt for T {
         &self,
         ctx: &Context,
         body: CreateGuildRoleBody,
-    ) -> Result<Cached<GuildRole>, Error> {
+    ) -> Result<Cached<CachedGuildRole>, Error> {
         Ok(CreateGuildRole {
             guild_id: self.get_guild_id(),
             body,
@@ -772,7 +774,7 @@ impl<T: GuildTrait> GuildExt for T {
         ctx: &Context,
         body: CreateGuildRoleBody,
         reason: impl Into<String> + Send,
-    ) -> Result<Cached<GuildRole>, Error> {
+    ) -> Result<Cached<CachedGuildRole>, Error> {
         Ok(CreateGuildRole {
             guild_id: self.get_guild_id(),
             body,
@@ -896,7 +898,7 @@ impl<T: GuildTrait> GuildExt for T {
         ctx: &Context,
         role_id: Id<RoleMarker>,
         updates: UpdateGuildRoleBody,
-    ) -> Result<Cached<GuildRole>, Error> {
+    ) -> Result<Cached<CachedGuildRole>, Error> {
         Ok(UpdateGuildRole {
             guild_id: self.get_guild_id(),
             role_id,
@@ -913,7 +915,7 @@ impl<T: GuildTrait> GuildExt for T {
         role_id: Id<RoleMarker>,
         updates: UpdateGuildRoleBody,
         reason: impl Into<String> + Send,
-    ) -> Result<Cached<GuildRole>, Error> {
+    ) -> Result<Cached<CachedGuildRole>, Error> {
         Ok(UpdateGuildRole {
             guild_id: self.get_guild_id(),
             role_id,
