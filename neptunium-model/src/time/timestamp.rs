@@ -11,20 +11,23 @@ pub struct Timestamp<Repr: TimestampRepr> {
     value: Repr,
 }
 
+#[expect(clippy::doc_paragraphs_missing_punctuation)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum TimestampDisplayType {
-    /// "10:23".
-    Time,
-    /// "10:23:55".
-    TimeWithSeconds,
-    /// "5/5/2026" or "05.05.2026" depending on user language.
-    Date,
-    /// "May 5, 2026".
-    VerboseDate,
-    /// "May 5, 2026, 10:00 AM".
+    /// "10:23". `t`
+    ShortTime,
+    /// "10:23:55". `T`
+    LongTime,
+    /// "5/5/2026" or "05.05.2026" depending on user language. `d`
+    ShortDate,
+    /// "May 5, 2026". `D`
+    LongDate,
+    /// "May 5, 2026, 10:00 AM". `f`
     VerboseDateWithShortTime,
-    /// "Tuesday, May 5, 2026 at 10:00 AM".
+    /// "Tuesday, May 5, 2026 at 10:00 AM". `F`
     VerboseDateWithDayOfWeekAndShortTime,
+    /// "4/4/2026, 10:00 AM" or "05.05.2026, 10:00", depending on user language. `s`
+    ShortDateAndTime,
     /// "5 minutes ago".
     Relative,
 }
@@ -47,13 +50,14 @@ impl<Repr: TimestampRepr> Timestamp<Repr> {
             "<t:{}:{}>",
             OffsetDateTime::from(self).unix_timestamp(),
             match display_type {
-                TimestampDisplayType::Time => 't',
-                TimestampDisplayType::TimeWithSeconds => 'T',
-                TimestampDisplayType::Date => 'd',
-                TimestampDisplayType::VerboseDate => 'D',
+                TimestampDisplayType::ShortTime => 't',
+                TimestampDisplayType::LongTime => 'T',
+                TimestampDisplayType::ShortDate => 'd',
+                TimestampDisplayType::LongDate => 'D',
                 TimestampDisplayType::VerboseDateWithShortTime => 'f',
                 TimestampDisplayType::VerboseDateWithDayOfWeekAndShortTime => 'F',
                 TimestampDisplayType::Relative => 'R',
+                TimestampDisplayType::ShortDateAndTime => 's',
             }
         )
     }
