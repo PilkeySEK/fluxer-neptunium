@@ -53,6 +53,9 @@ pub trait UserExt {
         params: GetUserProfileParams,
     ) -> Result<Cached<CachedUserProfileFullResponse>, Error>;
     async fn get_user(&self, ctx: &Context) -> Result<Cached<PartialUser>, Error>;
+    /// Returns the avatar ID, for which the corresponding default profile picture from Fluxer will be displayed in the Fluxer client if no `avatar` is set.
+    /// Currently this returns 0-5 and the ID is derived from the user ID.
+    fn get_default_avatar_id(&self) -> u8;
 }
 
 #[async_trait]
@@ -146,6 +149,10 @@ impl<T: UserTrait> UserExt for T {
         }
         .execute_cached(ctx.get_http_client(), &ctx.cache)
         .await?)
+    }
+
+    fn get_default_avatar_id(&self) -> u8 {
+        (self.get_user_id().into_inner() % 6) as u8
     }
 }
 
