@@ -38,8 +38,8 @@ pub struct ClientConfig {
         } else {
             time
         }
-    }) as Box<dyn Fn(usize) -> Duration + Send>), into)]
-    pub gateway_retry_wait_time_fn: DebugIgnore<Box<dyn Fn(usize) -> Duration + Send>>,
+    }) as Box<dyn Fn(usize) -> Duration + Send + Sync>), into)]
+    pub gateway_retry_wait_time_fn: DebugIgnore<Box<dyn Fn(usize) -> Duration + Send + Sync>>,
     /// Add resume info so that the client will try to resume on the first start instead
     /// of creating a new session.
     pub resume_info: Option<ResumeInfo>,
