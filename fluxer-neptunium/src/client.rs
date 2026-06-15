@@ -103,7 +103,7 @@ pub struct Client {
     context: Context,
     // tx: UnboundedSender<ClientMessage>,
     rx: UnboundedReceiver<ClientMessage>,
-    gateway_retry_wait_time_fn: Box<dyn Fn(usize) -> Duration>,
+    gateway_retry_wait_time_fn: Box<dyn Fn(usize) -> Duration + Send>,
     send_identify_presence_on_every_reconnect: bool,
     identify_presence: Option<PresenceUpdateOutgoing>,
     guild_members_chunk_listeners: HashMap<String, UnboundedSender<CachedGuildMembersChunk>>,
