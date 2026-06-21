@@ -1,4 +1,4 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     gateway::presence::CustomStatus,
@@ -9,7 +9,7 @@ use crate::{
     },
 };
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct GuildMemberListUpdate {
     pub guild_id: Id<GuildMarker>,
     /// The channel for which the member list is updated.
@@ -23,7 +23,7 @@ pub struct GuildMemberListUpdate {
     pub ops: Vec<MemberListOperation>,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct MemberListGroup {
     /// This is usually the role ID, but it may also be
     /// "online" or "offline".
@@ -59,7 +59,20 @@ impl<'de> Deserialize<'de> for MemberListGroupId {
     }
 }
 
-#[derive(Deserialize, Copy, Clone, Debug)]
+impl Serialize for MemberListGroupId {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        match self {
+            Self::Id(id) => id.serialize(serializer),
+            Self::Online => "online".serialize(serializer),
+            Self::Offline => "offline".serialize(serializer),
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Copy, Clone, Debug)]
 #[serde(rename_all = "UPPERCASE")]
 pub enum MemberListOperationType {
     Sync,
@@ -70,7 +83,7 @@ pub enum MemberListOperationType {
 }
 
 // TODO: Find out which of these are sent for which ops
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct MemberListOperation {
     pub op: MemberListOperationType,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -83,7 +96,7 @@ pub struct MemberListOperation {
     pub item: Option<MemberListItem>,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct MemberListItem {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub member: Option<GuildMember>,
@@ -91,7 +104,7 @@ pub struct MemberListItem {
     pub group: Option<MemberListGroup>,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct MemberListGuildMember {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub presence: Option<MemberListPresence>,
@@ -99,7 +112,7 @@ pub struct MemberListGuildMember {
     pub member: GuildMember,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct MemberListPresence {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub status: Option<String>,

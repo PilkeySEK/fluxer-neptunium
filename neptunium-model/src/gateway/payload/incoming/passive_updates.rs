@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     channel::Channel,
@@ -11,7 +11,7 @@ use crate::{
     },
 };
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct PassiveUpdates {
     pub guild_id: Id<GuildMarker>,
     /// Map of channel id to most recent message id.

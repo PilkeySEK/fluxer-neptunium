@@ -1,4 +1,4 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     channel::{Channel, message::Message},
@@ -27,7 +27,7 @@ use crate::{
 // For some reason rust-analyzer tells me a warning but clippy does not, this is
 // to make both of them happy
 #[allow(clippy::large_enum_variant)]
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(tag = "t", content = "d", rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum DispatchEvent {
     Ready(Ready),
@@ -113,7 +113,7 @@ pub enum DispatchEvent {
     GuildCountsUpdate(GuildCountsUpdate),
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct DispatchEventPayload {
     #[serde(flatten)]
     pub event: DispatchEvent,

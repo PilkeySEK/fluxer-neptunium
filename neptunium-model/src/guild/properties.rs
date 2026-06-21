@@ -34,7 +34,7 @@ pub struct GuildSticker {
 */
 
 // GuildStickerResponse
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct GuildSticker {
     pub id: Id<StickerMarker>,
     pub name: String,

@@ -1,4 +1,4 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     gateway::presence::Presence,
@@ -10,7 +10,7 @@ use crate::{
 };
 
 /// Sent in response to `RequestGuildMembers`.
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct GuildMembersChunk {
     pub guild_id: Id<GuildMarker>,
     pub members: Vec<GuildMember>,

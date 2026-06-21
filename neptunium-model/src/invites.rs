@@ -58,7 +58,7 @@ pub struct GuildInviteMetadata {
     pub max_age: Duration<Seconds>,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct GuildInvite {
     pub code: String,
     pub guild: PartialGuild,
@@ -181,5 +181,69 @@ impl<'de> Deserialize<'de> for InviteWithMetadata {
             ),
             n => return Err(D::Error::custom(format!("unknown invite type: {n}"))),
         })
+    }
+}
+
+impl Serialize for InviteWithMetadata {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        match self {
+            Self::Guild(invite, meta) => {
+                #[derive(Serialize)]
+                struct Wrapper<'a> {
+                    #[serde(flatten)]
+                    invite: &'a GuildInvite,
+                    #[serde(flatten)]
+                    meta: &'a GuildInviteMetadata,
+                    #[serde(rename = "type")]
+                    type_tag: u8,
+                }
+
+                Wrapper {
+                    invite,
+                    meta,
+                    type_tag: 0,
+                }
+                .serialize(serializer)
+            }
+            Self::GroupDm(invite, meta) => {
+                #[derive(Serialize)]
+                struct Wrapper<'a> {
+                    #[serde(flatten)]
+                    invite: &'a GroupDmInvite,
+                    #[serde(flatten)]
+                    meta: &'a GroupDmInviteMetadata,
+                    #[serde(rename = "type")]
+                    type_tag: u8,
+                }
+
+                Wrapper {
+                    invite,
+                    meta,
+                    type_tag: 1,
+                }
+                .serialize(serializer)
+            }
+            Self::EmojiPack(invite, meta) | Self::StickerPack(invite, meta) => {
+                #[derive(Serialize)]
+                struct Wrapper<'a> {
+                    #[serde(flatten)]
+                    invite: &'a PackInvite,
+                    #[serde(flatten)]
+                    meta: &'a PackInviteMetadata,
+                    #[serde(rename = "type")]
+                    type_tag: u8,
+                }
+
+                Wrapper {
+                    invite,
+                    meta,
+                    type_tag: 1,
+                }
+                .serialize(serializer)
+            }
+        }
     }
 }

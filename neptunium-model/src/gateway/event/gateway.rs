@@ -1,8 +1,8 @@
 use serde::{
-    Deserialize,
+    Deserialize, Serialize,
     de::{self, Error, Unexpected},
 };
-use serde_json::Value;
+use serde_json::{Value, json};
 
 use crate::gateway::{
     event::{
@@ -57,5 +57,59 @@ impl<'de> Deserialize<'de> for GatewayEvent {
                 )));
             }
         })
+    }
+}
+
+impl Serialize for GatewayEvent {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        match self {
+            Self::Dispatch(data) => {
+                #[derive(Serialize)]
+                struct Wrapper<'a> {
+                    #[serde(flatten)]
+                    data: &'a DispatchEventPayload,
+                    op: OpCode,
+                }
+
+                Wrapper {
+                    data,
+                    op: OpCode::Dispatch,
+                }
+                .serialize(serializer)
+            }
+            Self::GatewayError(data) => json!({
+                "op": OpCode::GatewayError,
+                "d": data,
+            })
+            .serialize(serializer),
+            Self::Heartbeat => json!({
+                "op": OpCode::Heartbeat,
+                "d": serde_json::Value::Null,
+            })
+            .serialize(serializer),
+            Self::HeartbeatAck => json!({
+                "op": OpCode::HeartbeatAck,
+                "d": serde_json::Value::Null,
+            })
+            .serialize(serializer),
+            Self::Hello(data) => json!({
+                "op": OpCode::Hello,
+                "d": data,
+            })
+            .serialize(serializer),
+            Self::InvalidSession(InvalidSessionEvent { resumable }) => json!({
+                "op": OpCode::InvalidSession,
+                "d": resumable,
+            })
+            .serialize(serializer),
+            Self::Reconnect => json!({
+                "op": OpCode::Reconnect,
+                "d": serde_json::Value::Null,
+            })
+            .serialize(serializer),
+        }
     }
 }

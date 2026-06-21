@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::id::{Id, marker::GuildMarker};
 
@@ -56,5 +56,39 @@ impl<'de> Deserialize<'de> for GuildCountsUpdate {
             counts,
             nonce: raw.nonce,
         })
+    }
+}
+
+impl Serialize for GuildCountsUpdate {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        #[derive(Serialize)]
+        struct RawGuildCountsUpdateItem {
+            guild_id: Id<GuildMarker>,
+            member_count: usize,
+            online_count: usize,
+        }
+        #[derive(Serialize)]
+        struct RawGuildCountsUpdate<'a> {
+            counts: Vec<RawGuildCountsUpdateItem>,
+            #[serde(skip_serializing_if = "Option::is_none")]
+            nonce: Option<&'a String>,
+        }
+
+        RawGuildCountsUpdate {
+            nonce: self.nonce.as_ref(),
+            counts: self
+                .counts
+                .iter()
+                .map(|(k, v)| RawGuildCountsUpdateItem {
+                    guild_id: *k,
+                    member_count: v.member_count,
+                    online_count: v.online_count,
+                })
+                .collect(),
+        }
+        .serialize(serializer)
     }
 }

@@ -1,4 +1,4 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     channel::Channel,
@@ -22,7 +22,7 @@ use crate::{
     },
 };
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct GuildProperties {
     pub afk_channel_id: Option<Id<ChannelMarker>>,
     pub afk_timeout: Duration<Seconds>,
@@ -63,7 +63,7 @@ pub struct GuildProperties {
 
 // Figured out by looking at guild response... :(
 // TODO: Check official gateway code once fluxer-v2 is released
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct GuildCreate {
     pub properties: GuildProperties,
     pub channels: Vec<Channel>,

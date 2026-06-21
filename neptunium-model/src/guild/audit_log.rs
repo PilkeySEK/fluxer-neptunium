@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     guild::{
@@ -20,7 +20,7 @@ pub mod event_type;
 // See comment in the module on why this is commented
 // pub mod optional_entry_info;
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct AuditLogEntry {
     /// Type of event to cause the entry.
     pub action_type: AuditLogActionType,
@@ -52,7 +52,7 @@ pub struct AuditLogEntry {
     pub user_id: Option<Id<UserMarker>>,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug, Serialize)]
 pub struct GuildAuditLogs {
     pub audit_log_entries: Vec<AuditLogEntry>,
     // TODO: Is this actually UserPartial?
