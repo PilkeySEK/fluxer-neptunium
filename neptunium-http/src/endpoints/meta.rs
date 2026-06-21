@@ -106,9 +106,39 @@ pub struct InstanceDiscoveryDocumentPushNotificationConfig {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct InstanceDiscoveryDocumentAppPublicBranding {
+    pub product_name: String,
+    pub icon_url: Option<String>,
+    pub symbol_url: Option<String>,
+    pub logo_url: Option<String>,
+    pub wordmark_url: Option<String>,
+    pub favicon_url: Option<String>,
+    pub theme_color: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct InstanceDiscoveryDocumentAppPublicSetup {
+    pub configured: bool,
+    pub admin_url: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct InstanceDiscoveryDocumentAppPublicLegal {
+    pub terms_url: Option<String>,
+    pub privacy_url: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct InstanceDiscoveryDocumentAppPublicRegistration {
+    pub collect_date_of_birth: bool,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct InstanceDiscoveryDocumentAppPublic {
-    /// Sentry DSN for client-side error reporting.
-    pub sentry_dsn: String,
+    pub branding: InstanceDiscoveryDocumentAppPublicBranding,
+    pub setup: InstanceDiscoveryDocumentAppPublicSetup,
+    pub legal: InstanceDiscoveryDocumentAppPublicLegal,
+    pub registration: InstanceDiscoveryDocumentAppPublicRegistration,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]

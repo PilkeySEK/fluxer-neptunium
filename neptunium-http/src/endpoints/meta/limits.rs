@@ -30,6 +30,7 @@ pub enum LimitKey {
     MaxGroupDmRecipients,
     MaxGroupDmsPerUser,
     MaxGuildChannels,
+    MaxGuildEmojis,
     MaxGuildEmojisAnimatedMore,
     MaxGuildEmojisAnimated,
     MaxGuildEmojisStaticMore,
