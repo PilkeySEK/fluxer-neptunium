@@ -12,7 +12,7 @@ pub struct VerifyPhoneCode {
     pub code: String,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug, Serialize)]
 pub struct VerifyPhoneCodeResponse {
     pub phone_token: String,
 }

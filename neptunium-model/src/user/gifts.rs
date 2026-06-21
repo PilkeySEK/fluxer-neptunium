@@ -1,11 +1,11 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     time::timestamp::{Timestamp, representations::Iso8601},
     user::PartialUser,
 };
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug, Serialize)]
 pub struct GiftPrivateResponse {
     pub code: String,
     pub duration_months: u64,

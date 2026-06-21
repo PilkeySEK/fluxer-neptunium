@@ -10,7 +10,7 @@ use neptunium_model::{
     },
 };
 use reqwest::Method;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{endpoints::Endpoint, request::Request};
 
@@ -28,7 +28,7 @@ pub struct ListPinnedMessages {
     pub params: ListPinnedMessagesParams,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug, Serialize)]
 pub struct ListPinnedMessagesResponse {
     /// Whether more pins can be fetched with pagination.
     pub has_more: bool,

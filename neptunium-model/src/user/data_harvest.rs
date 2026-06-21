@@ -1,9 +1,9 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::time::timestamp::{Timestamp, representations::Iso8601};
 
 #[cfg(feature = "user_api")]
-#[derive(Deserialize, Copy, Clone, Debug, PartialEq, Eq)]
+#[derive(Deserialize, Copy, Clone, Debug, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum DataHarvestStatus {
     Pending,
@@ -12,7 +12,7 @@ pub enum DataHarvestStatus {
     Failed,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug, Serialize)]
 pub struct DataHarvestResponse {
     pub harvest_id: String,
     pub status: DataHarvestStatus,

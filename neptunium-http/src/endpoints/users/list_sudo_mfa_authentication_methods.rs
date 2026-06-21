@@ -1,12 +1,12 @@
 use reqwest::Method;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{endpoints::Endpoint, request::Request};
 
 #[derive(Copy, Clone, Debug)]
 pub struct ListSudoMfaAuthenticationMethods;
 
-#[derive(Deserialize, Copy, Clone, Debug)]
+#[derive(Deserialize, Copy, Clone, Debug, Serialize)]
 #[expect(clippy::struct_excessive_bools)]
 pub struct ListSudoMfaAuthenticationMethodsResponse {
     pub totp: bool,

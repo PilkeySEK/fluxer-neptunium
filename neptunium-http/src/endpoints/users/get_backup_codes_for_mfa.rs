@@ -14,7 +14,7 @@ pub struct GetMfaBackupCodes {
     pub regenerate: bool,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct MfaBackupCodesResponse {
     pub backup_codes: Vec<MfaBackupCode>,
 }

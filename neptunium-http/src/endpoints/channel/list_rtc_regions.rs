@@ -1,7 +1,7 @@
 use bon::Builder;
 use neptunium_model::id::{Id, marker::ChannelMarker};
 use reqwest::Method;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{endpoints::Endpoint, request::Request};
 
@@ -10,7 +10,7 @@ pub struct ListRtcRegions {
     pub channel_id: Id<ChannelMarker>,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug, Serialize)]
 pub struct ListRtcRegionsResponseEntry {
     pub id: String,
     /// The display name.

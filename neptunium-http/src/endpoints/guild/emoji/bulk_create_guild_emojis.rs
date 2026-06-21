@@ -4,7 +4,7 @@ use neptunium_model::{
     id::{Id, marker::GuildMarker},
 };
 use reqwest::Method;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use serde_json::json;
 
 use crate::{
@@ -15,7 +15,7 @@ use crate::{
     request::Request,
 };
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct BulkCreateGuildEmojisResponse {
     /// Successfully created emojis.
     pub success: Vec<GuildEmoji>,

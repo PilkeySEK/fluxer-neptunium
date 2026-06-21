@@ -21,7 +21,7 @@ pub struct GuildEmojiCreateData {
     pub image: String,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug, Serialize)]
 pub struct EmojiCreateFailure {
     pub name: String,
     pub error: String,

@@ -1,7 +1,7 @@
 use bon::Builder;
 use neptunium_model::id::{Id, marker::GuildMarker};
 use reqwest::Method;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{endpoints::Endpoint, request::Request};
 
@@ -10,7 +10,7 @@ pub struct GetGuildVanityUrl {
     pub guild_id: Id<GuildMarker>,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug, Serialize)]
 pub struct GetGuildVanityUrlResponse {
     pub uses: u64,
     #[serde(skip_serializing_if = "Option::is_none")]

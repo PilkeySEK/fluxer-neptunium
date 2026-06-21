@@ -41,7 +41,7 @@ impl std::fmt::Debug for SudoVerification {
     }
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct MfaBackupCode {
     pub code: String,
     /// Whether the code has been used.

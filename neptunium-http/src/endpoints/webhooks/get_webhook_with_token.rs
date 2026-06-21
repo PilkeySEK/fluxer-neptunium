@@ -4,7 +4,7 @@ use neptunium_model::id::{
     marker::{ChannelMarker, GuildMarker, WebhookMarker},
 };
 use reqwest::Method;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use zeroize::Zeroizing;
 
 use crate::{endpoints::Endpoint, request::Request};
@@ -17,7 +17,7 @@ pub struct GetWebhookWithToken {
 }
 
 /// A `Webhook` struct without the creator user data.
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug, Serialize)]
 pub struct GetWebhookWithTokenResponse {
     pub id: Id<WebhookMarker>,
     pub guild_id: Id<GuildMarker>,

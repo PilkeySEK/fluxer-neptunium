@@ -1,12 +1,12 @@
 use reqwest::Method;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{endpoints::Endpoint, request::Request};
 
 #[derive(Copy, Clone, Debug)]
 pub struct GetSudoWebauthnAuthenticationOptions;
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug, Serialize)]
 pub struct GetSudoWebauthnAuthenticationOptionsResponse {
     /// The WebAuthn challenge.
     #[expect(clippy::doc_markdown)]

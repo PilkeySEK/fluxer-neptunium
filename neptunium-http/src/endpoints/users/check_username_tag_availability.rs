@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use bon::Builder;
 use reqwest::Method;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{endpoints::Endpoint, request::Request};
 
@@ -14,7 +14,7 @@ pub struct CheckUsernameTagAvailability {
     pub discriminator: String,
 }
 
-#[derive(Deserialize, Copy, Clone, Debug)]
+#[derive(Deserialize, Serialize, Copy, Clone, Debug)]
 pub struct CheckUsernameTagAvailabilityResponse {
     pub taken: bool,
 }

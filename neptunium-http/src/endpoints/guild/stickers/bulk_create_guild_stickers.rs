@@ -18,13 +18,13 @@ pub struct BulkCreateGuildStickers {
     pub body: Vec<CreateGuildStickerBody>,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug, Serialize)]
 pub struct BulkCreateGuildStickersFailureResponseEntry {
     pub name: String,
     pub error: String,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug, Serialize)]
 pub struct BulkCreateGuildStickersResponse {
     /// Successfully created stickers.
     pub success: Vec<GuildSticker>,

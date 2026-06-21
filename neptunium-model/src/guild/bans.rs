@@ -1,4 +1,4 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     id::{Id, marker::UserMarker},
@@ -6,7 +6,7 @@ use crate::{
     user::PartialUser,
 };
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug, Serialize)]
 pub struct GuildBanListEntry {
     // TODO: Check whether this is actually UserPartial
     pub user: PartialUser,

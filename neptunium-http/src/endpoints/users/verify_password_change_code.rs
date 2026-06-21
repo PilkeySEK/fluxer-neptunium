@@ -12,7 +12,7 @@ pub struct VerifyPasswordChangeCode {
     pub code: String,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug, Serialize)]
 pub struct VerifyPasswordChangeCodeResponse {
     pub verification_proof: String,
 }

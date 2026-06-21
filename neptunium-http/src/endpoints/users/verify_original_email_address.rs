@@ -12,7 +12,7 @@ pub struct VerifyOriginalEmailAddress {
     pub code: String,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug, Serialize)]
 pub struct VerifyOriginalEmailAddressResponse {
     pub oringinal_proof: String,
 }

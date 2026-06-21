@@ -16,7 +16,7 @@ pub struct RequestNewEmailAddress {
     pub original_proof: String,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug, Serialize)]
 pub struct RequestNewEmailAddressResponse {
     pub ticket: String,
     pub new_email: String,

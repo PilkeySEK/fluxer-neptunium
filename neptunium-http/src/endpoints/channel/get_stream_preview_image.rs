@@ -21,6 +21,9 @@ impl ResponseBody for StreamPreviewImageResponse {
     ) -> Result<Self, Box<crate::endpoints::ExecuteEndpointRequestError>> {
         Ok(Self(bytes))
     }
+    fn serialize(&self) -> Vec<u8> {
+        self.0.clone()
+    }
 }
 
 impl Endpoint for GetStreamPreviewImage {

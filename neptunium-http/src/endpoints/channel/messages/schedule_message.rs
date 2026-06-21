@@ -11,7 +11,7 @@ use neptunium_model::{
     time::timestamp::{Timestamp, representations::Iso8601},
 };
 use reqwest::Method;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     endpoints::{
@@ -28,7 +28,7 @@ pub struct ScheduleMessage {
     pub message: CreateMessageBody,
 }
 
-#[derive(Deserialize, Copy, Clone, Debug)]
+#[derive(Deserialize, Copy, Clone, Debug, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum ScheduledMessageStatus {
     Pending,
@@ -39,7 +39,7 @@ pub enum ScheduledMessageStatus {
     Cancelled,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug, Serialize)]
 pub struct ScheduleMessageResponsePayload {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub attachments: Option<Vec<MessageAttachment>>,
@@ -66,7 +66,7 @@ pub struct ScheduleMessageResponsePayload {
     pub saved_media_id: Option<Id<GenericMarker>>,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug, Serialize)]
 pub struct ScheduleMessageResponse {
     pub id: Id<ScheduledMessageMarker>,
     pub channel_id: Id<ChannelMarker>,

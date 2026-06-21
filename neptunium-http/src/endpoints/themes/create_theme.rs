@@ -12,7 +12,7 @@ pub struct CreateTheme {
     pub css: String,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct CreateThemeResponse {
     /// The ID of the created theme.
     pub id: String,

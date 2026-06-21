@@ -4,7 +4,7 @@ use std::string::FromUtf8Error;
 use crate::ratelimiting::RateLimitHeaders;
 #[cfg(feature = "rate-limiting")]
 use reqwest::Response;
-use serde::de::DeserializeOwned;
+use serde::{Serialize, de::DeserializeOwned};
 
 use crate::{
     error::{ApiErrorResponse, ApiRateLimitedResponse},
@@ -23,7 +23,7 @@ pub mod themes;
 pub mod users;
 pub mod webhooks;
 
-impl<T: DeserializeOwned> ResponseBody for T {
+impl<T: DeserializeOwned + Serialize> ResponseBody for T {
     fn deserialize(bytes: Vec<u8>) -> Result<Self, Box<ExecuteEndpointRequestError>> {
         if bytes.is_empty() {
             let mut deserializer = serde_json::Deserializer::from_str("null");
@@ -34,6 +34,9 @@ impl<T: DeserializeOwned> ResponseBody for T {
             Ok(serde_path_to_error::deserialize(&mut deserializer)?)
         }
     }
+    fn serialize(&self) -> Vec<u8> {
+        serde_json::to_string(self).unwrap().as_bytes().to_vec()
+    }
 }
 
 pub trait ResponseBody: Sized {
@@ -41,6 +44,7 @@ pub trait ResponseBody: Sized {
     /// # Errors
     /// Returns an error if deserializing failed.
     fn deserialize(bytes: Vec<u8>) -> Result<Self, Box<ExecuteEndpointRequestError>>;
+    fn serialize(&self) -> Vec<u8>;
 }
 
 // Trait bounds to make sure all endpoints implement these, they aren't technically required.

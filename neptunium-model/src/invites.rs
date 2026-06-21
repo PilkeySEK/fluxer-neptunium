@@ -247,3 +247,58 @@ impl Serialize for InviteWithMetadata {
         }
     }
 }
+
+impl Serialize for Invite {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        match self {
+            Self::Guild(invite) => {
+                #[derive(Serialize)]
+                struct Wrapper<'a> {
+                    #[serde(flatten)]
+                    invite: &'a GuildInvite,
+                    #[serde(rename = "type")]
+                    type_tag: u8,
+                }
+
+                Wrapper {
+                    invite,
+                    type_tag: 0,
+                }
+                .serialize(serializer)
+            }
+            Self::GroupDm(invite) => {
+                #[derive(Serialize)]
+                struct Wrapper<'a> {
+                    #[serde(flatten)]
+                    invite: &'a GroupDmInvite,
+                    #[serde(rename = "type")]
+                    type_tag: u8,
+                }
+
+                Wrapper {
+                    invite,
+                    type_tag: 1,
+                }
+                .serialize(serializer)
+            }
+            Self::EmojiPack(invite) | Self::StickerPack(invite) => {
+                #[derive(Serialize)]
+                struct Wrapper<'a> {
+                    #[serde(flatten)]
+                    invite: &'a PackInvite,
+                    #[serde(rename = "type")]
+                    type_tag: u8,
+                }
+
+                Wrapper {
+                    invite,
+                    type_tag: 1,
+                }
+                .serialize(serializer)
+            }
+        }
+    }
+}

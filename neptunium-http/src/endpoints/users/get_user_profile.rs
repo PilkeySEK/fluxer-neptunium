@@ -12,7 +12,7 @@ use neptunium_model::{
     user::{PartialUser, UserExternalAccountConnection, UserProfileData},
 };
 use reqwest::Method;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{endpoints::Endpoint, request::Request};
 
@@ -31,13 +31,13 @@ pub struct GetUserProfile {
     pub params: GetUserProfileParams,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug, Serialize)]
 pub struct MutualGuild {
     pub id: Id<GuildMarker>,
     pub nick: Option<String>,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug, Serialize)]
 pub struct UserProfileFullResponse {
     pub user: PartialUser,
     pub user_profile: UserProfileData,

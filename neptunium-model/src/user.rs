@@ -4,7 +4,7 @@ use serde_repr::{Deserialize_repr, Serialize_repr};
 
 use crate::{
     id::{Id, marker::UserMarker},
-    misc::HexColor,
+    misc::{HexColor, serde_bitflags},
     user::flags::PublicUserFlags,
 };
 
@@ -40,7 +40,7 @@ pub struct PartialUser {
     pub mention_flags: Option<MentionReplyPreference>,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug, Serialize)]
 pub struct UserProfileData {
     pub bio: Option<String>,
     pub pronouns: Option<String>,
@@ -49,7 +49,7 @@ pub struct UserProfileData {
     pub banner_color: Option<HexColor>,
 }
 
-#[derive(Deserialize, Copy, Clone, Debug)]
+#[derive(Deserialize, Copy, Clone, Debug, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum UserExternalAccountConnectionType {
     #[serde(rename = "bsky")]
@@ -66,16 +66,9 @@ bitflags! {
     }
 }
 
-impl<'de> Deserialize<'de> for UserExternalAccountConnectionVisibilityFlags {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        Ok(Self::from_bits_truncate(u32::deserialize(deserializer)?))
-    }
-}
+serde_bitflags!(UserExternalAccountConnectionVisibilityFlags, u32);
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug, Serialize)]
 pub struct UserExternalAccountConnection {
     // TODO: Is this a snowflake?
     pub id: String,

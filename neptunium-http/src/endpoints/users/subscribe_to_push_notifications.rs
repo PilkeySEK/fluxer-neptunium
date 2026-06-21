@@ -25,7 +25,7 @@ pub struct SubscribeToPushNotificationsKeys {
     pub auth: Zeroizing<String>,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug, Serialize)]
 pub struct SubscribeToPushNotificationsResponse {
     pub subscription_id: String,
 }

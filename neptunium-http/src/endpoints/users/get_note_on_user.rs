@@ -1,7 +1,7 @@
 use bon::Builder;
 use neptunium_model::id::{Id, marker::UserMarker};
 use reqwest::Method;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{endpoints::Endpoint, request::Request};
 
@@ -10,7 +10,7 @@ pub struct GetUserNote {
     pub user_id: Id<UserMarker>,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug, Serialize)]
 pub struct GetUserNoteResponse {
     pub note: String,
 }

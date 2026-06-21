@@ -1,6 +1,6 @@
 use neptunium_model::time::timestamp::{Timestamp, representations::Iso8601};
 use reqwest::Method;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use serde_json::json;
 
 use crate::{endpoints::Endpoint, request::Request};
@@ -8,7 +8,7 @@ use crate::{endpoints::Endpoint, request::Request};
 #[derive(Copy, Clone, Debug)]
 pub struct StartEmailChange;
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug, Serialize)]
 pub struct StartEmailChangeResponse {
     pub ticket: String,
     pub require_original: bool,

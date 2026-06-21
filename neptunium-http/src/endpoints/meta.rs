@@ -178,7 +178,7 @@ pub struct InstanceDiscoveryDocumentOauth2 {
     pub scopes_supported: Vec<String>,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct InstanceDiscoveryDocumentResponse {
     /// Version of the API server code.
     pub api_code_version: u64,

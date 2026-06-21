@@ -1,10 +1,10 @@
 use neptunium_model::time::duration::{Duration, Millis};
 use reqwest::Method;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{endpoints::Endpoint, request::Request};
 
-#[derive(Deserialize, Copy, Clone, Debug)]
+#[derive(Deserialize, Copy, Clone, Debug, Serialize)]
 pub struct GatewayInformationSessionStartLimit {
     /// Total number of session starts allowed.
     pub total: u64,
@@ -16,7 +16,7 @@ pub struct GatewayInformationSessionStartLimit {
     pub max_concurrency: u64,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug, Serialize)]
 pub struct GatewayInformation {
     /// WebSocket URL to connect to the gateway.
     pub url: String,

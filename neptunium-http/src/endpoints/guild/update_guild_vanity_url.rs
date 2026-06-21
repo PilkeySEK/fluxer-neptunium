@@ -1,7 +1,7 @@
 use bon::Builder;
 use neptunium_model::id::{Id, marker::GuildMarker};
 use reqwest::Method;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use serde_json::json;
 
 use crate::{endpoints::Endpoint, request::Request};
@@ -17,7 +17,7 @@ pub struct UpdateGuildVanityUrl {
     pub audit_log_reason: Option<String>,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug, Serialize)]
 pub struct UpdateGuildVanityUrlResponse {
     pub code: String,
 }

@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Deserialize, Copy, Clone, Debug, Hash, PartialEq, Eq)]
+#[derive(Deserialize, Serialize, Copy, Clone, Debug, Hash, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum LimitKey {
     AvatarMaxSize,
@@ -55,7 +55,7 @@ pub enum LimitKey {
     StickerMaxSize,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct InstanceDiscoveryDocumentLimitsRuleFilters {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub traits: Option<Vec<String>>,
@@ -63,7 +63,7 @@ pub struct InstanceDiscoveryDocumentLimitsRuleFilters {
     pub guild_features: Option<Vec<String>>,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct InstanceDiscoveryDocumentLimitsRule {
     /// Unique identifier for this limits rule.
     pub id: String,
@@ -72,7 +72,7 @@ pub struct InstanceDiscoveryDocumentLimitsRule {
     pub filters: Option<InstanceDiscoveryDocumentLimitsRuleFilters>,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct InstanceDiscoveryDocumentLimits {
     /// Wire format version. Is always `2`.
     pub version: u32,

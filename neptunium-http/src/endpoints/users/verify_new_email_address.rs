@@ -14,7 +14,7 @@ pub struct VerifyNewEmailAddress {
     pub original_proof: String,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug, Serialize)]
 pub struct VerifyNewEmailAddressResponse {
     pub email_token: String,
 }

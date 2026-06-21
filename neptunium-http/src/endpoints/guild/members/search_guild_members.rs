@@ -75,7 +75,7 @@ pub struct SearchGuildMembers {
     pub body: SearchGuildMembersBody,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug, Serialize)]
 pub struct SearchGuildMembersSupplementalMemberDataResponse {
     /// Invite code used to join.
     pub source_invite_code: Option<String>,
@@ -85,7 +85,7 @@ pub struct SearchGuildMembersSupplementalMemberDataResponse {
     pub join_source_type: Option<JoinSourceType>,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug, Serialize)]
 pub struct SearchGuildMembersMemberResponse {
     pub id: CompositeId<GuildMarker, UserMarker>,
     pub guild_id: Id<GuildMarker>,
@@ -101,7 +101,7 @@ pub struct SearchGuildMembersMemberResponse {
     pub is_bot: bool,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug, Serialize)]
 pub struct SearchGuildMembersResponse {
     pub guild_id: Id<GuildMarker>,
     pub members: Vec<SearchGuildMembersMemberResponse>,

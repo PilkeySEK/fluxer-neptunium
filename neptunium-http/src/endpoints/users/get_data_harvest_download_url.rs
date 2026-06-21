@@ -1,7 +1,7 @@
 use bon::Builder;
 use neptunium_model::time::timestamp::{Timestamp, representations::Iso8601};
 use reqwest::Method;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{endpoints::Endpoint, request::Request};
 
@@ -11,7 +11,7 @@ pub struct GetDataHarvestDownloadUrl {
     pub harvest_id: String,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug, Serialize)]
 pub struct GetDataHarvestDownloadUrlResponse {
     pub download_url: String,
     pub expires_at: Timestamp<Iso8601>,

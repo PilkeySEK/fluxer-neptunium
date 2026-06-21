@@ -7,7 +7,7 @@ use neptunium_model::{
     },
 };
 use reqwest::Method;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{endpoints::Endpoint, request::Request};
 
@@ -19,7 +19,7 @@ pub struct GetChannelSlowmodeInformation {
 
 /// Slowmode information for this channel and user. This includes information
 /// about when the client may send the next message too.
-#[derive(Deserialize, Copy, Clone, Debug)]
+#[derive(Deserialize, Copy, Clone, Debug, Serialize)]
 pub struct ChannelSlowmodeInformation {
     /// Whether the current user can bypass slowmode.
     pub can_bypass: bool,

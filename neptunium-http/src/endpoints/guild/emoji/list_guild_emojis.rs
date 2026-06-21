@@ -5,11 +5,11 @@ use neptunium_model::{
     user::PartialUser,
 };
 use reqwest::Method;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{endpoints::Endpoint, request::Request};
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug, Serialize)]
 pub struct ListGuildEmojisResponseEntry {
     #[serde(flatten)]
     pub emoji: GuildEmoji,

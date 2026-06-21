@@ -1,11 +1,11 @@
 use bon::Builder;
 use neptunium_model::id::{Id, marker::ChannelMarker};
 use reqwest::Method;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{endpoints::Endpoint, request::Request};
 
-#[derive(Deserialize, Copy, Clone, Debug)]
+#[derive(Deserialize, Copy, Clone, Debug, Serialize)]
 pub struct CallEligibilityStatus {
     pub ringable: bool,
     pub silent: bool,

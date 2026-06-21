@@ -67,7 +67,7 @@ fn boolean_false() -> bool {
     false
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug, Serialize)]
 pub struct GuildMemberProfile {
     pub bio: Option<String>,
     pub pronouns: Option<String>,

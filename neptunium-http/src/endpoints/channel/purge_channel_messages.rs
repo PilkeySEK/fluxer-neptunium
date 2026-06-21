@@ -1,7 +1,7 @@
 use bon::Builder;
 use neptunium_model::id::{Id, marker::ChannelMarker};
 use reqwest::Method;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{endpoints::Endpoint, request::Request};
 
@@ -11,7 +11,7 @@ pub struct PurgeChannelMessages {
     pub channel_id: Id<ChannelMarker>,
 }
 
-#[derive(Deserialize, Copy, Clone, Debug, PartialEq, Eq)]
+#[derive(Deserialize, Copy, Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct PurgeChannelMessagesResponse {
     pub deleted_count: usize,
 }

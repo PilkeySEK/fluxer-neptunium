@@ -28,7 +28,7 @@ pub struct CreateAttachmentsInChannel {
 }
 
 /// The API echoes `id`, `filename`, `file_size` and `content_type`.
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct CreateAttachmentsInChannelAttachmentResponse {
     pub id: u64,
     pub filename: String,
@@ -42,7 +42,7 @@ pub struct CreateAttachmentsInChannelAttachmentResponse {
     pub upload_url: String,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct CreateAttachmentsInChannelResponse {
     pub attachments: Vec<CreateAttachmentsInChannelAttachmentResponse>,
 }

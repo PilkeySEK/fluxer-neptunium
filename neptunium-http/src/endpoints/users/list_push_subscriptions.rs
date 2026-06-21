@@ -1,18 +1,18 @@
 use reqwest::Method;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{endpoints::Endpoint, request::Request};
 
 #[derive(Copy, Clone, Debug)]
 pub struct ListPushSubscriptions;
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug, Serialize)]
 pub struct ListPushSubscriptionsResponseEntry {
     pub subscription_id: String,
     pub user_agent: Option<String>,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug, Serialize)]
 pub struct ListPushSubscriptionsResponse {
     pub subscriptions: Vec<ListPushSubscriptionsResponseEntry>,
 }

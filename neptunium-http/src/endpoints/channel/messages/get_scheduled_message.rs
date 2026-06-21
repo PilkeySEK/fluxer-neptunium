@@ -7,7 +7,7 @@ use neptunium_model::{
     time::timestamp::{Timestamp, representations::Iso8601},
 };
 use reqwest::Method;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     endpoints::{
@@ -22,7 +22,7 @@ pub struct GetScheduledMessage {
     pub scheduled_message_id: Id<ScheduledMessageMarker>,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug, Serialize)]
 pub struct ScheduledMessageResponse {
     pub id: Id<ScheduledMessageMarker>,
     pub channel_id: Id<ChannelMarker>,

@@ -1,4 +1,4 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     channel::message::Message,
@@ -8,14 +8,14 @@ use crate::{
     },
 };
 
-#[derive(Deserialize, Copy, Clone, Debug, PartialEq, Eq)]
+#[derive(Deserialize, Copy, Clone, Debug, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum SavedMessageAvailability {
     Available,
     MissingPermissions,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug, Serialize)]
 pub struct SavedMessage {
     pub id: Id<SavedMessageMarker>,
     pub channel_id: Id<ChannelMarker>,
