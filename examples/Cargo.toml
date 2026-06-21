@@ -7,7 +7,7 @@ version = "0.0.0"
 
 [dev-dependencies]
 tokio = { version = "1.52.3", features = ["full"] }
-fluxer-neptunium = { path = "../fluxer-neptunium", version = "0.7.0", features = ["user_api"] }
+fluxer-neptunium = { path = "../fluxer-neptunium", version = "0.7.1", features = ["user_api"] }
 tracing-subscriber = "0.3.23"
 
 [[example]]
