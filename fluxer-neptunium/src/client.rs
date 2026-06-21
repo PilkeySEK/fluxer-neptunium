@@ -624,3 +624,13 @@ impl Client {
         ControlFlow::Continue(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn assert_client_is_send_sync() {
+        static_assertions::assert_impl_all!(Client: Send, Sync);
+    }
+}
