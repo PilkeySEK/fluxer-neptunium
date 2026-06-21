@@ -67,3 +67,11 @@ impl<'de, Repr: DurationRepr> Deserialize<'de> for Duration<Repr> {
         })
     }
 }
+
+impl<Repr: DurationRepr> From<std::time::Duration> for Duration<Repr> {
+    fn from(value: std::time::Duration) -> Self {
+        Self {
+            value: Repr::from(value),
+        }
+    }
+}
