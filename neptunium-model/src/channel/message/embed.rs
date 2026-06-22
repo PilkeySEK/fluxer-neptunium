@@ -121,12 +121,12 @@ impl DerefMut for EmbedChild {
 pub struct EmbedFooter {
     #[builder(into)]
     #[serde(skip_serializing_if = "Option::is_none")]
-    icon_url: Option<String>,
+    pub icon_url: Option<String>,
     #[builder(into)]
     #[serde(skip_serializing_if = "Option::is_none")]
-    proxy_icon_url: Option<String>,
+    pub proxy_icon_url: Option<String>,
     #[builder(into)]
-    text: String,
+    pub text: String,
 }
 
 #[expect(clippy::doc_markdown)]
