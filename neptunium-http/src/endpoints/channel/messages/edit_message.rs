@@ -86,3 +86,21 @@ impl From<CreateMessageBody> for EditMessageBody {
         }
     }
 }
+
+impl From<MessageEmbed> for EditMessageBody {
+    fn from(value: MessageEmbed) -> Self {
+        Self::from(vec![value])
+    }
+}
+
+impl From<Vec<MessageEmbed>> for EditMessageBody {
+    fn from(value: Vec<MessageEmbed>) -> Self {
+        Self {
+            content: None,
+            embeds: Some(value),
+            attachments: None,
+            allowed_mentions: None,
+            flags: None,
+        }
+    }
+}
