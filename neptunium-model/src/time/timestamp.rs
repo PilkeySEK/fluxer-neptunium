@@ -1,13 +1,13 @@
 use serde::{Deserialize, Serialize};
 use time::OffsetDateTime;
 
-use crate::time::timestamp::representations::TimestampRepr;
+use crate::time::timestamp::representations::{Iso8601, TimestampRepr};
 
 pub mod representations;
 
 /// Represents a timestamp. The representation represents the behavior of this type when being serialized or deserialized.
 #[derive(Copy, Debug, Clone, PartialEq, Eq)]
-pub struct Timestamp<Repr: TimestampRepr> {
+pub struct Timestamp<Repr: TimestampRepr = Iso8601> {
     value: Repr,
 }
 
@@ -60,6 +60,33 @@ impl<Repr: TimestampRepr> Timestamp<Repr> {
                 TimestampDisplayType::ShortDateAndTime => 's',
             }
         )
+    }
+
+    /// Parse a fluxer timestamp (in the same format that is returned by `Timestamp::time_string`).
+    ///
+    /// The string is expected to be `.trim()`ed already. It must contain exactly
+    /// the timestamp.
+    ///
+    /// Returns `None` if the timestap could not be parsed.
+    #[must_use]
+    pub fn parse(s: &str) -> Option<Self> {
+        // <t:?:?>
+        let s = s.strip_prefix("<t:")?;
+        // ?:?>
+        let s = s.strip_suffix('>')?;
+        // ?:?
+        let s =
+            s.strip_suffix(|char| matches!(char, 't' | 'T' | 'd' | 'D' | 'f' | 'F' | 'R' | 's'))?;
+        // ?:
+        let unix_timestamp_str = s.strip_suffix(':')?;
+        // ?
+        let unix_timestamp = unix_timestamp_str.parse::<i64>().ok()?;
+        if unix_timestamp < 0 {
+            return None;
+        }
+        Some(Self::new(
+            OffsetDateTime::from_unix_timestamp(unix_timestamp).ok()?,
+        ))
     }
 }
 
