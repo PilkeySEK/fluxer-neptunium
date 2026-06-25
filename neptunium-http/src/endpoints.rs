@@ -11,6 +11,8 @@ use crate::{
     request::Request,
 };
 
+#[cfg(feature = "user_api")]
+pub mod auth;
 pub mod channel;
 pub mod gateway;
 pub mod guild;

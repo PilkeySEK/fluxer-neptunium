@@ -1224,6 +1224,7 @@ dependencies = [
  "rand 0.10.1",
  "reqwest",
  "serde",
+ "serde-bool",
  "serde_json",
  "serde_path_to_error",
  "serde_repr",
@@ -1811,6 +1812,15 @@ checksum = "9a8e94ea7f378bd32cbbd37198a4a91436180c5bb472411e48b5ec2e2124ae9e"
 dependencies = [
  "serde_core",
  "serde_derive",
+]
+
+[[package]]
+name = "serde-bool"
+version = "0.1.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8fdd050c9c2ed5ae1fb29e71be0a6efdd9df43c7cb13ea5826528cfe10c51db0"
+dependencies = [
+ "serde",
 ]
 
 [[package]]
