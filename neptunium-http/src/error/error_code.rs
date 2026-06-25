@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 
+// from commit: 097e10d65140aa9129dcbad69c9850632a15ffd0
 #[expect(clippy::doc_markdown)]
 #[derive(Deserialize, Serialize, Clone, Debug, PartialEq, Eq)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
