@@ -1,19 +1,19 @@
 use neptunium_model::time::duration::{Duration, MillisF64};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::error::{error_code::ApiErrorCode, validation_error_code::ApiValidationErrorCode};
 
 pub mod error_code;
 pub mod validation_error_code;
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct ApiErrorEntry {
     pub path: String,
     pub message: String,
     pub code: ApiValidationErrorCode,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct ApiErrorResponse {
     pub code: ApiErrorCode,
     // I will assume that this field is always present
@@ -24,7 +24,7 @@ pub struct ApiErrorResponse {
     pub errors: Vec<ApiErrorEntry>,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct ApiRateLimitedResponse {
     /// Is always `RateLimited`.
     pub code: ApiErrorCode,
