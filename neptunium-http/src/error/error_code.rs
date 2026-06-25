@@ -4,12 +4,17 @@ use serde::{Deserialize, Serialize};
 #[derive(Deserialize, Serialize, Clone, Debug, PartialEq, Eq)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum ApiErrorCode {
-    /// There was an internal server error.
-    InternalServerError,
     /// Access to this resource is denied.
     AccessDenied,
     /// This account has been disabled.
     AccountDisabled,
+    BadGateway,
+    BadRequest,
+    BlueskyOauthAuthorizationFailed,
+    BlueskyOauthCallbackFailed,
+    BlueskyOauthNotEnabled,
+    BlueskyOauthSessionExpired,
+    BlueskyOauthStateInvalid,
     /// This account is scheduled for deletion.
     AccountScheduledForDeletion,
     /// This account has been permanently suspended.
@@ -24,28 +29,38 @@ pub enum ApiErrorCode {
     AclsMustBeNonEmpty,
     /// Admin API key was not found.
     AdminApiKeyNotFound,
+    ApplicationNotFound,
+    ApplicationNotOwned,
     /// You are already friends with this user.
     AlreadyFriends,
     /// Audit log is currently being indexed.
     AuditLogIndexing,
+    BotsCannotCreateGuilds,
     /// Bots cannot send friend requests.
     BotsCannotSendFriendRequests,
+    BotAlreadyInGuild,
+    BotApplicationNotFound,
+    BotIsPrivate,
     /// Bot users cannot access this authentication endpoint.
     BotUserAuthEndpointAccessDenied,
     /// Bot users cannot create authentication sessions.
     BotUserAuthSessionCreationDenied,
+    BotUserGenerationFailed,
+    BotUserNotFound,
     /// A call already exists in this channel.
     CallAlreadyExists,
     /// You cannot edit another user message.
     CannotEditOtherUserMessage,
     /// This action cannot be executed on a DM channel.
     CannotExecuteOnDm,
+    CannotBlockSystemUser,
     /// System webhooks cannot be modified.
     CannotModifySystemWebhook,
     /// Cannot modify voice state.
     CannotModifyVoiceState,
     /// Cannot redeem plutonium while having Visionary subscription.
     CannotRedeemPlutoniumWithVisionary,
+    CannotReportGuild,
     /// You cannot report your own guild.
     CannotReportOwnGuild,
     /// You cannot report your own message.
@@ -62,6 +77,7 @@ pub enum ApiErrorCode {
     CannotSendMessagesInNonTextChannel,
     /// Cannot send messages to this user.
     CannotSendMessagesToUser,
+    CannotTransferOwnershipToBot,
     /// Cannot shrink reserved slots.
     CannotShrinkReservedSlots,
     /// Captcha verification is required.
@@ -70,32 +86,72 @@ pub enum ApiErrorCode {
     ChannelIndexing,
     /// You are timed out in this guild.
     CommunicationDisabled,
+    ConnectionAlreadyExists,
+    ConnectionInitiationTokenInvalid,
+    ConnectionInvalidIdentifier,
+    ConnectionInvalidType,
+    ConnectionLimitReached,
+    ConnectionNotFound,
+    ConnectionVerificationFailed,
+    Conflict,
     /// Content was blocked.
     ContentBlocked,
     /// Resource creation failed.
     CreationFailed,
+    DecryptionFailed,
     /// Resource deletion failed.
     DeletionFailed,
+    DiscoveryAlreadyApplied,
+    DiscoveryApplicationAlreadyReviewed,
+    DiscoveryApplicationNotFound,
+    DiscoveryDescriptionRequired,
+    DiscoveryDisabled,
+    DiscoveryInsufficientMembers,
+    DiscoveryInvalidCategory,
+    DiscoveryNotDiscoverable,
     /// A discriminator is required.
     DiscriminatorRequired,
     /// Email service is not in testable mode.
     EmailServiceNotTestable,
     /// Email verification is required.
     EmailVerificationRequired,
+    CanaryTesterEmailVerificationRequired,
+    DirectMessageEmailVerificationRequired,
+    FriendRequestEmailVerificationRequired,
+    GuildCreationEmailVerificationRequired,
+    GuildEmailVerificationRequired,
+    MfaEmailVerificationRequired,
+    ProfileEmailVerificationRequired,
+    PurchaseEmailVerificationRequired,
+    ReactionEmailVerificationRequired,
+    ReportEmailVerificationRequired,
+    RegistrationClosed,
+    RegistrationPendingApproval,
+    RegistrationRejected,
+    RegistrationUrlInvalid,
+    EmptyEncryptedBody,
+    EncryptionFailed,
+    EuWithdrawalWaiverRequired,
     /// Explicit content cannot be sent in this channel.
     ExplicitContentCannotBeSent,
+    FeatureNotAvailableSelfHosted,
     /// This feature is temporarily disabled.
     FeatureTemporarilyDisabled,
     /// File size exceeds the maximum allowed.
     FileSizeTooLarge,
+    Forbidden,
     /// Friend request was blocked.
     FriendRequestBlocked,
+    GatewayTimeout,
     /// A general error occurred.
     GeneralError,
+    Gone,
     /// This gift code has already been redeemed.
     GiftCodeAlreadyRedeemed,
     /// Phone verification is required to join this guild.
     GuildPhoneVerificationRequired,
+    GuildTemplateFetchFailed,
+    GuildTemplateInvalid,
     /// Account verification is required to interact in this guild.
     GuildVerificationRequired,
     /// Handoff code has expired.
@@ -106,12 +162,12 @@ pub enum ApiErrorCode {
     HarvestFailed,
     /// Data harvest is not yet ready.
     HarvestNotReady,
-    /// Data harvest is on cooldown.
-    HarvestOnCooldown,
     /// HTTP GET authorize is not supported.
     HttpGetAuthorizeNotSupported,
     /// Instance version mismatch.
     InstanceVersionMismatch,
+    /// There was an internal server error.
+    InternalServerError,
     /// Invalid access control list format.
     InvalidAclsFormat,
     /// Invalid API origin.
@@ -136,8 +192,11 @@ pub enum ApiErrorCode {
     InvalidDsaTicket,
     /// Invalid DSA verification code.
     InvalidDsaVerificationCode,
+    InvalidDecryptedJson,
+    InvalidEphemeralKey,
     /// Invalid flags format.
     InvalidFlagsFormat,
+    InvalidIv,
     /// Invalid request body format.
     InvalidFormBody,
     /// Invalid OAuth2 grant.
@@ -192,12 +251,15 @@ pub enum ApiErrorCode {
     IpAuthorizationResendCooldown,
     /// IP authorization email resend limit exceeded.
     IpAuthorizationResendLimitExceeded,
+    GlobalIpBanned,
+    GlobalIpTemporarilyBanned,
     /// This IP address has been banned.
     IpBanned,
+    ResidentialProxyBlocked,
+    TorBlocked,
     /// Maximum animated emojis limit reached.
     MaxAnimatedEmojis,
-    /// Maximum beta codes limit reached.
-    MaxBetaCodesReached,
+    MaxApplications,
     /// Maximum bookmarks limit reached.
     MaxBookmarks,
     /// Maximum category channels limit reached.
@@ -213,6 +275,7 @@ pub enum ApiErrorCode {
     MaxGroupDmRecipients,
     /// Maximum group DMs limit reached.
     MaxGroupDms,
+    GroupDmRecipientsNotAddable,
     /// Maximum guild channels limit reached.
     MaxGuildChannels,
     /// Maximum guild members limit reached.
@@ -221,6 +284,7 @@ pub enum ApiErrorCode {
     MaxGuildRoles,
     /// Maximum guilds limit reached.
     MaxGuilds,
+    NewAccountGuildJoinRateLimited,
     /// Maximum invites limit reached.
     MaxInvites,
     /// Maximum pack expressions limit reached.
@@ -229,6 +293,7 @@ pub enum ApiErrorCode {
     MaxPacks,
     /// Maximum pins per channel limit reached.
     MaxPinsPerChannel,
+    MessageTotalAttachmentSizeTooLarge,
     /// Maximum reactions limit reached.
     MaxReactions,
     /// Maximum stickers limit reached.
@@ -245,6 +310,7 @@ pub enum ApiErrorCode {
     NcmecSubmissionFailed,
     /// Error processing media metadata.
     MediaMetadataError,
+    MethodNotAllowed,
     /// Missing access to this resource.
     MissingAccess,
     /// Missing access control list entry.
@@ -253,8 +319,8 @@ pub enum ApiErrorCode {
     MissingAuthorization,
     /// Missing client secret.
     MissingClientSecret,
-    /// Missing OAuth admin scope.
-    MissingOauthAdminScope,
+    MissingEphemeralKey,
+    MissingIv,
     /// Missing required OAuth fields.
     MissingOauthFields,
     /// Missing required OAuth scope.
@@ -267,6 +333,7 @@ pub enum ApiErrorCode {
     NoActiveCall,
     /// No active subscription.
     NoActiveSubscription,
+    NotFound,
     /// No passkeys registered for this account.
     NoPasskeysRegistered,
     /// No pending deletion for this account.
@@ -275,6 +342,7 @@ pub enum ApiErrorCode {
     NoUsersWithFluxertagExist,
     /// No Visionary slots available.
     NoVisionarySlotsAvailable,
+    NotABotApplication,
     /// You are not friends with this user.
     NotFriendsWithUser,
     /// You are not the owner of this admin API key.
@@ -287,12 +355,11 @@ pub enum ApiErrorCode {
     PasskeyAuthenticationFailed,
     /// Passkeys are disabled.
     PasskeysDisabled,
+    PhoneAddNotEligible,
     /// This phone number is already in use.
     PhoneAlreadyUsed,
     /// Phone verification rate limit exceeded.
     PhoneRateLimitExceeded,
-    /// Phone number required for SMS MFA.
-    PhoneRequiredForSmsMfa,
     /// Phone verification is required.
     PhoneVerificationRequired,
     /// Premium purchase is blocked.
@@ -309,14 +376,17 @@ pub enum ApiErrorCode {
     ReportAlreadyResolved,
     /// You are banned from submitting reports.
     ReportBanned,
+    ResponseValidationError,
+    ResourceLocked,
+    ServiceUnavailable,
     /// Session token mismatch.
     SessionTokenMismatch,
+    SingleCommunityCannotCreateGuilds,
+    SingleCommunityCannotDelete,
+    SingleCommunityCannotLeave,
+    InstancePolicyTransitionNotAllowed,
     /// You are being rate limited by slowmode.
     SlowmodeRateLimited,
-    /// SMS MFA is not enabled.
-    SmsMfaNotEnabled,
-    /// SMS MFA requires TOTP to be enabled first.
-    SmsMfaRequiresTotp,
     /// SMS verification is unavailable.
     SmsVerificationUnavailable,
     /// Single sign-on is required.
@@ -339,6 +409,8 @@ pub enum ApiErrorCode {
     StripeNoActiveSubscription,
     /// No Stripe purchase history.
     StripeNoPurchaseHistory,
+    StripeRefundOutsideWindow,
+    StripeRefundCooldownActive,
     /// No Stripe subscription.
     StripeNoSubscription,
     /// Stripe payment not available.
@@ -355,6 +427,12 @@ pub enum ApiErrorCode {
     StripeWebhookSignatureInvalid,
     /// Missing Stripe webhook signature.
     StripeWebhookSignatureMissing,
+    DirectMessagesDisabled,
+    DonationAmountInvalid,
+    DonationMagicLinkExpired,
+    DonationMagicLinkInvalid,
+    DonationMagicLinkUsed,
+    DonorNotFound,
     /// Sudo mode is required for this action.
     SudoModeRequired,
     /// This tag is already taken.
@@ -377,8 +455,7 @@ pub enum ApiErrorCode {
     UnclaimedAccountCannotAddReactions,
     /// Unclaimed accounts cannot create applications.
     UnclaimedAccountCannotCreateApplications,
-    /// Unclaimed accounts cannot create beta codes.
-    UnclaimedAccountCannotCreateBetaCodes,
+    UnclaimedAccountCannotCreateGuilds,
     /// Unclaimed accounts cannot join group DMs.
     UnclaimedAccountCannotJoinGroupDms,
     /// Unclaimed accounts cannot join one-on-one voice calls.
@@ -393,8 +470,7 @@ pub enum ApiErrorCode {
     UnclaimedAccountCannotSendFriendRequests,
     /// Unclaimed accounts cannot send messages.
     UnclaimedAccountCannotSendMessages,
-    /// Unknown beta code.
-    UnknownBetaCode,
+    UnclaimedAccountCannotSubmitReports,
     /// Unknown channel.
     UnknownChannel,
     /// Unknown emoji.
@@ -434,8 +510,10 @@ pub enum ApiErrorCode {
     UnknownVoiceServer,
     /// Unknown WebAuthn credential.
     UnknownWebauthnCredential,
+    UnknownApplication,
     /// Unknown webhook.
     UnknownWebhook,
+    UnfurlStreamTooLarge,
     /// Unsupported response type.
     UnsupportedResponseType,
     /// Resource update failed.
@@ -448,10 +526,13 @@ pub enum ApiErrorCode {
     UserNotInVoice,
     /// User owns guilds and cannot perform this action.
     UserOwnsGuilds,
+    ValidationError,
     /// Voice channel is full.
     VoiceChannelFull,
     /// WebAuthn credential limit reached.
     WebauthnCredentialLimitReached,
+    AgeVerificationAlreadyVerified,
+    AgeVerificationInvalidCardType,
     #[serde(untagged)]
     Other(String),
 }
