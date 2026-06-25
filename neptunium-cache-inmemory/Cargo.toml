@@ -14,11 +14,11 @@ categories = ["caching"]
 neptunium-model = { workspace = true }
 neptunium-http = { workspace = true }
 mini-moka = "0.10.3"
-bon = "3.9.2"
+bon = "3.9.3"
 async-trait = "0.1.89"
 tokio = { version = "1.52.3", default-features = false }
 tracing = "0.1.44"
-zeroize = "1.8.2"
+zeroize = "1.9.0"
 serde_json = "1.0.150"
 arc-swap = "1.9.1"
 atomic_once_cell = "0.2.0"

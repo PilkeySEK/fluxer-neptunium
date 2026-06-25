@@ -21,10 +21,10 @@ serde_json = "1.0.150"
 rand = "0.10.1"
 tracing = "0.1.44"
 async-trait = "0.1.89"
-zeroize = "1.8.2"
+zeroize = "1.9.0"
 reqwest = { version = "0.13.4", default-features = false }
 serde_path_to_error = "0.1.20"
-bon = "3.9.2"
+bon = "3.9.3"
 debug-ignore = "1.0.5"
 
 [features]

@@ -15,9 +15,9 @@ serde_json = "1.0.150"
 serde_repr = "0.1.20"
 serde = { version = "1.0.228", features = ["derive"] }
 bitflags = "2.13.0"
-time = { version = "0.3.47", features = ["serde", "parsing", "formatting"] }
-zeroize = { version = "1.8.2", features = ["serde"] }
-bon = "3.9.2"
+time = { version = "0.3.51", features = ["serde", "parsing", "formatting"] }
+zeroize = { version = "1.9.0", features = ["serde"] }
+bon = "3.9.3"
 language-tags = { version = "0.3.2", features = ["serde"] }
 chrono = { version = "0.4.45", optional = true }
 
