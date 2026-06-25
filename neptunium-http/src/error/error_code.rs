@@ -517,6 +517,8 @@ pub enum ApiErrorCode {
     UnfurlStreamTooLarge,
     /// Unsupported response type.
     UnsupportedResponseType,
+    /// The username is unavailable because all discriminators are taken.
+    UsernameNotAvailable,
     /// Resource update failed.
     UpdateFailed,
     /// User is banned from this guild.
