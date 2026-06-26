@@ -3,7 +3,7 @@ use bitflags::bitflags;
 use crate::misc::serde_bitflags;
 
 bitflags! {
-    #[derive(Copy, Clone, Debug)]
+    #[derive(Copy, Clone, Debug, PartialEq, Eq)]
     pub struct PublicUserFlags: u64 {
         /// User is a staff member.
         const STAFF = 1 << 0;

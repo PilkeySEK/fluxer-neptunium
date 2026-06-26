@@ -21,7 +21,7 @@ pub mod relationship;
 pub mod saved_messages;
 pub mod settings;
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct PartialUser {
     pub avatar: Option<String>,
     pub avatar_color: Option<HexColor>,
