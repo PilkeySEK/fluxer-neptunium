@@ -3,8 +3,11 @@ use bon::Builder;
 use serde_repr::{Deserialize_repr, Serialize_repr};
 use zeroize::Zeroizing;
 
-use crate::gateway::{
-    intents::GatewayEventFlags, payload::outgoing::PresenceUpdateOutgoing, shard::ShardInfo,
+use crate::{
+    gateway::{
+        intents::GatewayEventFlags, payload::outgoing::PresenceUpdateOutgoing, shard::ShardInfo,
+    },
+    misc::serde_bitflags,
 };
 
 #[derive(Serialize_repr, Deserialize_repr, Copy, Clone, Debug)]
@@ -86,23 +89,7 @@ bitflags! {
     }
 }
 
-impl<'de> serde::Deserialize<'de> for ActivityFlags {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        Ok(Self::from_bits_truncate(u64::deserialize(deserializer)?))
-    }
-}
-
-impl serde::Serialize for ActivityFlags {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        serializer.serialize_u64(self.bits())
-    }
-}
+serde_bitflags!(ActivityFlags, u64);
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
 pub struct ActivityButton {
@@ -161,7 +148,7 @@ pub struct Activity {
 */
 
 // TODO: This has more (optional) fields when logging in as a user
-#[derive(serde::Serialize, Clone, Debug, Builder)]
+#[derive(serde::Serialize, serde::Deserialize, Clone, Debug, Builder)]
 pub struct ConnectionProperties {
     /// The operating system, e.g. "linux".
     #[builder(into)]
@@ -174,7 +161,7 @@ pub struct ConnectionProperties {
     pub device: String,
 }
 
-#[derive(serde::Serialize, Clone, Debug, Builder)]
+#[derive(serde::Serialize, serde::Deserialize, Clone, Debug, Builder)]
 pub struct Identify {
     #[builder(into)]
     pub token: Zeroizing<String>,

@@ -525,6 +525,9 @@ impl Client {
                         resume_info.last_sequence_number = *last_sequence_number;
                     }
                 }
+                GatewayEvent::Identify(_data) => {
+                    tracing::warn!("Unexpected IDENTIFY received from gateway.");
+                }
             },
             ClientSessionMessage::ShardTaskEnd(maybe_error) => {
                 return ControlFlow::Break(maybe_error);

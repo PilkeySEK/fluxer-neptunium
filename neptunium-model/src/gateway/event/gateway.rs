@@ -8,7 +8,10 @@ use crate::gateway::{
     event::{
         dispatch::DispatchEventPayload, invalid_session::InvalidSessionEvent, op_code::OpCode,
     },
-    payload::incoming::{GatewayError, Hello},
+    payload::{
+        incoming::{GatewayError, Hello},
+        outgoing::Identify,
+    },
 };
 
 #[expect(clippy::large_enum_variant)]
@@ -21,6 +24,7 @@ pub enum GatewayEvent {
     InvalidSession(InvalidSessionEvent),
     Reconnect,
     GatewayError(GatewayError),
+    Identify(Identify),
 }
 
 impl<'de> Deserialize<'de> for GatewayEvent {
@@ -51,6 +55,9 @@ impl<'de> Deserialize<'de> for GatewayEvent {
                 Self::InvalidSession(serde_json::from_value(d).map_err(de::Error::custom)?)
             }
             OpCode::Reconnect => Self::Reconnect,
+            OpCode::Identify => {
+                Self::Identify(serde_json::from_value(d).map_err(de::Error::custom)?)
+            }
             opcode => {
                 return Err(D::Error::custom(format!(
                     "Not yet supported opcode: {opcode:?}"
@@ -108,6 +115,11 @@ impl Serialize for GatewayEvent {
             Self::Reconnect => json!({
                 "op": OpCode::Reconnect,
                 "d": serde_json::Value::Null,
+            })
+            .serialize(serializer),
+            Self::Identify(data) => json!({
+                "op": OpCode::Identify,
+                "d": data,
             })
             .serialize(serializer),
         }
