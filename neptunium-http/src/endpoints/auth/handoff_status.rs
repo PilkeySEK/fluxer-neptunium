@@ -1,6 +1,6 @@
 use neptunium_model::{
     id::{Id, marker::UserMarker},
-    user::PartialUser,
+    user::{PartialUser, auth::handoff::HandoffCode},
 };
 use reqwest::Method;
 use serde::{Deserialize, Serialize};
@@ -9,7 +9,7 @@ use crate::{endpoints::Endpoint, request::Request};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct HandoffStatus {
-    pub code: String,
+    pub code: HandoffCode,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]

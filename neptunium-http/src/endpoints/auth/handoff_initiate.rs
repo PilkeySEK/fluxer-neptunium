@@ -1,4 +1,7 @@
-use neptunium_model::time::timestamp::{Timestamp, representations::Iso8601};
+use neptunium_model::{
+    time::timestamp::{Timestamp, representations::Iso8601},
+    user::auth::handoff::HandoffCode,
+};
 use reqwest::Method;
 use serde::{Deserialize, Serialize};
 
@@ -10,7 +13,7 @@ pub struct HandoffInitiate;
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct HandoffInitiateResponse {
     /// Handoff code to share with the recieving device.
-    pub code: String,
+    pub code: HandoffCode,
     pub expires_at: Timestamp<Iso8601>,
 }
 

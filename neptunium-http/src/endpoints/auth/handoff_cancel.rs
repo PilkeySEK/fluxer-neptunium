@@ -1,10 +1,11 @@
+use neptunium_model::user::auth::handoff::HandoffCode;
 use reqwest::Method;
 
 use crate::{endpoints::Endpoint, request::Request};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct HandoffCancel {
-    pub code: String,
+    pub code: HandoffCode,
 }
 
 impl Endpoint for HandoffCancel {

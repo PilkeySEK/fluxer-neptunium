@@ -4,6 +4,7 @@ use zeroize::Zeroizing;
 
 use crate::user::auth::webauthn::WebauthnAuthenticationResponse;
 
+pub mod handoff;
 pub mod webauthn;
 
 #[derive(Serialize, Deserialize, Copy, Clone, Debug, PartialEq, Eq)]

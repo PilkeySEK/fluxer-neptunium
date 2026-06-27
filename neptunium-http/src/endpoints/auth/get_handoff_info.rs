@@ -1,3 +1,4 @@
+use neptunium_model::user::auth::handoff::HandoffCode;
 use reqwest::Method;
 use serde::{Deserialize, Serialize};
 
@@ -5,7 +6,7 @@ use crate::{endpoints::Endpoint, request::Request};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct GetHandoffInfo {
-    pub code: String,
+    pub code: HandoffCode,
 }
 
 #[derive(Serialize, Deserialize, Copy, Clone, Debug, PartialEq, Eq)]
