@@ -2,7 +2,7 @@
 
 pub const DEFAULT_API_BASE_URL: &str = "https://api.fluxer.app/v1";
 /// (name, contact info).
-pub const BASE_USER_AGENT: (&str, &str) = ("neptunium-http", "pilkey#0770");
+pub const BASE_USER_AGENT: (&str, &str) = ("neptunium-http", "1473229884793090118");
 
 const VERSION: &str = unwrap_or(option_env!("CARGO_PKG_VERSION"), "unknown");
 
