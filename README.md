@@ -43,7 +43,7 @@ This is the current support for different APIs (Categories named after [The offi
 - ✅ Instance
 - ❌ Admin
 - ❌ OAuth2
-- ❌ Auth
+- 🟡 Auth
 - ✅ Channels
 - ✅ Invites
 - ✅ Saved Media
