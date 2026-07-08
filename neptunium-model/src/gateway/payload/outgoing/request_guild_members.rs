@@ -1,5 +1,5 @@
 use bon::Builder;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use serde_json::json;
 
 use crate::id::{
@@ -9,7 +9,7 @@ use crate::id::{
 
 // Source: https://github.com/fluxerapp/fluxer/blob/ee1f27fe1a372b5291aead8042944afd706bf5db/fluxer_app/src/lib/GatewaySocket.tsx#L324
 // Discord userdocs source: https://docs.discord.food/gateway/gateway-events#request-guild-members
-#[derive(Serialize, Clone, Debug, Builder)]
+#[derive(Serialize, Deserialize, Clone, Debug, Builder)]
 pub struct RequestGuildMembers {
     #[builder(into)]
     pub guild_ids: Vec<Id<GuildMarker>>,
@@ -64,6 +64,35 @@ impl Serialize for RequestGuildMembersQuery {
             })
             .serialize(serializer),
         }
+    }
+}
+
+impl<'de> Deserialize<'de> for RequestGuildMembersQuery {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        #[derive(Deserialize)]
+        #[serde(untagged)]
+        enum Schema {
+            Query { query: String },
+            OneUserId { user_ids: Id<UserMarker> },
+            MultipleUserIds { user_ids: Vec<Id<UserMarker>> },
+        }
+
+        let schema = Schema::deserialize(deserializer)?;
+
+        Ok(match schema {
+            Schema::Query { query } => {
+                if query.is_empty() {
+                    Self::Empty
+                } else {
+                    Self::Text(query)
+                }
+            }
+            Schema::MultipleUserIds { user_ids } => Self::MultipleIds(user_ids),
+            Schema::OneUserId { user_ids } => Self::SingleId(user_ids),
+        })
     }
 }
 

@@ -1,14 +1,14 @@
 use std::collections::HashMap;
 
 use bon::Builder;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 use crate::id::{
     Id,
     marker::{ChannelMarker, GuildMarker, UserMarker},
 };
 
-#[derive(Serialize, Clone, Debug, Builder)]
+#[derive(Serialize, Deserialize, Clone, Debug, Builder)]
 #[expect(clippy::type_complexity)]
 pub struct GuildSubscriptionRequest {
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -31,7 +31,7 @@ pub struct GuildSubscriptionRequest {
     pub sync: Option<bool>,
 }
 
-#[derive(Serialize, Clone, Debug, Builder)]
+#[derive(Serialize, Deserialize, Clone, Debug, Builder)]
 pub struct LazyRequest {
     pub subscriptions: HashMap<Id<GuildMarker>, GuildSubscriptionRequest>,
 }

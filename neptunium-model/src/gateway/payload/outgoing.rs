@@ -1,4 +1,4 @@
-use serde::{Serialize, ser::SerializeStruct};
+use serde::{Deserialize, Serialize, ser::SerializeStruct};
 
 use crate::gateway::event::op_code::OpCode;
 
@@ -57,5 +57,47 @@ impl Serialize for OutgoingGatewayMessage {
         }?;
 
         s.end()
+    }
+}
+
+impl<'de> Deserialize<'de> for OutgoingGatewayMessage {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        #[derive(Deserialize)]
+        struct Schema {
+            op: u8,
+            d: serde_json::Value,
+        }
+
+        let schema = Schema::deserialize(deserializer)?;
+        let Some(op_code) = OpCode::from(schema.op) else {
+            return Err(serde::de::Error::custom("unknown opcode"));
+        };
+        Ok(match op_code {
+            OpCode::Identify => {
+                Self::Identify(serde_json::from_value(schema.d).map_err(serde::de::Error::custom)?)
+            }
+            OpCode::Heartbeat => {
+                Self::Heartbeat(serde_json::from_value(schema.d).map_err(serde::de::Error::custom)?)
+            }
+            OpCode::PresenceUpdate => Self::PresenceUpdate(
+                serde_json::from_value(schema.d).map_err(serde::de::Error::custom)?,
+            ),
+            OpCode::Resume => {
+                Self::Resume(serde_json::from_value(schema.d).map_err(serde::de::Error::custom)?)
+            }
+            OpCode::LazyRequest => Self::LazyRequest(
+                serde_json::from_value(schema.d).map_err(serde::de::Error::custom)?,
+            ),
+            OpCode::RequestGuildMembers => Self::RequestGuildMembers(
+                serde_json::from_value(schema.d).map_err(serde::de::Error::custom)?,
+            ),
+            OpCode::RequestGuildCounts => Self::RequestGuildCounts(
+                serde_json::from_value(schema.d).map_err(serde::de::Error::custom)?,
+            ),
+            _ => todo!(),
+        })
     }
 }

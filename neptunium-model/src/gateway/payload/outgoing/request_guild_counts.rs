@@ -1,10 +1,10 @@
 use bon::Builder;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 use crate::id::{Id, marker::GuildMarker};
 
 /// Request the member and online count of the specified guilds.
-#[derive(Serialize, Clone, Debug, Builder)]
+#[derive(Serialize, Deserialize, Clone, Debug, Builder)]
 pub struct RequestGuildCounts {
     /// The guild IDs, max 100.
     pub guild_ids: Vec<Id<GuildMarker>>,
