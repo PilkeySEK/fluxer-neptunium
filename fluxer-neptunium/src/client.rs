@@ -11,7 +11,7 @@ use neptunium_gateway::shard::{Shard, config::ShardConfig};
 use neptunium_http::client::HttpClient;
 use neptunium_model::gateway::{
     close_code::GatewayCloseCode,
-    event::{dispatch::DispatchEvent, gateway::GatewayEvent},
+    event::{dispatch::DispatchEvent, gateway::GatewayEventIncoming},
     payload::{
         incoming::GuildCountsUpdate,
         outgoing::{
@@ -86,7 +86,7 @@ struct SessionInfo<'a> {
 
 enum ClientSessionMessage {
     SendHeartbeat,
-    GatewayEvent(Box<GatewayEvent>),
+    GatewayEvent(Box<GatewayEventIncoming>),
     ShardTaskEnd(Option<Error>),
 }
 
@@ -408,7 +408,7 @@ impl Client {
 
         tracing::debug!("Waiting for `Hello` event from gateway.");
         let hello_event = match shard.next_event().await? {
-            GatewayEvent::Hello(event) => event,
+            GatewayEventIncoming::Hello(event) => event,
             other => {
                 return Err(Error::new(ClientErrorKind::UnexpectedEventReceived(
                     Box::new(other),
@@ -458,31 +458,31 @@ impl Client {
                 }
             }
             ClientSessionMessage::GatewayEvent(event) => match *event {
-                GatewayEvent::InvalidSession(_event) => {
+                GatewayEventIncoming::InvalidSession(_event) => {
                     tracing::debug!(
                         "Reconnecting because of invalid session event while waiting for `Ready`."
                     );
                     return ControlFlow::Break(None);
                 }
-                GatewayEvent::HeartbeatAck => {
+                GatewayEventIncoming::HeartbeatAck => {
                     *session.last_heartbeat_ack_at = SystemTime::now();
                 }
-                GatewayEvent::Hello(event) => {
+                GatewayEventIncoming::Hello(event) => {
                     tracing::debug!(
                         "Received second Hello message from gateway, ignoring it: {event:?}"
                     );
                 }
-                GatewayEvent::Reconnect => {
+                GatewayEventIncoming::Reconnect => {
                     tracing::debug!("Reconnecting due to gateway `Reconnect` event.");
                     return ControlFlow::Break(None);
                 }
-                GatewayEvent::GatewayError(e) => {
+                GatewayEventIncoming::GatewayError(e) => {
                     tracing::warn!("Received gateway error event: {e:?}");
                 }
-                GatewayEvent::Heartbeat => {
+                GatewayEventIncoming::Heartbeat => {
                     let _ = session.session_tx.send(ClientSessionMessage::SendHeartbeat);
                 }
-                GatewayEvent::Dispatch(event) => {
+                GatewayEventIncoming::Dispatch(event) => {
                     match event.event {
                         DispatchEvent::Ready(ready) => {
                             *session.already_sent_presence_in_identify = true;
@@ -524,9 +524,6 @@ impl Client {
                     {
                         resume_info.last_sequence_number = *last_sequence_number;
                     }
-                }
-                GatewayEvent::Identify(_data) => {
-                    tracing::warn!("Unexpected IDENTIFY received from gateway.");
                 }
             },
             ClientSessionMessage::ShardTaskEnd(maybe_error) => {

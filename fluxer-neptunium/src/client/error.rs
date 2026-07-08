@@ -3,7 +3,7 @@ use neptunium_http::{
     endpoints::ExecuteEndpointRequestError,
     error::{ApiErrorResponse, ApiRateLimitedResponse},
 };
-use neptunium_model::gateway::event::gateway::GatewayEvent;
+use neptunium_model::gateway::event::gateway::GatewayEventIncoming;
 use tokio_tungstenite::tungstenite::{self, protocol::CloseFrame};
 
 use crate::events::EventError;
@@ -112,7 +112,7 @@ pub enum ClientErrorKind {
     NetworkError(tungstenite::Error),
     ParseError(serde_path_to_error::Error<serde_json::Error>),
     UnsupportedMessageEncoding,
-    UnexpectedEventReceived(Box<GatewayEvent>),
+    UnexpectedEventReceived(Box<GatewayEventIncoming>),
     ConnectionClosed(Option<CloseFrame>),
     SessionInvalidated,
     HttpRequestError(reqwest::Error),

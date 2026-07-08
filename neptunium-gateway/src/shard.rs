@@ -3,7 +3,7 @@ use futures_util::{
     stream::{SplitSink, SplitStream},
 };
 use neptunium_model::gateway::{
-    event::gateway::GatewayEvent,
+    event::gateway::GatewayEventIncoming,
     payload::outgoing::{
         ConnectionProperties, Identify, OutgoingGatewayMessage, PresenceUpdateOutgoing, Resume,
     },
@@ -132,7 +132,7 @@ impl Shard {
 
     /// # Errors
     /// Returns an error if receiving the event fails.
-    pub async fn next_event(&mut self) -> Result<GatewayEvent, EventReceiveError> {
+    pub async fn next_event(&mut self) -> Result<GatewayEventIncoming, EventReceiveError> {
         let message = self
             .next_message()
             .await
