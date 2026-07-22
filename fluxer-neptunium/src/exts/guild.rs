@@ -64,7 +64,7 @@ pub trait GuildExt {
         &self,
         ctx: &Context,
         user_id: Id<UserMarker>,
-        reason: impl Into<String> + Send,
+        reason: impl Into<String> + Send + Sync,
     ) -> Result<(), Error>;
     async fn list_channels(&self, ctx: &Context) -> Result<Vec<Cached<CachedChannel>>, Error>;
     async fn create_channel(
@@ -76,7 +76,7 @@ pub trait GuildExt {
         &self,
         ctx: &Context,
         channel: GuildChannelCreateRequest,
-        reason: impl Into<String> + Send,
+        reason: impl Into<String> + Send + Sync,
     ) -> Result<Cached<CachedChannel>, Error>;
     // TODO: Add helper functions for things, such as making a reordering using Vec<Id<ChannelMarker>>
     async fn update_channel_positions(
@@ -88,7 +88,7 @@ pub trait GuildExt {
         &self,
         ctx: &Context,
         positions: Vec<UpdateGuildChannelPositionsEntry>,
-        reason: impl Into<String> + Send,
+        reason: impl Into<String> + Send + Sync,
     ) -> Result<(), Error>;
     #[cfg(feature = "user_api")]
     async fn delete(
@@ -105,7 +105,7 @@ pub trait GuildExt {
         &self,
         ctx: &Context,
         detached: bool,
-        reason: impl Into<String> + Send,
+        reason: impl Into<String> + Send + Sync,
     ) -> Result<Cached<Guild>, Error>;
     /// List the guild members. `limit` defaults to 1 and should not be greater than 1000.
     async fn list_members(
@@ -150,20 +150,20 @@ pub trait GuildExt {
         ctx: &Context,
         member_id: Id<UserMarker>,
         body: UpdateGuildMemberBody,
-        reason: impl Into<String> + Send,
+        reason: impl Into<String> + Send + Sync,
     ) -> Result<Cached<CachedGuildMember>, Error>;
     async fn timeout_member(
         &self,
         ctx: &Context,
         member_id: Id<UserMarker>,
-        until: impl Into<Timestamp<Iso8601>> + Send,
+        until: impl Into<Timestamp<Iso8601>> + Send + Sync,
     ) -> Result<Cached<CachedGuildMember>, Error>;
     async fn timeout_member_with_reason(
         &self,
         ctx: &Context,
         member_id: Id<UserMarker>,
-        until: impl Into<Timestamp<Iso8601>> + Send,
-        reason: impl Into<String> + Send,
+        until: impl Into<Timestamp<Iso8601>> + Send + Sync,
+        reason: impl Into<String> + Send + Sync,
     ) -> Result<Cached<CachedGuildMember>, Error>;
     async fn untimeout_member(
         &self,
@@ -174,7 +174,7 @@ pub trait GuildExt {
         &self,
         ctx: &Context,
         member_id: Id<UserMarker>,
-        reason: impl Into<String> + Send,
+        reason: impl Into<String> + Send + Sync,
     ) -> Result<Cached<CachedGuildMember>, Error>;
     async fn add_role_to_member(
         &self,
@@ -187,7 +187,7 @@ pub trait GuildExt {
         ctx: &Context,
         member_id: Id<UserMarker>,
         role_id: Id<RoleMarker>,
-        reason: impl Into<String> + Send,
+        reason: impl Into<String> + Send + Sync,
     ) -> Result<(), Error>;
     async fn remove_role_from_member(
         &self,
@@ -200,7 +200,7 @@ pub trait GuildExt {
         ctx: &Context,
         member_id: Id<UserMarker>,
         role_id: Id<RoleMarker>,
-        reason: impl Into<String> + Send,
+        reason: impl Into<String> + Send + Sync,
     ) -> Result<(), Error>;
     async fn list_roles(&self, ctx: &Context) -> Result<Vec<Cached<CachedGuildRole>>, Error>;
     async fn create_role(
@@ -212,7 +212,7 @@ pub trait GuildExt {
         &self,
         ctx: &Context,
         body: CreateGuildRoleBody,
-        reason: impl Into<String> + Send,
+        reason: impl Into<String> + Send + Sync,
     ) -> Result<Cached<CachedGuildRole>, Error>;
     async fn update_role_positions(
         &self,
@@ -223,13 +223,13 @@ pub trait GuildExt {
         &self,
         ctx: &Context,
         positions: Vec<UpdateGuildRolePositionsEntry>,
-        reason: impl Into<String> + Send,
+        reason: impl Into<String> + Send + Sync,
     ) -> Result<(), Error>;
     async fn reset_role_hoist_positions(&self, ctx: &Context) -> Result<(), Error>;
     async fn reset_role_hoist_positions_with_reason(
         &self,
         ctx: &Context,
-        reason: impl Into<String> + Send,
+        reason: impl Into<String> + Send + Sync,
     ) -> Result<(), Error>;
     async fn update_role_hoist_positions(
         &self,
@@ -240,14 +240,14 @@ pub trait GuildExt {
         &self,
         ctx: &Context,
         positions: Vec<UpdateGuildRoleHoistPositionsEntry>,
-        reason: impl Into<String> + Send,
+        reason: impl Into<String> + Send + Sync,
     ) -> Result<(), Error>;
     async fn delete_role(&self, ctx: &Context, role_id: Id<RoleMarker>) -> Result<(), Error>;
     async fn delete_role_with_reason(
         &self,
         ctx: &Context,
         role_id: Id<RoleMarker>,
-        reason: impl Into<String> + Send,
+        reason: impl Into<String> + Send + Sync,
     ) -> Result<(), Error>;
     async fn update_role(
         &self,
@@ -260,7 +260,7 @@ pub trait GuildExt {
         ctx: &Context,
         role_id: Id<RoleMarker>,
         updates: UpdateGuildRoleBody,
-        reason: impl Into<String> + Send,
+        reason: impl Into<String> + Send + Sync,
     ) -> Result<Cached<CachedGuildRole>, Error>;
     async fn list_stickers(&self, ctx: &Context) -> Result<Vec<GuildSticker>, Error>;
     async fn create_sticker(
@@ -293,7 +293,7 @@ pub trait GuildExt {
         &self,
         ctx: &Context,
         enabled: bool,
-        reason: impl Into<String> + Send,
+        reason: impl Into<String> + Send + Sync,
     ) -> Result<Cached<Guild>, Error>;
     #[cfg(feature = "user_api")]
     async fn transfer_ownership(
@@ -312,7 +312,7 @@ pub trait GuildExt {
         &self,
         ctx: &Context,
         code: Option<String>,
-        reason: impl Into<String> + Send,
+        reason: impl Into<String> + Send + Sync,
     ) -> Result<UpdateGuildVanityUrlResponse, Error>;
     /// Leave this guild.
     async fn leave(&self, ctx: &Context) -> Result<(), Error>;
@@ -332,7 +332,7 @@ pub trait GuildExt {
         &self,
         ctx: &Context,
         body: UpdateGuildSettingsBody,
-        reason: impl Into<String> + Send,
+        reason: impl Into<String> + Send + Sync,
     ) -> Result<Cached<Guild>, Error>;
 }
 
@@ -417,7 +417,7 @@ impl<T: GuildTrait> GuildExt for T {
         &self,
         ctx: &Context,
         user_id: Id<UserMarker>,
-        reason: impl Into<String> + Send,
+        reason: impl Into<String> + Send + Sync,
     ) -> Result<(), Error> {
         Ok(ctx
             .get_http_client()
@@ -455,7 +455,7 @@ impl<T: GuildTrait> GuildExt for T {
         &self,
         ctx: &Context,
         channel: GuildChannelCreateRequest,
-        reason: impl Into<String> + Send,
+        reason: impl Into<String> + Send + Sync,
     ) -> Result<Cached<CachedChannel>, Error> {
         Ok(CreateGuildChannel {
             guild_id: self.get_guild_id(),
@@ -486,7 +486,7 @@ impl<T: GuildTrait> GuildExt for T {
         &self,
         ctx: &Context,
         positions: Vec<UpdateGuildChannelPositionsEntry>,
-        reason: impl Into<String> + Send,
+        reason: impl Into<String> + Send + Sync,
     ) -> Result<(), Error> {
         // TODO: Caching for this
         Ok(ctx
@@ -533,7 +533,7 @@ impl<T: GuildTrait> GuildExt for T {
         &self,
         ctx: &Context,
         detached: bool,
-        reason: impl Into<String> + Send,
+        reason: impl Into<String> + Send + Sync,
     ) -> Result<Cached<Guild>, Error> {
         Ok(ToggleDetachedBanner {
             guild_id: self.get_guild_id(),
@@ -665,7 +665,7 @@ impl<T: GuildTrait> GuildExt for T {
         ctx: &Context,
         member_id: Id<UserMarker>,
         body: UpdateGuildMemberBody,
-        reason: impl Into<String> + Send,
+        reason: impl Into<String> + Send + Sync,
     ) -> Result<Cached<CachedGuildMember>, Error> {
         Ok(UpdateGuildMember {
             guild_id: self.get_guild_id(),
@@ -699,7 +699,7 @@ impl<T: GuildTrait> GuildExt for T {
         ctx: &Context,
         member_id: Id<UserMarker>,
         role_id: Id<RoleMarker>,
-        reason: impl Into<String> + Send,
+        reason: impl Into<String> + Send + Sync,
     ) -> Result<(), Error> {
         Ok(ctx
             .get_http_client()
@@ -734,7 +734,7 @@ impl<T: GuildTrait> GuildExt for T {
         ctx: &Context,
         member_id: Id<UserMarker>,
         role_id: Id<RoleMarker>,
-        reason: impl Into<String> + Send,
+        reason: impl Into<String> + Send + Sync,
     ) -> Result<(), Error> {
         Ok(ctx
             .get_http_client()
@@ -773,7 +773,7 @@ impl<T: GuildTrait> GuildExt for T {
         &self,
         ctx: &Context,
         body: CreateGuildRoleBody,
-        reason: impl Into<String> + Send,
+        reason: impl Into<String> + Send + Sync,
     ) -> Result<Cached<CachedGuildRole>, Error> {
         Ok(CreateGuildRole {
             guild_id: self.get_guild_id(),
@@ -802,7 +802,7 @@ impl<T: GuildTrait> GuildExt for T {
         &self,
         ctx: &Context,
         positions: Vec<UpdateGuildRolePositionsEntry>,
-        reason: impl Into<String> + Send,
+        reason: impl Into<String> + Send + Sync,
     ) -> Result<(), Error> {
         Ok(UpdateGuildRolePositions {
             guild_id: self.get_guild_id(),
@@ -827,7 +827,7 @@ impl<T: GuildTrait> GuildExt for T {
     async fn reset_role_hoist_positions_with_reason(
         &self,
         ctx: &Context,
-        reason: impl Into<String> + Send,
+        reason: impl Into<String> + Send + Sync,
     ) -> Result<(), Error> {
         // TODO: Caching for this (need to map guild AND role id to GuildRole for this to be possible)
         Ok(ctx
@@ -857,7 +857,7 @@ impl<T: GuildTrait> GuildExt for T {
         &self,
         ctx: &Context,
         positions: Vec<UpdateGuildRoleHoistPositionsEntry>,
-        reason: impl Into<String> + Send,
+        reason: impl Into<String> + Send + Sync,
     ) -> Result<(), Error> {
         Ok(UpdateGuildRoleHoistPositions {
             guild_id: self.get_guild_id(),
@@ -882,7 +882,7 @@ impl<T: GuildTrait> GuildExt for T {
         &self,
         ctx: &Context,
         role_id: Id<RoleMarker>,
-        reason: impl Into<String> + Send,
+        reason: impl Into<String> + Send + Sync,
     ) -> Result<(), Error> {
         Ok(DeleteGuildRole {
             guild_id: self.get_guild_id(),
@@ -914,7 +914,7 @@ impl<T: GuildTrait> GuildExt for T {
         ctx: &Context,
         role_id: Id<RoleMarker>,
         updates: UpdateGuildRoleBody,
-        reason: impl Into<String> + Send,
+        reason: impl Into<String> + Send + Sync,
     ) -> Result<Cached<CachedGuildRole>, Error> {
         Ok(UpdateGuildRole {
             guild_id: self.get_guild_id(),
@@ -1011,7 +1011,7 @@ impl<T: GuildTrait> GuildExt for T {
         &self,
         ctx: &Context,
         enabled: bool,
-        reason: impl Into<String> + Send,
+        reason: impl Into<String> + Send + Sync,
     ) -> Result<Cached<Guild>, Error> {
         Ok(ToggleGuildTextChannelFlexibleNames {
             guild_id: self.get_guild_id(),
@@ -1067,7 +1067,7 @@ impl<T: GuildTrait> GuildExt for T {
         &self,
         ctx: &Context,
         code: Option<String>,
-        reason: impl Into<String> + Send,
+        reason: impl Into<String> + Send + Sync,
     ) -> Result<UpdateGuildVanityUrlResponse, Error> {
         Ok(UpdateGuildVanityUrl {
             guild_id: self.get_guild_id(),
@@ -1119,7 +1119,7 @@ impl<T: GuildTrait> GuildExt for T {
         &self,
         ctx: &Context,
         body: UpdateGuildSettingsBody,
-        reason: impl Into<String> + Send,
+        reason: impl Into<String> + Send + Sync,
     ) -> Result<Cached<Guild>, Error> {
         Ok(UpdateGuildSettings {
             guild_id: self.get_guild_id(),
@@ -1134,7 +1134,7 @@ impl<T: GuildTrait> GuildExt for T {
         &self,
         ctx: &Context,
         member_id: Id<UserMarker>,
-        until: impl Into<Timestamp<Iso8601>> + Send,
+        until: impl Into<Timestamp<Iso8601>> + Send + Sync,
     ) -> Result<Cached<CachedGuildMember>, Error> {
         self.update_member(
             ctx,
@@ -1157,8 +1157,8 @@ impl<T: GuildTrait> GuildExt for T {
         &self,
         ctx: &Context,
         member_id: Id<UserMarker>,
-        until: impl Into<Timestamp<Iso8601>> + Send,
-        reason: impl Into<String> + Send,
+        until: impl Into<Timestamp<Iso8601>> + Send + Sync,
+        reason: impl Into<String> + Send + Sync,
     ) -> Result<Cached<CachedGuildMember>, Error> {
         self.update_member(
             ctx,
@@ -1203,7 +1203,7 @@ impl<T: GuildTrait> GuildExt for T {
         &self,
         ctx: &Context,
         member_id: Id<UserMarker>,
-        reason: impl Into<String> + Send,
+        reason: impl Into<String> + Send + Sync,
     ) -> Result<Cached<CachedGuildMember>, Error> {
         self.update_member(
             ctx,

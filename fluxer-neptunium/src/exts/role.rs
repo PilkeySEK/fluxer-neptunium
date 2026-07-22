@@ -17,7 +17,7 @@ pub trait GuildRoleExt {
         &self,
         ctx: &Context,
         updates: UpdateGuildRoleBody,
-        reason: impl Into<String> + Send,
+        reason: impl Into<String> + Send + Sync,
     ) -> Result<Cached<CachedGuildRole>, Error>;
     /// Delete this role.
     async fn delete(&self, ctx: &Context) -> Result<(), Error>;
@@ -25,7 +25,7 @@ pub trait GuildRoleExt {
     async fn delete_with_reason(
         &self,
         ctx: &Context,
-        reason: impl Into<String> + Send,
+        reason: impl Into<String> + Send + Sync,
     ) -> Result<(), Error>;
 }
 
@@ -42,7 +42,7 @@ impl GuildRoleExt for CachedGuildRole {
         &self,
         ctx: &Context,
         updates: UpdateGuildRoleBody,
-        reason: impl Into<String> + Send,
+        reason: impl Into<String> + Send + Sync,
     ) -> Result<Cached<CachedGuildRole>, Error> {
         self.guild_id
             .update_role_with_reason(ctx, self.id, updates, reason)
@@ -54,7 +54,7 @@ impl GuildRoleExt for CachedGuildRole {
     async fn delete_with_reason(
         &self,
         ctx: &Context,
-        reason: impl Into<String> + Send,
+        reason: impl Into<String> + Send + Sync,
     ) -> Result<(), Error> {
         self.guild_id
             .delete_role_with_reason(ctx, self.id, reason)

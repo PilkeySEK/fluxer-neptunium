@@ -33,32 +33,32 @@ pub trait MessageExt {
     async fn reply(
         &self,
         ctx: &Context,
-        message_body: impl Into<CreateMessageBody> + Send,
+        message_body: impl Into<CreateMessageBody> + Send + Sync,
     ) -> Result<Cached<CachedMessage>, Error>;
 
     async fn add_reaction(
         &self,
         ctx: &Context,
-        reaction: impl Into<Reaction> + Send,
+        reaction: impl Into<Reaction> + Send + Sync,
     ) -> Result<(), Error>;
 
     async fn delete_own_reaction(
         &self,
         ctx: &Context,
-        reaction: impl Into<Reaction> + Send,
+        reaction: impl Into<Reaction> + Send + Sync,
     ) -> Result<(), Error>;
 
     async fn delete_reaction(
         &self,
         ctx: &Context,
-        reaction: impl Into<Reaction> + Send,
+        reaction: impl Into<Reaction> + Send + Sync,
         target: Id<UserMarker>,
     ) -> Result<(), Error>;
 
     async fn delete_all_reactions_of_emoji(
         &self,
         ctx: &Context,
-        reaction: impl Into<Reaction> + Send,
+        reaction: impl Into<Reaction> + Send + Sync,
     ) -> Result<(), Error>;
 
     async fn delete_all_reactions(&self, ctx: &Context) -> Result<(), Error>;
@@ -70,7 +70,7 @@ pub trait MessageExt {
     async fn edit(
         &self,
         ctx: &Context,
-        updates: impl Into<EditMessageBody> + Send,
+        updates: impl Into<EditMessageBody> + Send + Sync,
     ) -> Result<Cached<CachedMessage>, Error>;
 
     /// Re-fetches this message and returns the result.
@@ -116,7 +116,7 @@ impl MessageExt for Message {
     async fn reply(
         &self,
         ctx: &Context,
-        message_body: impl Into<CreateMessageBody> + Send,
+        message_body: impl Into<CreateMessageBody> + Send + Sync,
     ) -> Result<Cached<CachedMessage>, crate::client::error::Error> {
         let mut message_body = message_body.into().apply_default_allowed_mentions(ctx);
         message_body.message_reference = Some(
@@ -136,7 +136,7 @@ impl MessageExt for Message {
     async fn add_reaction(
         &self,
         ctx: &Context,
-        reaction: impl Into<Reaction> + Send,
+        reaction: impl Into<Reaction> + Send + Sync,
     ) -> Result<(), crate::client::error::Error> {
         Ok(ctx
             .get_http_client()
@@ -153,7 +153,7 @@ impl MessageExt for Message {
     async fn delete_own_reaction(
         &self,
         ctx: &Context,
-        reaction: impl Into<Reaction> + Send,
+        reaction: impl Into<Reaction> + Send + Sync,
     ) -> Result<(), Error> {
         Ok(ctx
             .get_http_client()
@@ -170,7 +170,7 @@ impl MessageExt for Message {
     async fn delete_reaction(
         &self,
         ctx: &Context,
-        reaction: impl Into<Reaction> + Send,
+        reaction: impl Into<Reaction> + Send + Sync,
         target: Id<UserMarker>,
     ) -> Result<(), Error> {
         Ok(ctx
@@ -189,7 +189,7 @@ impl MessageExt for Message {
     async fn delete_all_reactions_of_emoji(
         &self,
         ctx: &Context,
-        reaction: impl Into<Reaction> + Send,
+        reaction: impl Into<Reaction> + Send + Sync,
     ) -> Result<(), Error> {
         Ok(ctx
             .get_http_client()
@@ -227,7 +227,7 @@ impl MessageExt for Message {
     async fn edit(
         &self,
         ctx: &Context,
-        updates: impl Into<EditMessageBody> + Send,
+        updates: impl Into<EditMessageBody> + Send + Sync,
     ) -> Result<Cached<CachedMessage>, Error> {
         Ok(EditMessage {
             channel_id: self.channel_id,
@@ -358,7 +358,7 @@ impl MessageExt for CachedMessage {
     async fn reply(
         &self,
         ctx: &Context,
-        message_body: impl Into<CreateMessageBody> + Send,
+        message_body: impl Into<CreateMessageBody> + Send + Sync,
     ) -> Result<Cached<CachedMessage>, crate::client::error::Error> {
         let mut message_body = message_body.into().apply_default_allowed_mentions(ctx);
         message_body.message_reference = Some(
@@ -378,7 +378,7 @@ impl MessageExt for CachedMessage {
     async fn add_reaction(
         &self,
         ctx: &Context,
-        reaction: impl Into<Reaction> + Send,
+        reaction: impl Into<Reaction> + Send + Sync,
     ) -> Result<(), crate::client::error::Error> {
         Ok(ctx
             .get_http_client()
@@ -395,7 +395,7 @@ impl MessageExt for CachedMessage {
     async fn delete_own_reaction(
         &self,
         ctx: &Context,
-        reaction: impl Into<Reaction> + Send,
+        reaction: impl Into<Reaction> + Send + Sync,
     ) -> Result<(), Error> {
         Ok(ctx
             .get_http_client()
@@ -412,7 +412,7 @@ impl MessageExt for CachedMessage {
     async fn delete_reaction(
         &self,
         ctx: &Context,
-        reaction: impl Into<Reaction> + Send,
+        reaction: impl Into<Reaction> + Send + Sync,
         target: Id<UserMarker>,
     ) -> Result<(), Error> {
         Ok(ctx
@@ -431,7 +431,7 @@ impl MessageExt for CachedMessage {
     async fn delete_all_reactions_of_emoji(
         &self,
         ctx: &Context,
-        reaction: impl Into<Reaction> + Send,
+        reaction: impl Into<Reaction> + Send + Sync,
     ) -> Result<(), Error> {
         Ok(ctx
             .get_http_client()
@@ -469,7 +469,7 @@ impl MessageExt for CachedMessage {
     async fn edit(
         &self,
         ctx: &Context,
-        updates: impl Into<EditMessageBody> + Send,
+        updates: impl Into<EditMessageBody> + Send + Sync,
     ) -> Result<Cached<CachedMessage>, Error> {
         Ok(EditMessage {
             channel_id: self.channel_id,
