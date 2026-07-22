@@ -252,19 +252,19 @@ pub trait GuildMemberExt {
     async fn timeout(
         &self,
         ctx: &Context,
-        until: impl Into<Timestamp<Iso8601>> + Send + Sync,
+        until: impl Into<Timestamp<Iso8601>> + Send,
     ) -> Result<Cached<CachedGuildMember>, Error>;
     async fn timeout_with_reason(
         &self,
         ctx: &Context,
-        until: impl Into<Timestamp<Iso8601>> + Send + Sync,
-        reason: impl Into<String> + Send + Sync,
+        until: impl Into<Timestamp<Iso8601>> + Send,
+        reason: impl Into<String> + Send,
     ) -> Result<Cached<CachedGuildMember>, Error>;
     async fn untimeout(&self, ctx: &Context) -> Result<Cached<CachedGuildMember>, Error>;
     async fn untimeout_with_reason(
         &self,
         ctx: &Context,
-        reason: impl Into<String> + Send + Sync,
+        reason: impl Into<String> + Send,
     ) -> Result<Cached<CachedGuildMember>, Error>;
 }
 
@@ -410,7 +410,7 @@ impl GuildMemberExt for CachedGuildMember {
     async fn timeout(
         &self,
         ctx: &Context,
-        until: impl Into<Timestamp<Iso8601>> + Send + Sync,
+        until: impl Into<Timestamp<Iso8601>> + Send,
     ) -> Result<Cached<CachedGuildMember>, Error> {
         self.guild_id.timeout_member(ctx, self.id, until).await
     }
@@ -418,8 +418,8 @@ impl GuildMemberExt for CachedGuildMember {
     async fn timeout_with_reason(
         &self,
         ctx: &Context,
-        until: impl Into<Timestamp<Iso8601>> + Send + Sync,
-        reason: impl Into<String> + Send + Sync,
+        until: impl Into<Timestamp<Iso8601>> + Send,
+        reason: impl Into<String> + Send,
     ) -> Result<Cached<CachedGuildMember>, Error> {
         self.guild_id
             .timeout_member_with_reason(ctx, self.id, until, reason)
@@ -433,7 +433,7 @@ impl GuildMemberExt for CachedGuildMember {
     async fn untimeout_with_reason(
         &self,
         ctx: &Context,
-        reason: impl Into<String> + Send + Sync,
+        reason: impl Into<String> + Send,
     ) -> Result<Cached<CachedGuildMember>, Error> {
         self.guild_id
             .untimeout_member_with_reason(ctx, self.id, reason)

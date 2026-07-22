@@ -47,12 +47,12 @@ pub trait WebhookExt {
     async fn delete_with_token(
         &self,
         ctx: &Context,
-        token: impl Into<Zeroizing<String>> + Send + Sync,
+        token: impl Into<Zeroizing<String>> + Send,
     ) -> Result<(), Error>;
     async fn delete_message(
         &self,
         ctx: &Context,
-        token: impl Into<Zeroizing<String>> + Send + Sync,
+        token: impl Into<Zeroizing<String>> + Send,
         message_id: Id<MessageMarker>,
     ) -> Result<(), Error>;
 }
@@ -146,7 +146,7 @@ impl WebhookExt for Id<WebhookMarker> {
     async fn delete_with_token(
         &self,
         ctx: &Context,
-        token: impl Into<Zeroizing<String>> + Send + Sync,
+        token: impl Into<Zeroizing<String>> + Send,
     ) -> Result<(), Error> {
         Ok(ctx
             .get_http_client()
@@ -160,7 +160,7 @@ impl WebhookExt for Id<WebhookMarker> {
     async fn delete_message(
         &self,
         ctx: &Context,
-        token: impl Into<Zeroizing<String>> + Send + Sync,
+        token: impl Into<Zeroizing<String>> + Send,
         message_id: Id<MessageMarker>,
     ) -> Result<(), Error> {
         Ok(ctx

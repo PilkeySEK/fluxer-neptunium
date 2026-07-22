@@ -81,12 +81,12 @@ pub trait ChannelExt {
     async fn send_message(
         &self,
         ctx: &Context,
-        message: impl Into<CreateMessageBody> + Send + Sync,
+        message: impl Into<CreateMessageBody> + Send,
     ) -> Result<Cached<CachedMessage>, Error>;
     async fn create_message(
         &self,
         ctx: &Context,
-        message: impl Into<CreateMessageBody> + Send + Sync,
+        message: impl Into<CreateMessageBody> + Send,
     ) -> Result<Cached<CachedMessage>, Error>;
     async fn set_permission_overwrite(
         &self,
@@ -314,7 +314,7 @@ impl<T: ChannelTrait> ChannelExt for T {
     async fn send_message(
         &self,
         ctx: &Context,
-        message: impl Into<CreateMessageBody> + Send + Sync,
+        message: impl Into<CreateMessageBody> + Send,
     ) -> Result<Cached<CachedMessage>, Error> {
         self.create_message(ctx, message).await
     }
@@ -322,7 +322,7 @@ impl<T: ChannelTrait> ChannelExt for T {
     async fn create_message(
         &self,
         ctx: &Context,
-        message: impl Into<CreateMessageBody> + Send + Sync,
+        message: impl Into<CreateMessageBody> + Send,
     ) -> Result<Cached<CachedMessage>, Error> {
         Ok(CreateMessage {
             channel_id: self.get_channel_id(),
