@@ -94,6 +94,30 @@ impl super::Client {
                 call_event_handlers!(self.event_handlers, self.context, data => on_presence_update);
             }
             CachedDispatchEvent::GuildCreate(data) => {
+                #[cfg(feature = "user_api")]
+                if self.subscribe_to_everything {
+                    let ctx = self.context.clone();
+                    let guild_id = data.id;
+                    tokio::spawn(async move {
+                        use neptunium_model::gateway::payload::outgoing::GuildSubscriptionRequest;
+
+                        let hashmap = std::iter::once((
+                            guild_id,
+                            GuildSubscriptionRequest {
+                                active: Some(true),
+                                member_list_channels: None,
+                                typing: None,
+                                members: None,
+                                sync: Some(true),
+                            },
+                        ))
+                        .collect();
+
+                        if let Err(e) = ctx.update_guild_event_subscriptions(hashmap).await {
+                            tracing::error!("Failed to subscribe to guild {}: {}", guild_id, e);
+                        }
+                    });
+                }
                 call_event_handlers!(self.event_handlers, self.context, data => on_guild_create);
             }
             CachedDispatchEvent::GuildUpdate(data) => {

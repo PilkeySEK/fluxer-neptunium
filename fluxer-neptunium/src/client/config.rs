@@ -55,6 +55,16 @@ pub struct ClientConfig {
     /// Whether to overwrite the send timeout in the `ShardConfig` when it is set to `None`.
     #[builder(default = true)]
     pub overwrite_send_timeout: bool,
+    /// Whether to automatically subscribe to all guild events.
+    /// Useful for user bots.
+    ///
+    /// By default, Fluxer will only send events that would trigger a
+    /// notification to users (and user bots), requiring them to
+    /// subscribe to guild events. Setting this to `true` will make
+    /// fluxer-neptunium subscribe to all events automatically.
+    #[cfg(feature = "user_api")]
+    #[builder(default = false)]
+    pub subscribe_to_everything: bool,
 }
 
 impl Default for ClientConfig {

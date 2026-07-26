@@ -32,7 +32,7 @@ pub use arc_swap::Guard;
 
 /// The wrapper for cached values, to be able to easily globally change them and access those changed values.
 /// Uses `arc-swap` under the hood, with an internal "cache" for the last value (refreshed on `.refresh()`),
-/// to make the `Deref` implementation possible and have minimal performance.
+/// to make the `Deref` implementation possible with minimal overhead.
 pub struct Cached<T> {
     inner: Arc<ArcSwap<T>>,
     last_value: Arc<T>,
@@ -160,6 +160,15 @@ impl<T> Cached<T> {
     {
         (*(*self.load())).clone()
     }
+
+    /// Clone but do not refresh the internal cached value.
+    #[must_use]
+    pub fn clone_stale(&self) -> Self {
+        Self {
+            inner: Arc::clone(&self.inner),
+            last_value: Arc::clone(&self.last_value),
+        }
+    }
 }
 
 impl<T> Deref for Cached<T> {
@@ -176,10 +185,12 @@ impl<T> Debug for Cached<T> {
 }
 
 impl<T> Clone for Cached<T> {
+    /// This will refresh the internal cached value for the cloned `Self`.
     fn clone(&self) -> Self {
+        let inner = Arc::clone(&self.inner);
         Self {
-            inner: self.inner.clone(),
-            last_value: Arc::clone(&self.last_value),
+            last_value: Arc::clone(&*inner.load()),
+            inner,
         }
     }
 }

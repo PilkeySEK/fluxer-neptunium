@@ -110,6 +110,8 @@ pub struct Client {
     guild_counts_update_listeners: HashMap<String, oneshot::Sender<GuildCountsUpdate>>,
     latency_measurements: Vec<oneshot::Sender<()>>,
     initial_resume_info: Option<ResumeInfo>,
+    #[cfg(feature = "user_api")]
+    subscribe_to_everything: bool,
 }
 
 impl std::ops::Deref for Client {
@@ -168,6 +170,8 @@ impl Client {
             guild_members_chunk_listeners: HashMap::new(),
             latency_measurements: Vec::new(),
             initial_resume_info: client_config.resume_info,
+            #[cfg(feature = "user_api")]
+            subscribe_to_everything: client_config.subscribe_to_everything,
         }
     }
 
@@ -195,6 +199,15 @@ impl Client {
     #[expect(clippy::too_many_lines, clippy::missing_panics_doc)]
     pub async fn start(&mut self) -> Result<Option<ResumeInfo>, Error> {
         tracing::debug!("Starting client.");
+        #[cfg(feature = "user_api")]
+        if self.subscribe_to_everything {
+            let context = self.context.clone();
+            tokio::spawn(async move {
+                if let Err(e) = Self::subscribe_to_everything(context).await {
+                    tracing::error!("Failed to subscribe to everything: {e}");
+                }
+            });
+        }
         let mut num_tries = 0;
         // Used for determining whether the presence should be sent on identify
         // if the client is configured to only send it once.
@@ -388,6 +401,35 @@ impl Client {
                 "Something happened causing all session mpsc senders to close, reconnecting."
             );
         }
+    }
+
+    #[cfg(feature = "user_api")]
+    #[tracing::instrument(skip(ctx))]
+    async fn subscribe_to_everything(ctx: Context) -> Result<(), Error> {
+        use neptunium_model::gateway::payload::outgoing::GuildSubscriptionRequest;
+
+        tracing::debug!("Subscribing to all guild events.");
+        let guilds = ctx.list_own_guilds().await?;
+
+        let subscriptions = guilds
+            .into_iter()
+            .map(|guild| {
+                (
+                    guild.id,
+                    GuildSubscriptionRequest {
+                        active: Some(true),
+                        member_list_channels: None,
+                        typing: None,
+                        members: None,
+                        sync: Some(true),
+                    },
+                )
+            })
+            .collect::<HashMap<_, _>>();
+
+        ctx.update_guild_event_subscriptions(subscriptions).await?;
+
+        Ok(())
     }
 
     #[expect(clippy::result_large_err)]
