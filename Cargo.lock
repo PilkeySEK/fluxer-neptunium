@@ -444,7 +444,7 @@ checksum = "5baebc0774151f905a1a2cc41989300b1e6fbb29aff0ceffa1064fdd3088d582"
 
 [[package]]
 name = "fluxer-neptunium"
-version = "0.7.2"
+version = "0.7.3"
 dependencies = [
  "async-trait",
  "bon",
@@ -1119,7 +1119,7 @@ dependencies = [
 
 [[package]]
 name = "neptunium-cache-inmemory"
-version = "0.7.2"
+version = "0.7.3"
 dependencies = [
  "arc-swap",
  "async-trait",
@@ -1136,7 +1136,7 @@ dependencies = [
 
 [[package]]
 name = "neptunium-gateway"
-version = "0.7.2"
+version = "0.7.3"
 dependencies = [
  "bon",
  "futures-util",
@@ -1152,7 +1152,7 @@ dependencies = [
 
 [[package]]
 name = "neptunium-http"
-version = "0.7.2"
+version = "0.7.3"
 dependencies = [
  "async-trait",
  "bon",
@@ -1176,7 +1176,7 @@ dependencies = [
 
 [[package]]
 name = "neptunium-model"
-version = "0.7.2"
+version = "0.7.3"
 dependencies = [
  "bitflags",
  "bon",
