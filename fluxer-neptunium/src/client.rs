@@ -545,7 +545,7 @@ impl Client {
                         }
                         other => {
                             if session.resume_info.is_none() {
-                                tracing::debug!(
+                                tracing::trace!(
                                     "Received dispatch event that is not `Ready` while waiting for `Ready`, queueing it for later."
                                 );
                                 session.queued_dispatch_events.push(other);
