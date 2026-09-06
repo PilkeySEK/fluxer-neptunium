@@ -1,14 +1,13 @@
-use std::time::Duration;
+use std::{fmt::Debug, time::Duration};
 
 use bon::Builder;
-use debug_ignore::DebugIgnore;
 use neptunium_cache_inmemory::CacheConfig;
 use neptunium_http::endpoints::channel::AllowedMentions;
 use neptunium_model::gateway::payload::outgoing::PresenceUpdateOutgoing;
 
 use crate::client::ResumeInfo;
 
-#[derive(Builder, Debug)]
+#[derive(Builder)]
 pub struct ClientConfig {
     #[builder(into)]
     pub api_base_url: Option<String>,
@@ -25,7 +24,7 @@ pub struct ClientConfig {
     pub initial_presence: Option<PresenceUpdateOutgoing>,
     #[builder(default = true)]
     pub send_initial_presence_on_every_reconnect: bool,
-    #[builder(default = DebugIgnore::from(Box::new(|num_tries: usize| {
+    #[builder(default = Box::new(|num_tries: usize| {
         const MIN_TIME: Duration = Duration::from_secs(3);
         const MAX_TIME: Duration = Duration::from_mins(1);
         const BASE: f64 = 2.0;
@@ -38,8 +37,8 @@ pub struct ClientConfig {
         } else {
             time
         }
-    }) as Box<dyn Fn(usize) -> Duration + Send + Sync>), into)]
-    pub gateway_retry_wait_time_fn: DebugIgnore<Box<dyn Fn(usize) -> Duration + Send + Sync>>,
+    }) as Box<dyn Fn(usize) -> Duration + Send + Sync>, into)]
+    pub gateway_retry_wait_time_fn: Box<dyn Fn(usize) -> Duration + Send + Sync>,
     /// Add resume info so that the client will try to resume on the first start instead
     /// of creating a new session.
     pub resume_info: Option<ResumeInfo>,
@@ -65,6 +64,30 @@ pub struct ClientConfig {
     #[cfg(feature = "user_api")]
     #[builder(default = false)]
     pub subscribe_to_everything: bool,
+}
+
+impl Debug for ClientConfig {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ClientConfig")
+            .field("api_base_url", &self.api_base_url)
+            .field("token_type", &self.token_type)
+            .field("cache_config", &self.cache_config)
+            .field("initial_presence", &self.initial_presence)
+            .field(
+                "send_initial_presence_on_every_reconnect",
+                &self.send_initial_presence_on_every_reconnect,
+            )
+            .field("gateway_retry_wait_time_fn", &"...")
+            .field("resume_info", &self.resume_info)
+            .field("default_allowed_mentions", &self.default_allowed_mentions)
+            .field(
+                "bot_user_agent_information",
+                &self.bot_user_agent_information,
+            )
+            .field("overwrite_send_timeout", &self.overwrite_send_timeout)
+            .field("subscribe_to_everything", &self.subscribe_to_everything)
+            .finish()
+    }
 }
 
 impl Default for ClientConfig {

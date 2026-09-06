@@ -24,10 +24,12 @@ use tokio::sync::{
     mpsc::{UnboundedReceiver, UnboundedSender, unbounded_channel},
     oneshot,
 };
+use tokio_util::{sync::CancellationToken, task::TaskTracker};
 use zeroize::Zeroizing;
 
 mod config;
 mod dispatch_event_impl;
+mod session;
 pub mod error;
 pub use config::*;
 
@@ -160,9 +162,8 @@ impl Client {
                 cache: Arc::new(Cache::new(client_config.cache_config)),
                 default_allowed_mentions: Arc::new(client_config.default_allowed_mentions),
             },
-            // tx,
             rx,
-            gateway_retry_wait_time_fn: client_config.gateway_retry_wait_time_fn.0,
+            gateway_retry_wait_time_fn: client_config.gateway_retry_wait_time_fn,
             send_identify_presence_on_every_reconnect: client_config
                 .send_initial_presence_on_every_reconnect,
             identify_presence: client_config.initial_presence,
@@ -197,12 +198,27 @@ impl Client {
     /// Will return an error if the shard connection has been closed with an unrecoverable close code.
     /// If that happens, you should likely not try to restart the client.
     #[expect(clippy::too_many_lines, clippy::missing_panics_doc)]
-    pub async fn start(&mut self) -> Result<Option<ResumeInfo>, Error> {
+    pub async fn start_with_shutdown<Fut: Future<Output = ()> + Send + 'static>(
+        &mut self,
+        shutdown: Fut,
+    ) -> Result<Option<ResumeInfo>, Error> {
         tracing::debug!("Starting client.");
+        let tracker = TaskTracker::new();
+        let cancellation = CancellationToken::new();
+        let cancellation_clone = cancellation.clone();
+        tracker.spawn(async move {
+            tokio::select! {
+                () = shutdown => {
+                    tracing::debug!("Shutting down");
+                    cancellation_clone.cancel();
+                },
+                () = cancellation_clone.cancelled() => {}
+            }
+        });
         #[cfg(feature = "user_api")]
         if self.subscribe_to_everything {
             let context = self.context.clone();
-            tokio::spawn(async move {
+            tracker.spawn(async move {
                 if let Err(e) = Self::subscribe_to_everything(context).await {
                     tracing::error!("Failed to subscribe to everything: {e}");
                 }
@@ -214,7 +230,7 @@ impl Client {
         let mut already_sent_presence_in_identify = false;
         let mut resume_info: Option<ResumeInfo> = self.initial_resume_info.clone();
         let mut reset_num_tries_at = Instant::now();
-        'client_loop: loop {
+        let result = 'client_loop: loop {
             if reset_num_tries_at
                 .checked_duration_since(Instant::now())
                 .is_none()
@@ -284,27 +300,39 @@ impl Client {
             let (shard_task_tx, mut shard_task_rx) = unbounded_channel();
 
             let session_tx_clone = session_tx.clone();
-            tokio::spawn(async move {
+            let cancellation_clone = cancellation.clone();
+            tracker.spawn(async move {
                 #[expect(clippy::cast_possible_truncation)]
                 let first_heartbeat_wait_time = Duration::from_millis(rand::random_range(
                     0..heartbeat_interval.as_millis(),
                 ) as u64);
-                tokio::time::sleep(first_heartbeat_wait_time).await;
+                tokio::select! {
+                    biased;
+                    _ = cancellation_clone.cancelled() => {
+                        return;
+                    }
+                    _ = tokio::time::sleep(first_heartbeat_wait_time) => {},
+                }
                 let mut interval = tokio::time::interval(heartbeat_interval);
                 // Since the first tick of the interval completes immediately, we do not need to add explicit handling for the first heartbeat.
                 loop {
                     tokio::select! {
+                        biased;
+                        _ = cancellation_clone.cancelled() => {
+                            break;
+                        }
                         _ = interval.tick() => {
                             if session_tx_clone.send(ClientSessionMessage::SendHeartbeat).is_err() {
-                                tracing::debug!("Stopping heartbeat task.");
                                 break;
                             }
                         },
                     }
+                    tracing::debug!("Stopping heartbeat task.");
                 }
             });
             let session_tx_clone = session_tx.clone();
-            tokio::spawn(async move {
+            let cancellation_clone = cancellation.clone();
+            tracker.spawn(async move {
                 let maybe_error = loop {
                     tokio::select! {
                         next = shard.next_event() => {
@@ -320,7 +348,7 @@ impl Client {
                                 break None;
                             }
                         },
-                        () = session_tx_clone.closed() => {
+                        _ = cancellation_clone.cancelled() => {
                             break None;
                         }
                         message = shard_task_rx.recv() => {
@@ -376,7 +404,7 @@ impl Client {
                                         tracing::error!("Error handling session message: {e}");
                                     },
                                     Err(e) => {
-                                        return Err(e);
+                                        break 'client_loop Err(e);
                                     }
                                 }
                             }
@@ -387,20 +415,20 @@ impl Client {
                         let Some(message) = message else {
                             panic!("There should always be at least one client message sender.");
                         };
-                        if let ControlFlow::Break(gracefully_stop) = self.handle_client_message(message, &session_info) {
-                            if gracefully_stop {
-                                return Ok(resume_info);
-                            }
+                        if self.handle_client_message(message, &session_info).is_break() {
                             continue 'client_loop;
                         }
                     }
+                    _ = cancellation.cancelled() => {
+                        tracing::debug!("Shutting down client");
+                        break 'client_loop Ok(resume_info);
+                    }
                 }
             }
-
-            tracing::warn!(
-                "Something happened causing all session mpsc senders to close, reconnecting."
-            );
-        }
+        };
+        cancellation.cancel();
+        tracker.wait().await;
+        result
     }
 
     #[cfg(feature = "user_api")]
@@ -427,7 +455,16 @@ impl Client {
             })
             .collect::<HashMap<_, _>>();
 
-        ctx.update_guild_event_subscriptions(subscriptions).await?;
+        tokio::time::timeout(
+            Duration::from_mins(1),
+            ctx.update_guild_event_subscriptions(subscriptions),
+        )
+        .await
+        .map_err(|_| {
+            Error::new(ClientErrorKind::TimedOut(
+                "updating guild event subscriptions".to_owned(),
+            ))
+        })??;
 
         Ok(())
     }
@@ -581,7 +618,7 @@ impl Client {
         &mut self,
         message: ClientMessage,
         session: &SessionInfo<'_>,
-    ) -> ControlFlow<bool> {
+    ) -> ControlFlow<()> {
         match message {
             ClientMessage::UpdatePresence(data, sender) => {
                 if session

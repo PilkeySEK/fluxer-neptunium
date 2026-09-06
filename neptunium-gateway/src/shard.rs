@@ -117,8 +117,15 @@ impl Shard {
         }
     }
 
+    // Why this is cancel safe: https://docs.rs/tokio-tungstenite/0.30.0/tokio_tungstenite/struct.WebSocketStream.html#cancel-safety
     /// # Errors
     /// Returns an error if receiving the message fails.
+    ///
+    /// # Cancel safety
+    /// This method is cancel safe. If the future produced by this method is dropped
+    /// before it resolves, the next call to [`next_event`](Self::next_event) or
+    /// [`next_message`](Self::next_message) resumes from the same position in the stream,
+    /// and thus no message is lost.
     pub async fn next_message(&mut self) -> Result<Message, Error> {
         let connection = self.get_connection().await?;
         let message = connection
@@ -132,6 +139,13 @@ impl Shard {
 
     /// # Errors
     /// Returns an error if receiving the event fails.
+    ///
+    /// # Cancel safety
+    /// This method is cancel safe for the same reason why [`next_message`](Self::next_message)
+    /// is cancel safe. If the future produced by this method is dropped
+    /// before it resolves, the next call to [`next_event`](Self::next_event) or
+    /// [`next_message`](Self::next_message) resumes from the same position in the stream,
+    /// and thus no message is lost.
     pub async fn next_event(&mut self) -> Result<GatewayEventIncoming, EventReceiveError> {
         let message = self
             .next_message()
@@ -154,8 +168,12 @@ impl Shard {
         result
     }
 
+    // Why this is not cancel safe: https://docs.rs/tokio-tungstenite/0.30.0/tokio_tungstenite/struct.WebSocketStream.html#cancel-safety
     /// # Errors
     /// Returns an error if sending the message fails.
+    ///
+    /// # Cancel safety
+    /// This method may not be cancel safe.
     pub async fn send_message(&mut self, message: Message) -> Result<(), Error> {
         let send_timeout = self.config.send_timeout;
         let connection = self.get_connection().await?;
@@ -171,6 +189,9 @@ impl Shard {
 
     /// # Errors
     /// Returns an error if sending the message fails.
+    ///
+    /// # Cancel safety
+    /// This method may not be cancel safe.
     #[expect(clippy::missing_panics_doc)]
     pub async fn send_gateway_message(
         &mut self,
@@ -183,8 +204,12 @@ impl Shard {
     }
 
     /// Helper function for sending the identify message to the gateway. This should be used after a `Hello` message is received.
+    /// 
     /// # Errors
     /// Returns an error if sending the message fails.
+    ///
+    /// # Cancel safety
+    /// This method may not be cancel safe.
     pub async fn identify(
         &mut self,
         connection_properties: ConnectionProperties,
@@ -202,6 +227,7 @@ impl Shard {
 
     /// Close the shard connection. This also closes the underlying websocket.
     /// If no connection has been opened yet, immediately returns `Ok`.
+    /// 
     /// # Errors
     /// Returns an error if closing the websocket failed.
     #[expect(clippy::missing_panics_doc)]
@@ -219,12 +245,17 @@ impl Shard {
     }
 
     /// Reopens the existing connection (if there is one) and resumes.
+    /// 
     /// # Resuming
     /// Upon sending the `Resume` event, the gateway will replay all events after the specified
     /// `last_sequence_number`, and finally send a `Resumed` dispatch event to signal that the replaying
     /// is finished and all messages from that point onward are new.
+    /// 
     /// # Errors
     /// Returns an error if sending the resume message failed. **Does not** error if closing the websocket failed.
+    ///
+    /// # Cancel safety
+    /// This method may not be cancel safe.
     pub async fn resume(
         &mut self,
         session_id: Zeroizing<String>,

@@ -25,7 +25,7 @@ zeroize = "1.9.0"
 reqwest = { version = "0.13.4", default-features = false }
 serde_path_to_error = "0.1.20"
 bon = "3.9.3"
-debug-ignore = "1.0.5"
+tokio-util = { version = "0.7.19", features = ["rt"] }
 
 [features]
 default = ["webpki-roots", "rate-limiting", "cache-statistics", "rustls"]
