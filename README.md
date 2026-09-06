@@ -65,9 +65,6 @@ This is the current support for different APIs (Categories named after [The offi
 - ❌ Connections
 - ✅ Themes
 
-# Woah new stuff
-So, basically, while trying to cover parts of the API, I am sometimes discovering not yet documented features. Most of them are just not *documented*, but actually do exist in the fluxer code, which is fine. But, some others, like the GUILD_AUDIT_LOG_ENTRY_CREATE (related structs in `model/src/guild/audit_log`) dispatch event are not even in the fluxer codebase yet and instead only in the private `fluxer-v2` repository which is only available to Fluxer visionaries. I'm sadly not a visionary, so I don't fully know the structure of this event. I'm still including it for the future, but you shouldn't rely on it currently.
-
 # Third party code
 I have copied certain audit log schemas from twilight-rs, along with using `twilight-http-ratelimiting` for the rate limiting (currently `twilight-http-ratelimiting` is a modified version directly in `neptunium-http` until the next version releases which will fix a wrong debug assertion).
 
