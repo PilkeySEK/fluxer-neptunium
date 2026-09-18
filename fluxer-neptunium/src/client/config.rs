@@ -5,8 +5,14 @@ use debug_ignore::DebugIgnore;
 use neptunium_cache_inmemory::CacheConfig;
 use neptunium_http::endpoints::channel::AllowedMentions;
 use neptunium_model::gateway::payload::outgoing::PresenceUpdateOutgoing;
+use zeroize::Zeroizing;
 
-use crate::client::ResumeInfo;
+#[derive(Builder, Clone, Debug)]
+pub struct ResumeInfo {
+    #[builder(into)]
+    pub session_id: Zeroizing<String>,
+    pub last_sequence_number: u64,
+}
 
 #[derive(Builder, Debug)]
 pub struct ClientConfig {

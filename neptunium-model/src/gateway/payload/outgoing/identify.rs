@@ -1,15 +1,20 @@
 use bitflags::bitflags;
 use bon::Builder;
+use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 use zeroize::Zeroizing;
 
 use crate::{
     gateway::{
-        intents::GatewayEventFlags, payload::outgoing::PresenceUpdateOutgoing, shard::ShardInfo,
+        payload::outgoing::{PresenceUpdateOutgoing, Status},
+        presence::CustomStatus,
+        shard::ShardInfo,
     },
+    id::{Id, marker::GuildMarker},
     misc::serde_bitflags,
 };
 
+/*
 #[derive(Serialize_repr, Deserialize_repr, Copy, Clone, Debug)]
 #[repr(u8)]
 pub enum ActivityType {
@@ -20,6 +25,7 @@ pub enum ActivityType {
     Custom,
     Competing,
 }
+*/
 
 #[derive(serde::Serialize, serde::Deserialize, Copy, Clone, Debug)]
 pub struct Timestamps {
@@ -36,7 +42,7 @@ pub enum StatusDisplayType {
     State,
     Details,
 }
-
+/*
 #[derive(serde::Serialize, serde::Deserialize, Clone, Debug)]
 pub struct ActivityParty {
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -96,6 +102,7 @@ pub struct ActivityButton {
     pub label: String,
     pub url: String,
 }
+*/
 
 // Activities don't exist yet.
 /*
@@ -149,23 +156,36 @@ pub struct Activity {
 
 // TODO: This has more (optional) fields when logging in as a user
 #[derive(serde::Serialize, serde::Deserialize, Clone, Debug, Builder)]
-pub struct ConnectionProperties {
+pub struct IdentifyProperties {
     /// The operating system, e.g. "linux".
     #[builder(into)]
     pub os: String,
     /// The library name.
     #[builder(into)]
     pub browser: String,
-    /// The library name.
+    /// The device or application identifier.
     #[builder(into)]
     pub device: String,
+    /// Whether the client can take part in end-to-end encrypted voice.
+    /// A session without this set to `true` will be refused from an
+    /// end-to-end encrypted voice channel with `VOICE_E2EE_REQUIRED`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub e2ee_capable: Option<bool>,
+    /// Whether the session is mobile (default `false`).
+    pub mobile: Option<bool>,
+    /// The client latitude as a decimal string of 1 through 32 characters.
+    /// Only used to order the `Ready` `rtc_regions` array by distance.
+    pub latitude: Option<String>,
+    /// The client longitude as a decimal string of 1 through 32 characters.
+    /// Only used to order the `Ready` `rtc_regions` array by distance.
+    pub longitude: Option<String>,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Clone, Debug, Builder)]
 pub struct Identify {
     #[builder(into)]
     pub token: Zeroizing<String>,
-    pub properties: ConnectionProperties,
+    pub properties: IdentifyProperties,
     // Doesn't appear to exist - https://github.com/fluxerapp/fluxer/blob/5da26d4ed5ef9f3fe8bef993c0f10ea4f4ee9c1d/fluxer_gateway/src/gateway/gateway_handler.erl#L466
     // pub compress: bool,
     // /// Value between 50 and 250.
@@ -176,8 +196,34 @@ pub struct Identify {
     pub shard: Option<ShardInfo>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub presence: Option<PresenceUpdateOutgoing>,
-    // TODO: Check whether this is actually `Intents`...
+    /// The names of dispatch events that this session does not want to receive.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub ignored_events: Option<GatewayEventFlags>,
-    // TODO: There might be a "flags" field, have to check...
+    pub ignored_events: Option<Vec<String>>,
+    /// One guild the session joins as active.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub initial_guild_id: Option<Id<GuildMarker>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub flags: Option<SessionFlags>,
+}
+
+bitflags! {
+    #[derive(Clone, Copy, Debug)]
+    pub struct SessionFlags: u32 {
+        /// Merge runs of reaction additions into `MessageReactionAddMany`.
+        const DEBOUNCE_MESSAGE_REACTIONS = 1 << 1;
+    }
+}
+
+serde_bitflags!(SessionFlags, u32);
+
+#[derive(Builder, Serialize, Deserialize, Clone, Debug)]
+pub struct InitialPresence {
+    #[builder(default = Status::Online)]
+    pub status: Status,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub custom_status: Option<CustomStatus>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub afk: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub mobile: Option<bool>,
 }

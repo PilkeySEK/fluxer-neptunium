@@ -37,9 +37,6 @@ pub struct CustomStatus {
     pub emoji_name: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(into)]
-    pub emoji_animated: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    #[builder(into)]
     pub expires_at: Option<Timestamp<Iso8601>>,
 }
 
