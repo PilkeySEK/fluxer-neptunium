@@ -1,9 +1,10 @@
-use neptunium_gateway::shard::EventReceiveError;
+use neptunium_gateway::session::EventReceiveError;
 use neptunium_http::{
     endpoints::ExecuteEndpointRequestError,
     error::{ApiErrorResponse, ApiRateLimitedResponse},
 };
 use neptunium_model::gateway::event::gateway::GatewayEventIncoming;
+use tokio::task::JoinError;
 use tokio_tungstenite::tungstenite::{self, protocol::CloseFrame};
 
 use crate::events::EventError;
@@ -73,6 +74,9 @@ impl std::fmt::Display for Error {
             ClientErrorKind::ClientNotPresent => f.write_str("Client no longer exists"),
             ClientErrorKind::TimedOut(step) => f.write_fmt(format_args!("Timed out {step}")),
             ClientErrorKind::UnexpectedDataReceived => f.write_str("Received unexpected data"),
+            ClientErrorKind::CancelFutureJoinError(err) => {
+                f.write_fmt(format_args!("Join error on cancel future: {err:?}"))
+            }
         }
     }
 }
@@ -130,6 +134,7 @@ pub enum ClientErrorKind {
     ClientNotPresent,
     TimedOut(String),
     UnexpectedDataReceived,
+    CancelFutureJoinError(JoinError),
 }
 
 impl From<tungstenite::Error> for Error {

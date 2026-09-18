@@ -14,6 +14,9 @@ use tokio_tungstenite::{
     tungstenite::{self, Message, client::IntoClientRequest, protocol::CloseFrame},
 };
 
+mod session;
+pub use session::*;
+
 #[derive(Debug)]
 struct ShardConnection {
     tx: SplitSink<
