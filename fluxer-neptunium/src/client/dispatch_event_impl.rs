@@ -6,7 +6,6 @@ use tokio::sync::mpsc::error::SendError;
 impl super::Client {
     #[expect(clippy::too_many_lines)]
     pub(super) fn handle_dispatch_event(&mut self, event: DispatchEvent) {
-        tracing::trace!("Dispatch Event: {event:?}");
         macro_rules! call_event_handlers {
             ($handlers:expr, $ctx:expr, $data:expr => $func_name:ident) => {{
                 let arc = Arc::new($data);
@@ -95,7 +94,7 @@ impl super::Client {
             }
             CachedDispatchEvent::GuildCreate(data) => {
                 #[cfg(feature = "user_api")]
-                if self.subscribe_to_everything {
+                if self.config.subscribe_to_everything {
                     let ctx = self.context.clone();
                     let guild_id = data.id;
                     tokio::spawn(async move {

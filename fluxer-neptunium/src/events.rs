@@ -40,7 +40,7 @@ pub trait EventHandler: Send {
     async fn on_ready(&self, ctx: Context, data: Arc<CachedReady>) -> Result<(), EventError> {
         Ok(())
     }
-    async fn on_resumed(&self, ctx: Context, data: Arc<Option<Resumed>>) -> Result<(), EventError> {
+    async fn on_resumed(&self, ctx: Context, data: Arc<Resumed>) -> Result<(), EventError> {
         Ok(())
     }
     async fn on_sessions_replace(

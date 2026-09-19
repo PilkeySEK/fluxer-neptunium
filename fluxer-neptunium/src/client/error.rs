@@ -1,4 +1,4 @@
-use neptunium_gateway::session::EventReceiveError;
+use neptunium_gateway::session::SessionError;
 use neptunium_http::{
     endpoints::ExecuteEndpointRequestError,
     error::{ApiErrorResponse, ApiRateLimitedResponse},
@@ -74,9 +74,8 @@ impl std::fmt::Display for Error {
             ClientErrorKind::ClientNotPresent => f.write_str("Client no longer exists"),
             ClientErrorKind::TimedOut(step) => f.write_fmt(format_args!("Timed out {step}")),
             ClientErrorKind::UnexpectedDataReceived => f.write_str("Received unexpected data"),
-            ClientErrorKind::CancelFutureJoinError(err) => {
-                f.write_fmt(format_args!("Join error on cancel future: {err:?}"))
-            }
+            ClientErrorKind::JoinError(err) => f.write_fmt(format_args!("Join error: {err}")),
+            ClientErrorKind::SessionError(err) => f.write_fmt(format_args!("Session error: {err}")),
         }
     }
 }
@@ -134,7 +133,8 @@ pub enum ClientErrorKind {
     ClientNotPresent,
     TimedOut(String),
     UnexpectedDataReceived,
-    CancelFutureJoinError(JoinError),
+    JoinError(JoinError),
+    SessionError(SessionError),
 }
 
 impl From<tungstenite::Error> for Error {
@@ -145,6 +145,7 @@ impl From<tungstenite::Error> for Error {
     }
 }
 
+/*
 impl From<EventReceiveError> for Error {
     fn from(value: EventReceiveError) -> Self {
         Self {
@@ -159,6 +160,7 @@ impl From<EventReceiveError> for Error {
         }
     }
 }
+*/
 
 impl From<reqwest::Error> for Error {
     fn from(value: reqwest::Error) -> Self {

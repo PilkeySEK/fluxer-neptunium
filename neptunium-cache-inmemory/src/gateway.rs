@@ -243,9 +243,8 @@ impl CachedDispatchEvent {
 
 pub enum CachedDispatchEvent {
     Ready(CachedReady),
-    /// The payload is documented to be null, but has data in practice (undocumented).
     /// The presence of this event indicates a successful resume.
-    Resumed(Option<Resumed>),
+    Resumed(Resumed),
     SessionsReplace(Vec<serde_json::Value>),
     GuildAuditLogEntryCreate(GuildAuditLogEntryCreate),
     UserUpdate(Cached<UserPrivateResponse>),
