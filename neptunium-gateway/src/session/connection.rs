@@ -85,6 +85,7 @@ impl Connection {
         let (msg, reconnected) = internal::next_message(&mut self.stream, &self.request).await;
         if reconnected {
             self.state = ConnectionState::Initial;
+            self.last_heartbeat_ack_at = Instant::now();
         }
         msg
     }
@@ -98,6 +99,7 @@ impl Connection {
         let (event, reconnected) = internal::next_event(&mut self.stream, &self.request).await;
         if reconnected {
             self.state = ConnectionState::Initial;
+            self.last_heartbeat_ack_at = Instant::now();
         }
         event
     }
@@ -108,6 +110,7 @@ impl Connection {
     pub async fn reconnect_with_backoff(&mut self, close_frame: Option<CloseFrame>) {
         internal::reconnect_with_backoff(&mut self.stream, &self.request, close_frame).await;
         self.state = ConnectionState::Initial;
+        self.last_heartbeat_ack_at = Instant::now();
     }
 
     /// Close the existing connection and start a new one.
@@ -117,6 +120,7 @@ impl Connection {
     ) -> Result<(), tokio_tungstenite::tungstenite::Error> {
         internal::reconnect(&mut self.stream, self.request.clone(), close_frame).await?;
         self.state = ConnectionState::Initial;
+        self.last_heartbeat_ack_at = Instant::now();
         Ok(())
     }
 
@@ -124,6 +128,7 @@ impl Connection {
         let reconnected = internal::send_message(&mut self.stream, &self.request, event).await;
         if reconnected {
             self.state = ConnectionState::Initial;
+            self.last_heartbeat_ack_at = Instant::now();
         }
     }
 }
