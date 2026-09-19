@@ -168,6 +168,7 @@ pub struct Ready {
     pub users: Option<Vec<PartialUser>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub presences: Option<Vec<Presence>>,
+    // TODO
     #[serde(skip_serializing_if = "Option::is_none")]
     pub sessions: Option<Vec<Value>>,
     #[serde(skip_serializing_if = "Option::is_none")]

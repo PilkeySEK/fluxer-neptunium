@@ -12,7 +12,6 @@ use tokio_tungstenite::{
     MaybeTlsStream, WebSocketStream, connect_async,
     tungstenite::{Message, client::IntoClientRequest, protocol::CloseFrame},
 };
-use tracing::instrument;
 
 use crate::session::connection::internal::{next_event, send_message};
 
@@ -26,10 +25,11 @@ pub struct Connection {
     pub state: ConnectionState,
 }
 
+#[derive(PartialEq, Eq)]
 pub enum ConnectionState {
     Initial,
+    Identifying,
     Resuming,
-    Identified,
     Ready,
 }
 
@@ -81,8 +81,12 @@ impl Connection {
     /// # Errors
     /// This method does not return an error because it will always try reconnecting
     /// to recover from errors.
-    pub async fn next_message(&mut self) -> (Message, bool) {
-        internal::next_message(&mut self.stream, &self.request).await
+    pub async fn next_message(&mut self) -> Message {
+        let (msg, reconnected) = internal::next_message(&mut self.stream, &self.request).await;
+        if reconnected {
+            self.state = ConnectionState::Initial;
+        }
+        msg
     }
 
     /// Wait for the next gateway event to be received.
@@ -90,8 +94,12 @@ impl Connection {
     /// # Errors
     /// Will always retry if receiving the event fails, and reconnect if the
     /// received event could not be deserialized.
-    pub async fn next_event(&mut self) -> (GatewayEventIncoming, bool) {
-        internal::next_event(&mut self.stream, &self.request).await
+    pub async fn next_event(&mut self) -> GatewayEventIncoming {
+        let (event, reconnected) = internal::next_event(&mut self.stream, &self.request).await;
+        if reconnected {
+            self.state = ConnectionState::Initial;
+        }
+        event
     }
 
     /// Reconnect, waiting an increasingly longer time between reconnects if they fail.
@@ -99,6 +107,7 @@ impl Connection {
     /// one occurs.
     pub async fn reconnect_with_backoff(&mut self, close_frame: Option<CloseFrame>) {
         internal::reconnect_with_backoff(&mut self.stream, &self.request, close_frame).await;
+        self.state = ConnectionState::Initial;
     }
 
     /// Close the existing connection and start a new one.
@@ -106,11 +115,16 @@ impl Connection {
         &mut self,
         close_frame: Option<CloseFrame>,
     ) -> Result<(), tokio_tungstenite::tungstenite::Error> {
-        internal::reconnect(&mut self.stream, self.request.clone(), close_frame).await
+        internal::reconnect(&mut self.stream, self.request.clone(), close_frame).await?;
+        self.state = ConnectionState::Initial;
+        Ok(())
     }
 
-    pub async fn send_message(&mut self, event: &OutgoingGatewayMessage) -> bool {
-        internal::send_message(&mut self.stream, &self.request, event).await
+    pub async fn send_message(&mut self, event: &OutgoingGatewayMessage) {
+        let reconnected = internal::send_message(&mut self.stream, &self.request, event).await;
+        if reconnected {
+            self.state = ConnectionState::Initial;
+        }
     }
 }
 
@@ -179,7 +193,7 @@ mod internal {
                 Ok(None) => {
                     reconnect_with_backoff(stream, request, None).await;
                     reconnected = true;
-                },
+                }
                 Err(e) => {
                     tracing::error!("{e}");
                     reconnect_with_backoff(stream, request, None).await;
@@ -190,7 +204,10 @@ mod internal {
         (message, reconnected)
     }
 
-    pub async fn next_event(stream: &mut Stream, request: &Request<()>) -> (GatewayEventIncoming, bool) {
+    pub async fn next_event(
+        stream: &mut Stream,
+        request: &Request<()>,
+    ) -> (GatewayEventIncoming, bool) {
         let mut reconnected = false;
         let event = loop {
             let (message, set_reconnected) = next_message(stream, request).await;
