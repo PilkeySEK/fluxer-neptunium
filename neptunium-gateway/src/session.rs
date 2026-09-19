@@ -6,7 +6,7 @@ use std::{
 
 use neptunium_model::gateway::{
     event::{dispatch::DispatchEvent, gateway::GatewayEventIncoming},
-    payload::outgoing::{Identify, IdentifyProperties, OutgoingGatewayMessage, Resume},
+    payload::outgoing::{Heartbeat, Identify, IdentifyProperties, OutgoingGatewayMessage, Resume},
 };
 use serde::{Deserialize, Serialize};
 use tokio::sync::{
@@ -375,7 +375,12 @@ impl Session {
     }
 
     async fn send_heartbeat(&mut self) {
-        todo!()
+        self.conn
+            .send_message(&OutgoingGatewayMessage::Heartbeat(Heartbeat {
+                last_sequence_number: self.last_sequence_number,
+            }))
+            .await;
+        self.maybe_identify_or_resume().await;
     }
 }
 
