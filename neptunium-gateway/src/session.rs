@@ -188,7 +188,8 @@ impl Session {
                 self.conn.last_heartbeat_ack_at = Instant::now();
             }
             GatewayEventIncoming::Hello(event) => {
-                tracing::debug!(?event, "Unexpected `Hello`");
+                self.conn.heartbeat_interval = event.heartbeat_interval.into();
+                self.respawn_heartbeat_task();
             }
             GatewayEventIncoming::InvalidSession(event) => {
                 if !event.resumable {
@@ -311,6 +312,9 @@ impl Session {
     }
 
     async fn maybe_identify_or_resume(&mut self) {
+        if self.conn.state != ConnectionState::Initial {
+            return;
+        }
         let message = self.create_identify_or_resume_message();
         loop {
             match self.conn.state {
@@ -365,6 +369,7 @@ impl Session {
     }
 
     fn respawn_heartbeat_task(&mut self) {
+        tracing::debug!("Respawning heartbeat task");
         let (heartbeat_task_tx, heartbeat_task_rx) = unbounded_channel();
         self.heartbeat_task_rx = heartbeat_task_rx;
         self.tracker.spawn(heartbeat_task(
@@ -384,6 +389,7 @@ impl Session {
     }
 }
 
+#[tracing::instrument(skip(tx, cancellation_token))]
 async fn heartbeat_task(
     tx: UnboundedSender<()>,
     heartbeat_interval: Duration,
@@ -395,6 +401,7 @@ async fn heartbeat_task(
     loop {
         tokio::select! {
             _ = interval.tick() => {
+                tracing::trace!("Sending heartbeat over channel");
                 if tx.send(()).is_err() {
                     tracing::debug!("Stopping heartbeat task because receiver has been dropped");
                     break;
