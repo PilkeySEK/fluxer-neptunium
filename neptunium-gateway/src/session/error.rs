@@ -1,7 +1,4 @@
-use std::string::FromUtf8Error;
-
 use thiserror::Error;
-use tokio_tungstenite::tungstenite::Message;
 
 #[derive(Debug, Error)]
 pub enum SessionError {
@@ -14,6 +11,8 @@ pub enum SessionError {
     // ReconnectFailed { num_tries: usize },
     #[error("failed to deserialize: {0}")]
     Deserialize(serde_json::Error),
+    #[error("The session is invalid and reconnecting is not possible")]
+    InvalidSessionUnresumable,
 }
 
 impl From<tokio_tungstenite::tungstenite::Error> for SessionError {

@@ -4,35 +4,22 @@ use std::{
     time::{Duration, Instant},
 };
 
-use futures_util::{SinkExt, TryStreamExt};
 use neptunium_model::gateway::{
-    event::gateway::GatewayEventIncoming,
-    payload::outgoing::{Heartbeat, Identify, IdentifyProperties, OutgoingGatewayMessage},
+    event::{dispatch::DispatchEvent, gateway::GatewayEventIncoming},
+    payload::outgoing::{Identify, IdentifyProperties, OutgoingGatewayMessage, Resume},
 };
 use serde::{Deserialize, Serialize};
-use tokio::{
-    net::TcpStream,
-    sync::{
-        OnceCell,
-        mpsc::{UnboundedReceiver, UnboundedSender, unbounded_channel},
-        oneshot,
-    },
+use tokio::sync::{
+    OnceCell,
+    mpsc::{UnboundedReceiver, UnboundedSender, unbounded_channel},
+    oneshot,
 };
-use tokio_tungstenite::{
-    MaybeTlsStream, WebSocketStream, connect_async,
-    tungstenite::{Message, Utf8Bytes, protocol::CloseFrame},
-};
-use tokio_util::{
-    sync::{CancellationToken, DropGuard},
-    task::TaskTracker,
-    time::FutureExt,
-};
-use tracing::instrument;
+use tokio_util::{sync::CancellationToken, task::TaskTracker, time::FutureExt};
 use zeroize::Zeroizing;
 
 use crate::session::{
-    config::{GatewayConnectionParams, SessionConfig},
-    connection::Connection,
+    config::SessionConfig,
+    connection::{Connection, ConnectionState},
 };
 
 pub mod config;
@@ -42,7 +29,7 @@ mod connection;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct ResumeInfo {
-    pub session_id: String,
+    pub session_id: Zeroizing<String>,
     #[serde(rename = "seq")]
     pub last_sequence_number: u64,
 }
@@ -51,9 +38,9 @@ pub struct Session {
     conn: Connection,
     token: Zeroizing<String>,
     // state: SessionState,
-    gateway_base_url: String,
-    connection_params: GatewayConnectionParams,
-    resume_info: Option<ResumeInfo>,
+    // gateway_base_url: String,
+    // connection_params: GatewayConnectionParams,
+    resume_info_session_id: Option<Zeroizing<String>>,
     last_sequence_number: Option<u64>,
     heartbeat_task_rx: UnboundedReceiver<()>,
     cancellation_token: CancellationToken,
@@ -83,10 +70,13 @@ impl Session {
             conn,
             token: config.token,
             // state: SessionState::default(),
-            gateway_base_url: config.gateway_base_url,
-            connection_params: config.connection_params,
-            resume_info: config.resume_info,
-            last_sequence_number: None,
+            // gateway_base_url: config.gateway_base_url,
+            // connection_params: config.connection_params,
+            last_sequence_number: config
+                .resume_info
+                .as_ref()
+                .map(|info| info.last_sequence_number),
+            resume_info_session_id: config.resume_info.map(|info| info.session_id),
             heartbeat_task_rx,
             // _cancellation_token_drop_guard: cancellation_token.drop_guard(),
             cancellation_token,
@@ -94,9 +84,9 @@ impl Session {
         })
     }
 
-    pub async fn run_cancellable<T: Send + Sync + 'static>(
+    pub async fn run_cancellable<T: Send + Sync + 'static, Fut: Future<Output = ()>>(
         &mut self,
-        event_handler: impl FnMut(GatewayEventIncoming, &mut Self),
+        mut event_handler: impl FnMut(DispatchEvent) -> Fut,
         cancel: impl Future<Output = T> + Send + 'static,
     ) -> Result<(Option<ResumeInfo>, T), SessionError> {
         let cancellation_token = CancellationToken::new();
@@ -149,11 +139,30 @@ impl Session {
                 msg = &mut cancel_value_rx => {
                     match msg {
                         Ok(value) => {
-                            break Ok((self.resume_info.take(), value));
+                            break Ok((
+                                if let Some(session_id) = self.resume_info_session_id.take()
+                                    && let Some(last_sequence_number) = self.last_sequence_number
+                                {
+                                    Some(ResumeInfo {
+                                        session_id,
+                                        last_sequence_number,
+                                    })
+                                } else {
+                                    None
+                                },
+                                value
+                            ));
                         },
                         Err(e) => {
                             panic!("cancel value channel error: {e}");
                         }
+                    }
+                }
+                // TODO: Technically cancel-unsafe
+                event = self.next_event_with_timeout_and_heartbeats_and_identifying_or_resuming() => {
+                    tracing::trace!(?event, "Received event");
+                    if let Err(e) = self.handle_event(event, &mut event_handler).await {
+                        break Err(e);
                     }
                 }
             }
@@ -164,6 +173,59 @@ impl Session {
         tracker.wait().await;
 
         result
+    }
+
+    async fn handle_event<Fut: Future<Output = ()>>(
+        &mut self,
+        event: GatewayEventIncoming,
+        event_handler: &mut impl FnMut(DispatchEvent) -> Fut,
+    ) -> Result<(), SessionError> {
+        match event {
+            GatewayEventIncoming::Heartbeat => {
+                self.send_heartbeat().await;
+            }
+            GatewayEventIncoming::HeartbeatAck => {
+                self.conn.last_heartbeat_ack_at = Instant::now();
+            }
+            GatewayEventIncoming::Hello(event) => {
+                tracing::debug!(?event, "Unexpected `Hello`");
+            }
+            GatewayEventIncoming::InvalidSession(event) => {
+                if !event.resumable {
+                    return Err(SessionError::InvalidSessionUnresumable);
+                } else {
+                    self.conn.reconnect_with_backoff(None).await;
+                }
+            }
+            GatewayEventIncoming::GatewayError(event) => {
+                tracing::warn!(?event, "Gateway error event received");
+                self.conn.reconnect_with_backoff(None).await;
+            }
+            GatewayEventIncoming::Reconnect => {
+                self.conn.reconnect_with_backoff(None).await;
+            }
+            GatewayEventIncoming::Dispatch(payload) => {
+                if let Some(last_sequence_number) = self.last_sequence_number
+                    && last_sequence_number > payload.sequence_number
+                {
+                    tracing::warn!("Stored sequence number is larger than received one");
+                }
+                self.last_sequence_number = Some(payload.sequence_number);
+                match payload.event {
+                    DispatchEvent::Ready(ready) => {
+                        self.conn.state = ConnectionState::Ready;
+                        self.resume_info_session_id = Some(ready.session_id.clone());
+                        event_handler(DispatchEvent::Ready(ready)).await;
+                    }
+                    DispatchEvent::Resumed(resumed) => {
+                        self.conn.state = ConnectionState::Ready;
+                        event_handler(DispatchEvent::Resumed(resumed)).await;
+                    }
+                    event => event_handler(event).await,
+                }
+            }
+        }
+        Ok(())
     }
 
     /*
@@ -212,9 +274,11 @@ impl Session {
     }
     */
 
-    async fn next_event_with_timeout_and_heartbeats(&mut self) -> (GatewayEventIncoming, bool) {
-        let mut reconnected = false;
+    async fn next_event_with_timeout_and_heartbeats_and_identifying_or_resuming(
+        &mut self,
+    ) -> GatewayEventIncoming {
         loop {
+            self.maybe_identify_or_resume().await;
             let heartbeat_ack_timeout_at =
                 self.conn.last_heartbeat_ack_at + (self.conn.heartbeat_interval * 2);
             let maybe_event;
@@ -235,19 +299,68 @@ impl Session {
                 }
             }
             let event = match maybe_event {
-                Ok((event, set_reconnected)) => {
-                    if set_reconnected {
-                        reconnected = true;
-                    }
-                    event
-                }
+                Ok(event) => event,
                 Err(e) => {
                     tracing::error!("Timed out waiting for heartbeat acknowledgement: {e}");
                     self.conn.reconnect_with_backoff(None).await;
                     continue;
                 }
             };
-            break (event, reconnected);
+            break event;
+        }
+    }
+
+    async fn maybe_identify_or_resume(&mut self) {
+        let message = self.create_identify_or_resume_message();
+        loop {
+            match self.conn.state {
+                ConnectionState::Initial => {
+                    if let OutgoingGatewayMessage::Resume(_) = &message {
+                        self.conn.state = ConnectionState::Resuming;
+                    } else {
+                        self.conn.state = ConnectionState::Identifying;
+                    }
+                    self.last_sequence_number = None;
+                    self.conn.send_message(&message).await;
+                }
+                ConnectionState::Ready
+                | ConnectionState::Resuming
+                | ConnectionState::Identifying => break,
+            }
+        }
+    }
+
+    /// Either `Resume` or `Identify`.
+    fn create_identify_or_resume_message(&mut self) -> OutgoingGatewayMessage {
+        if let Some(session_id) = self.resume_info_session_id.take()
+            && let Some(seq) = self.last_sequence_number
+        {
+            OutgoingGatewayMessage::Resume(Resume {
+                token: self.token.clone(),
+                session_id,
+                seq,
+            })
+        } else {
+            OutgoingGatewayMessage::Identify(Identify {
+                token: self.token.clone(),
+                properties: IdentifyProperties {
+                    os: consts::OS.to_owned(),
+                    browser: env!("CARGO_CRATE_NAME").to_owned(),
+                    device: "desktop".to_owned(),
+                    // TODO:
+                    e2ee_capable: None,
+                    mobile: None,
+                    latitude: None,
+                    longitude: None,
+                },
+                // TODO:
+                shard: None,
+                // TODO:
+                presence: None,
+                ignored_events: None,
+                flags: None,
+                initial_guild_id: None,
+            })
         }
     }
 
