@@ -1,34 +1,64 @@
 use std::{collections::HashMap, convert::Infallible, future, sync::Arc};
 
-use neptunium_cache_inmemory::Cache;
-use neptunium_gateway::session::{Shard, config::SessionConfig};
+use neptunium_cache_inmemory::{Cache, gateway::cached_payload::CachedGuildMembersChunk};
+use neptunium_gateway::session::{ResumeInfo, Session, config::SessionConfig};
 
 use neptunium_http::client::HttpClient;
-use tokio::sync::mpsc::unbounded_channel;
-use tokio_util::sync::CancellationToken;
-use tracing::instrument;
-
-use crate::{
-    client::session::Session,
-    events::{EventHandler, context::Context},
+use neptunium_model::gateway::payload::{
+    incoming::GuildCountsUpdate,
+    outgoing::{LazyRequest, PresenceUpdateOutgoing, RequestGuildCounts, RequestGuildMembers},
 };
+use tokio::sync::{
+    mpsc::{UnboundedSender, unbounded_channel},
+    oneshot,
+};
+use tokio_util::sync::CancellationToken;
+
+use crate::events::{EventHandler, context::Context};
 
 mod config;
 pub use config::*;
 pub(crate) mod error;
 pub use error::*;
+mod dispatch_event_impl;
 
 struct ClientInternalConfig {
     #[cfg(feature = "user_api")]
     subscribe_to_everything: bool,
 }
 
+pub(crate) enum ClientMessage {
+    UpdatePresence(
+        PresenceUpdateOutgoing,
+        oneshot::Sender<Result<(), neptunium_gateway::session::SessionError>>,
+    ),
+    RequestGuildMembers(
+        RequestGuildMembers,
+        oneshot::Sender<Result<(), neptunium_gateway::session::SessionError>>,
+        Option<UnboundedSender<CachedGuildMembersChunk>>,
+    ),
+    SendLazyRequest(
+        LazyRequest,
+        UnboundedSender<Result<(), neptunium_gateway::session::SessionError>>,
+    ),
+    // PropagateEventError(EventError),
+    LatencyMeasurement(oneshot::Sender<()>),
+    RequestGuildCounts(
+        RequestGuildCounts,
+        oneshot::Sender<Result<(), neptunium_gateway::session::SessionError>>,
+        Option<oneshot::Sender<GuildCountsUpdate>>,
+    ),
+    GracefullyStop,
+}
+
 pub struct Client {
     // shard_config: ShardConfig,
     context: Context,
-    event_handlers: Vec<Box<dyn EventHandler + Sync>>,
+    event_handlers: Vec<Arc<dyn EventHandler + Sync>>,
     config: ClientInternalConfig,
-    shard: Shard,
+    session_config: SessionConfig,
+    guild_members_chunk_listeners: HashMap<String, UnboundedSender<CachedGuildMembersChunk>>,
+    guild_counts_update_listeners: HashMap<String, oneshot::Sender<GuildCountsUpdate>>,
 }
 
 impl Client {
@@ -44,25 +74,24 @@ impl Client {
     /// # }
     /// ```
     #[must_use]
-    pub fn new(shard_config: impl Into<SessionConfig>) -> Self {
-        Self::new_with_config(shard_config, ClientConfig::default())
+    pub fn new(session_config: impl Into<SessionConfig>) -> Self {
+        Self::new_with_config(session_config, ClientConfig::default())
     }
 
     #[must_use]
     pub fn new_with_config(
-        shard_config: impl Into<SessionConfig>,
+        session_config: impl Into<SessionConfig>,
         client_config: ClientConfig,
     ) -> Self {
-        let shard_config = shard_config.into();
+        let session_config = session_config.into();
 
         let (tx, rx) = unbounded_channel();
 
         Self {
-            shard: Shard::new(shard_config),
             context: Context {
                 http_client: Arc::new({
                     let mut api_client = HttpClient::builder()
-                        .token(shard_config.token.clone())
+                        .token(session_config.token.clone())
                         .token_type(client_config.token_type)
                         .maybe_bot_user_agent(client_config.bot_user_agent_information)
                         .build();
@@ -75,11 +104,14 @@ impl Client {
                 cache: Arc::new(Cache::new(client_config.cache_config)),
                 default_allowed_mentions: Arc::new(client_config.default_allowed_mentions),
             },
+            session_config,
             event_handlers: Vec::new(),
             config: ClientInternalConfig {
                 #[cfg(feature = "user_api")]
                 subscribe_to_everything: client_config.subscribe_to_everything,
             },
+            guild_counts_update_listeners: HashMap::new(),
+            guild_members_chunk_listeners: HashMap::new(),
         }
     }
 
@@ -119,7 +151,14 @@ impl Client {
     /// }
     /// ```
     pub fn register_event_handler(&mut self, handler: impl EventHandler + Sync + 'static) {
-        self.event_handlers.push(Box::new(handler));
+        self.register_arc_event_handler(Arc::new(handler));
+    }
+
+    /// Same as [`register_event_handler`], except you can pass the event handler as an `Arc`.
+    ///
+    /// [`register_event_handler`]: Self::register_event_handler
+    pub fn register_arc_event_handler(&mut self, handler: Arc<dyn EventHandler + Sync + 'static>) {
+        self.event_handlers.push(handler);
     }
 
     pub async fn start(&mut self) -> Result<Infallible, Error> {
@@ -135,38 +174,17 @@ impl Client {
 
     /// Start the client and stop the client when the provided `cancel` future is fulfilled,
     /// returning `ResumeInfo` (if it is available) and the return value of the future.
-    pub async fn start_cancellable<T: Send + 'static>(
+    pub async fn start_cancellable<T: Send + Sync + 'static>(
         &mut self,
         cancel: impl Future<Output = T> + Send + 'static,
     ) -> Result<(Option<ResumeInfo>, T), Error> {
-        let all_cancellation_token = CancellationToken::new();
-        let cancel_future_task = tokio::spawn(cancel);
-        let resume_info = None;
-        loop {
-            tokio::select! {
-                maybe_cancel_future_result = cancel_future_task => {
-                    all_cancellation_token.cancel();
-                    break match maybe_cancel_future_result {
-                        Ok(cancel_future_result) => Ok((resume_info, cancel_future_result)),
-                        Err(e) => Err(Error::new(ClientErrorKind::CancelFutureJoinError(e))),
-                    };
-                },
-                session_result = self.session() => {
-                    todo!()
-                }
-            }
-        }
-    }
-
-    #[instrument(skip(self))]
-    async fn session(&mut self) {
-        let session_cancellation_token = CancellationToken::new();
-        tracing::debug!("Starting new client session.");
+        let cancellation_token = CancellationToken::new();
+        let cancellation_token_drop_guard = cancellation_token.drop_guard();
         #[cfg(feature = "user_api")]
         if self.config.subscribe_to_everything {
             let context = self.context.clone();
             tokio::spawn(async move {
-                match session_cancellation_token
+                match cancellation_token
                     .run_until_cancelled(Self::subscribe_to_everything(context))
                     .await
                 {
@@ -183,9 +201,43 @@ impl Client {
             });
         }
 
-        let session = Session {
-            shard: &mut self.shard,
+        let (event_tx, event_rx) = unbounded_channel();
+        let session_task = tokio::spawn(async move {
+            let mut session = Session::connect(self.session_config.clone()).await?;
+            session
+                .run_cancellable(
+                    |event| {
+                        if let Err(err) = event_tx.send(event) {
+                            tracing::warn!(%err, "Failed to send event over channel");
+                        }
+                    },
+                    cancel,
+                )
+                .await
+        });
+        let session_task_result = loop {
+            tokio::select! {
+                result = session_task => {
+                    break result;
+                }
+                maybe_event = event_rx.recv() => {
+                    let Some(event) = maybe_event else {
+                        tracing::debug!("Event sender dropped, waiting for session task to complete");
+                        break session_task.await;
+                    };
+                    self.handle_dispatch_event(event);
+                }
+            }
         };
+        let result = match session_task_result {
+            Ok(Ok(value)) => Ok(value),
+            Err(err) => Err(Error::new(ClientErrorKind::JoinError(err))),
+            Ok(Err(e)) => Err(Error::new(ClientErrorKind::SessionError(e))),
+        };
+        // Make sure that the lifetime extends until the end of the function
+        // so that the drop guard isn't dropped before
+        drop(cancellation_token_drop_guard);
+        result
     }
 
     #[cfg(feature = "user_api")]

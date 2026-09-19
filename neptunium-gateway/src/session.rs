@@ -84,9 +84,9 @@ impl Session {
         })
     }
 
-    pub async fn run_cancellable<T: Send + Sync + 'static, Fut: Future<Output = ()>>(
+    pub async fn run_cancellable<T: Send + Sync + 'static>(
         &mut self,
-        mut event_handler: impl FnMut(DispatchEvent) -> Fut,
+        mut event_handler: impl FnMut(DispatchEvent),
         cancel: impl Future<Output = T> + Send + 'static,
     ) -> Result<(Option<ResumeInfo>, T), SessionError> {
         let cancellation_token = CancellationToken::new();
@@ -175,10 +175,10 @@ impl Session {
         result
     }
 
-    async fn handle_event<Fut: Future<Output = ()>>(
+    async fn handle_event(
         &mut self,
         event: GatewayEventIncoming,
-        event_handler: &mut impl FnMut(DispatchEvent) -> Fut,
+        event_handler: &mut impl FnMut(DispatchEvent),
     ) -> Result<(), SessionError> {
         match event {
             GatewayEventIncoming::Heartbeat => {
@@ -216,13 +216,13 @@ impl Session {
                     DispatchEvent::Ready(ready) => {
                         self.conn.state = ConnectionState::Ready;
                         self.resume_info_session_id = Some(ready.session_id.clone());
-                        event_handler(DispatchEvent::Ready(ready)).await;
+                        event_handler(DispatchEvent::Ready(ready));
                     }
                     DispatchEvent::Resumed(resumed) => {
                         self.conn.state = ConnectionState::Ready;
-                        event_handler(DispatchEvent::Resumed(resumed)).await;
+                        event_handler(DispatchEvent::Resumed(resumed));
                     }
-                    event => event_handler(event).await,
+                    event => event_handler(event),
                 }
             }
         }
