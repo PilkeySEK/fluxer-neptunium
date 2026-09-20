@@ -1,177 +1,94 @@
-use neptunium_gateway::session::SessionError;
+use std::string::FromUtf8Error;
+
+use neptunium_gateway::session::{ConnectError, SessionError};
 use neptunium_http::{
     endpoints::ExecuteEndpointRequestError,
     error::{ApiErrorResponse, ApiRateLimitedResponse},
 };
-use neptunium_model::gateway::event::gateway::GatewayEventIncoming;
 use tokio::task::JoinError;
-use tokio_tungstenite::tungstenite::{self, protocol::CloseFrame};
+use tokio_tungstenite::tungstenite;
 
-use crate::events::EventError;
-
-#[derive(Debug)]
-pub struct Error {
-    pub kind: ClientErrorKind,
+#[derive(Debug, thiserror::Error)]
+pub enum ClientError {
+    #[error("network error: {0}")]
+    NetworkError(tungstenite::Error),
+    #[error("failed to parse: {0}")]
+    ParseError(serde_path_to_error::Error<serde_json::Error>),
+    #[error("the session is invalid")]
+    SessionInvalidated,
+    #[error("error sending HTTP request: {0}")]
+    HttpRequestError(reqwest::Error),
+    #[error("API did not respond OK: {0:?}")]
+    HttpStatusNotOk(reqwest::Response),
+    #[error("rate limited from API: {0:?}")]
+    HttpRateLimited(ApiRateLimitedResponse),
+    #[error("bad request from API: {0:?}")]
+    HttpBadRequest(ApiErrorResponse),
+    #[error("unauthorized from API: {0:?}")]
+    HttpUnauthorized(ApiErrorResponse),
+    #[error("forbidden from API: {0:?}")]
+    HttpForbidden(ApiErrorResponse),
+    #[error("not found from API: {0:?}")]
+    HttpNotFound(ApiErrorResponse),
+    #[error("internal server error from API: {0:?}")]
+    HttpInternalServerError(ApiErrorResponse),
+    #[error("invalid response: \"{0}\"")]
+    HttpInvalidResponse(String),
+    #[error("the client has stopped")]
+    ClientNotPresent,
+    #[error("{0}")]
+    JoinError(JoinError),
+    #[error("gateway session error: {0}")]
+    GatewaySessionError(SessionError),
+    #[error("error connecting to gateway: {0}")]
+    GatewayConnectError(ConnectError),
+    #[error("received non-utf8 bytes: {0}")]
+    NonUtf8Bytes(FromUtf8Error),
+    #[error("unexpected data received: {0}")]
+    UnexpectedDataReceived(String),
 }
 
-impl Error {
-    pub(crate) fn new(kind: ClientErrorKind) -> Self {
-        Self { kind }
-    }
-
-    pub fn kind(&self) -> &ClientErrorKind {
-        &self.kind
+impl From<tungstenite::Error> for ClientError {
+    fn from(value: tungstenite::Error) -> Self {
+        Self::NetworkError(value)
     }
 }
 
-impl std::error::Error for Error {}
-impl std::fmt::Display for Error {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match &self.kind {
-            ClientErrorKind::NetworkError(e) => f.write_fmt(format_args!("Network error: {e}")),
-            ClientErrorKind::ParseError(e) => f.write_fmt(format_args!("Parse error: {e}")),
-            ClientErrorKind::UnexpectedEventReceived(event) => {
-                f.write_fmt(format_args!("Unexpected event received: {event:?}"))
+impl From<reqwest::Error> for ClientError {
+    fn from(value: reqwest::Error) -> Self {
+        Self::HttpRequestError(value)
+    }
+}
+
+impl From<Box<ClientError>> for ClientError {
+    fn from(value: Box<ClientError>) -> Self {
+        *value
+    }
+}
+
+impl From<ExecuteEndpointRequestError> for ClientError {
+    fn from(value: ExecuteEndpointRequestError) -> Self {
+        match value {
+            ExecuteEndpointRequestError::DeserializationError(e) => ClientError::ParseError(e),
+            ExecuteEndpointRequestError::NetworkError(e) => ClientError::HttpRequestError(e),
+            ExecuteEndpointRequestError::NonUtf8Bytes(e) => ClientError::NonUtf8Bytes(e),
+            ExecuteEndpointRequestError::ResponseNotOk(response) => {
+                ClientError::HttpStatusNotOk(response)
             }
-            ClientErrorKind::UnsupportedMessageEncoding => {
-                f.write_str("Unsupported message encoding")
+            ExecuteEndpointRequestError::NotFound(e) => ClientError::HttpNotFound(e),
+            ExecuteEndpointRequestError::BadRequest(e) => ClientError::HttpBadRequest(e),
+            ExecuteEndpointRequestError::Forbidden(e) => ClientError::HttpForbidden(e),
+            ExecuteEndpointRequestError::RateLimited(e) => ClientError::HttpRateLimited(e),
+            ExecuteEndpointRequestError::InternalServerError(e) => {
+                ClientError::HttpInternalServerError(e)
             }
-            ClientErrorKind::ConnectionClosed(frame) => match frame {
-                Some(frame) => f.write_fmt(format_args!(
-                    "Connection closed: code={}, reason=\"{}\"",
-                    frame.code, frame.reason
-                )),
-                _ => f.write_fmt(format_args!("Connection closed, no close frame present")),
-            },
-            ClientErrorKind::SessionInvalidated => f.write_str("Session invalidated"),
-            ClientErrorKind::HttpRequestError(e) => f.write_fmt(format_args!("HTTP error: {e}")),
-            ClientErrorKind::HttpStatusNotOk(response) => f.write_fmt(format_args!(
-                "HTTP error: The server did not respond OK: {response:?}"
-            )),
-            // TODO: Improve these error messages
-            ClientErrorKind::HttpNotFound(err) => {
-                f.write_fmt(format_args!("API Error: Not Found: {err:?}"))
-            }
-            ClientErrorKind::HttpBadRequest(err) => {
-                f.write_fmt(format_args!("API Error: Bad Request: {err:?}"))
-            }
-            ClientErrorKind::HttpForbidden(err) => {
-                f.write_fmt(format_args!("API Error: Forbidden: {err:?}"))
-            }
-            ClientErrorKind::HttpRateLimited(err) => {
-                f.write_fmt(format_args!("API Error: Rate Limited: {err:?}"))
-            }
-            ClientErrorKind::HttpInternalServerError(err) => {
-                f.write_fmt(format_args!("API Error: Internal Server Error: {err:?}"))
-            }
-            ClientErrorKind::HttpUnauthorized(err) => {
-                f.write_fmt(format_args!("API Error: Unauthorized: {err:?}"))
-            }
-            ClientErrorKind::HttpInvalidResponse(s) => {
-                f.write_fmt(format_args!("API Error: Invalid response: {s}"))
-            }
-            ClientErrorKind::EventError(err) => f.write_fmt(format_args!("Event error: {err}")),
-            ClientErrorKind::ClientNotPresent => f.write_str("Client no longer exists"),
-            ClientErrorKind::TimedOut(step) => f.write_fmt(format_args!("Timed out {step}")),
-            ClientErrorKind::UnexpectedDataReceived => f.write_str("Received unexpected data"),
-            ClientErrorKind::JoinError(err) => f.write_fmt(format_args!("Join error: {err}")),
-            ClientErrorKind::SessionError(err) => f.write_fmt(format_args!("Session error: {err}")),
+            ExecuteEndpointRequestError::Unauthorized(e) => ClientError::HttpUnauthorized(e),
         }
     }
 }
 
-impl From<ExecuteEndpointRequestError> for Error {
-    fn from(value: ExecuteEndpointRequestError) -> Self {
-        Self::new(match value {
-            ExecuteEndpointRequestError::DeserializationError(e) => ClientErrorKind::ParseError(e),
-            ExecuteEndpointRequestError::NetworkError(e) => ClientErrorKind::HttpRequestError(e),
-            ExecuteEndpointRequestError::NonUtf8Bytes(_) => {
-                ClientErrorKind::UnsupportedMessageEncoding
-            }
-            ExecuteEndpointRequestError::ResponseNotOk(response) => {
-                ClientErrorKind::HttpStatusNotOk(response)
-            }
-            ExecuteEndpointRequestError::NotFound(err) => ClientErrorKind::HttpNotFound(err),
-            ExecuteEndpointRequestError::BadRequest(err) => ClientErrorKind::HttpBadRequest(err),
-            ExecuteEndpointRequestError::Forbidden(err) => ClientErrorKind::HttpForbidden(err),
-            ExecuteEndpointRequestError::RateLimited(err) => ClientErrorKind::HttpRateLimited(err),
-            ExecuteEndpointRequestError::InternalServerError(err) => {
-                ClientErrorKind::HttpInternalServerError(err)
-            }
-            ExecuteEndpointRequestError::Unauthorized(err) => {
-                ClientErrorKind::HttpUnauthorized(err)
-            }
-        })
-    }
-}
-impl From<Box<ExecuteEndpointRequestError>> for Error {
+impl From<Box<ExecuteEndpointRequestError>> for ClientError {
     fn from(value: Box<ExecuteEndpointRequestError>) -> Self {
         Self::from(*value)
-    }
-}
-
-#[derive(Debug)]
-pub enum ClientErrorKind {
-    NetworkError(tungstenite::Error),
-    ParseError(serde_path_to_error::Error<serde_json::Error>),
-    UnsupportedMessageEncoding,
-    UnexpectedEventReceived(Box<GatewayEventIncoming>),
-    ConnectionClosed(Option<CloseFrame>),
-    SessionInvalidated,
-    HttpRequestError(reqwest::Error),
-    HttpStatusNotOk(reqwest::Response),
-    HttpRateLimited(ApiRateLimitedResponse),
-    HttpBadRequest(ApiErrorResponse),
-    HttpUnauthorized(ApiErrorResponse),
-    HttpForbidden(ApiErrorResponse),
-    HttpNotFound(ApiErrorResponse),
-    HttpInternalServerError(ApiErrorResponse),
-    HttpInvalidResponse(String),
-    // TODO: Currently this needs to be Boxed because else it would be an infinite cycle
-    // of Error<->EventError
-    EventError(Box<EventError>),
-    ClientNotPresent,
-    TimedOut(String),
-    UnexpectedDataReceived,
-    JoinError(JoinError),
-    SessionError(SessionError),
-}
-
-impl From<tungstenite::Error> for Error {
-    fn from(value: tungstenite::Error) -> Self {
-        Self {
-            kind: ClientErrorKind::NetworkError(value),
-        }
-    }
-}
-
-/*
-impl From<EventReceiveError> for Error {
-    fn from(value: EventReceiveError) -> Self {
-        Self {
-            kind: match value {
-                EventReceiveError::ParseError(e) => ClientErrorKind::ParseError(e),
-                EventReceiveError::TungsteniteError(e) => ClientErrorKind::NetworkError(e),
-                EventReceiveError::UnsupportedMessageEncoding => {
-                    ClientErrorKind::UnsupportedMessageEncoding
-                }
-                EventReceiveError::Closed(frame) => ClientErrorKind::ConnectionClosed(frame),
-            },
-        }
-    }
-}
-*/
-
-impl From<reqwest::Error> for Error {
-    fn from(value: reqwest::Error) -> Self {
-        Self {
-            kind: ClientErrorKind::HttpRequestError(value),
-        }
-    }
-}
-
-impl From<Box<Error>> for Error {
-    fn from(value: Box<Error>) -> Self {
-        *value
     }
 }

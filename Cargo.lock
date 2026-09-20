@@ -458,6 +458,7 @@ dependencies = [
  "serde_json",
  "serde_path_to_error",
  "static_assertions",
+ "thiserror",
  "tokio",
  "tokio-tungstenite",
  "tokio-util",

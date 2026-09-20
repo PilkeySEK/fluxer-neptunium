@@ -1,4 +1,4 @@
-use fluxer_neptunium::{client::error::Error, model::guild::Guild, prelude::*};
+use fluxer_neptunium::{client::error::ClientError, model::guild::Guild, prelude::*};
 use tokio::{task::JoinSet, time::Instant};
 use tracing_subscriber::filter::LevelFilter;
 
@@ -14,7 +14,7 @@ async fn main() {
 
     let ctx = client.context();
     let start_time = Instant::now();
-    let mut join_set = JoinSet::<Result<Vec<Cached<Guild>>, Error>>::new();
+    let mut join_set = JoinSet::<Result<Vec<Cached<Guild>>, ClientError>>::new();
     for i in 1..=NUM_REQUESTS {
         let ctx = ctx.clone();
         join_set.spawn(async move {

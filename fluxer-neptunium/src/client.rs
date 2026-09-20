@@ -1,4 +1,10 @@
-use std::{collections::HashMap, convert::Infallible, future, sync::Arc};
+use std::{
+    collections::HashMap,
+    convert::Infallible,
+    future,
+    ops::{Deref, DerefMut},
+    sync::Arc,
+};
 
 use neptunium_cache_inmemory::{Cache, gateway::cached_payload::CachedGuildMembersChunk};
 use neptunium_gateway::session::{ResumeInfo, Session, config::SessionConfig};
@@ -59,6 +65,20 @@ pub struct Client {
     session_config: SessionConfig,
     guild_members_chunk_listeners: HashMap<String, UnboundedSender<CachedGuildMembersChunk>>,
     guild_counts_update_listeners: HashMap<String, oneshot::Sender<GuildCountsUpdate>>,
+}
+
+impl Deref for Client {
+    type Target = Context;
+
+    fn deref(&self) -> &Self::Target {
+        &self.context
+    }
+}
+
+impl DerefMut for Client {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.context
+    }
 }
 
 impl Client {
@@ -161,7 +181,7 @@ impl Client {
         self.event_handlers.push(handler);
     }
 
-    pub async fn start(&mut self) -> Result<Infallible, Error> {
+    pub async fn start(&mut self) -> Result<Infallible, ClientError> {
         match self
             .start_cancellable(future::pending::<Infallible>())
             .await
@@ -177,9 +197,9 @@ impl Client {
     pub async fn start_cancellable<T: Send + Sync + 'static>(
         &mut self,
         cancel: impl Future<Output = T> + Send + 'static,
-    ) -> Result<(Option<ResumeInfo>, T), Error> {
+    ) -> Result<(Option<ResumeInfo>, T), ClientError> {
         let cancellation_token = CancellationToken::new();
-        let cancellation_token_drop_guard = cancellation_token.drop_guard();
+        let cancellation_token_drop_guard = cancellation_token.clone().drop_guard();
         #[cfg(feature = "user_api")]
         if self.config.subscribe_to_everything {
             let context = self.context.clone();
@@ -201,9 +221,12 @@ impl Client {
             });
         }
 
-        let (event_tx, event_rx) = unbounded_channel();
-        let session_task = tokio::spawn(async move {
-            let mut session = Session::connect(self.session_config.clone()).await?;
+        let (event_tx, mut event_rx) = unbounded_channel();
+        let session_config = self.session_config.clone();
+        let mut session_task = tokio::spawn(async move {
+            let mut session = Session::connect(session_config)
+                .await
+                .map_err(ClientError::GatewayConnectError)?;
             session
                 .run_cancellable(
                     |event| {
@@ -214,10 +237,11 @@ impl Client {
                     cancel,
                 )
                 .await
+                .map_err(ClientError::GatewaySessionError)
         });
         let session_task_result = loop {
             tokio::select! {
-                result = session_task => {
+                result = &mut session_task => {
                     break result;
                 }
                 maybe_event = event_rx.recv() => {
@@ -231,8 +255,8 @@ impl Client {
         };
         let result = match session_task_result {
             Ok(Ok(value)) => Ok(value),
-            Err(err) => Err(Error::new(ClientErrorKind::JoinError(err))),
-            Ok(Err(e)) => Err(Error::new(ClientErrorKind::SessionError(e))),
+            Err(e) => Err(ClientError::JoinError(e)),
+            Ok(Err(e)) => Err(e),
         };
         // Make sure that the lifetime extends until the end of the function
         // so that the drop guard isn't dropped before
@@ -242,7 +266,7 @@ impl Client {
 
     #[cfg(feature = "user_api")]
     #[tracing::instrument(skip(ctx))]
-    async fn subscribe_to_everything(ctx: Context) -> Result<(), Error> {
+    async fn subscribe_to_everything(ctx: Context) -> Result<(), ClientError> {
         use neptunium_model::gateway::payload::outgoing::GuildSubscriptionRequest;
 
         tracing::debug!("Subscribing to all guild events.");

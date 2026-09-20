@@ -10,10 +10,13 @@ use neptunium_model::gateway::{
 use tokio::net::TcpStream;
 use tokio_tungstenite::{
     MaybeTlsStream, WebSocketStream, connect_async,
-    tungstenite::{Message, client::IntoClientRequest, protocol::CloseFrame},
+    tungstenite::{client::IntoClientRequest, protocol::CloseFrame},
 };
 
-use crate::session::connection::internal::{next_event, send_message};
+use crate::session::{
+    ConnectError,
+    connection::internal::{next_event, send_message},
+};
 
 type Stream = WebSocketStream<MaybeTlsStream<TcpStream>>;
 
@@ -36,13 +39,21 @@ pub enum ConnectionState {
 impl Connection {
     pub async fn connect_and_await_hello(
         request: impl IntoClientRequest,
-    ) -> Result<Self, tokio_tungstenite::tungstenite::Error> {
-        let request = request.into_client_request()?;
+    ) -> Result<Self, ConnectError> {
+        let request = request
+            .into_client_request()
+            .map_err(ConnectError::Tungstenite)?;
 
-        let (mut stream, _response) = connect_async(request.clone()).await?;
+        let (mut stream, _response) = connect_async(request.clone())
+            .await
+            .map_err(ConnectError::Tungstenite)?;
 
         let heartbeat_interval = loop {
-            match next_event(&mut stream, &request).await.0 {
+            match next_event(&mut stream, &request)
+                .await
+                .map_err(ConnectError::ClosedUnrecoverable)?
+                .0
+            {
                 GatewayEventIncoming::Hello(Hello { heartbeat_interval }) => {
                     break heartbeat_interval.into();
                 }
@@ -75,6 +86,7 @@ impl Connection {
         })
     }
 
+    /*
     /// Wait for the next message from the gateway, reconnecting
     /// if the client has been disconnected.
     ///
@@ -89,19 +101,20 @@ impl Connection {
         }
         msg
     }
+    */
 
     /// Wait for the next gateway event to be received.
     ///
     /// # Errors
     /// Will always retry if receiving the event fails, and reconnect if the
     /// received event could not be deserialized.
-    pub async fn next_event(&mut self) -> GatewayEventIncoming {
-        let (event, reconnected) = internal::next_event(&mut self.stream, &self.request).await;
+    pub async fn next_event(&mut self) -> Result<GatewayEventIncoming, CloseFrame> {
+        let (event, reconnected) = internal::next_event(&mut self.stream, &self.request).await?;
         if reconnected {
             self.state = ConnectionState::Initial;
             self.last_heartbeat_ack_at = Instant::now();
         }
-        event
+        Ok(event)
     }
 
     /// Reconnect, waiting an increasingly longer time between reconnects if they fail.
@@ -113,6 +126,7 @@ impl Connection {
         self.last_heartbeat_ack_at = Instant::now();
     }
 
+    /*
     /// Close the existing connection and start a new one.
     pub async fn reconnect(
         &mut self,
@@ -123,6 +137,7 @@ impl Connection {
         self.last_heartbeat_ack_at = Instant::now();
         Ok(())
     }
+    */
 
     pub async fn send_message(&mut self, event: &OutgoingGatewayMessage) {
         let reconnected = internal::send_message(&mut self.stream, &self.request, event).await;
@@ -138,7 +153,8 @@ mod internal {
 
     use futures_util::{SinkExt, TryStreamExt};
     use neptunium_model::gateway::{
-        event::gateway::GatewayEventIncoming, payload::outgoing::OutgoingGatewayMessage,
+        close_code::GatewayCloseCode, event::gateway::GatewayEventIncoming,
+        payload::outgoing::OutgoingGatewayMessage,
     };
     use tokio_tungstenite::{
         connect_async,
@@ -212,7 +228,7 @@ mod internal {
     pub async fn next_event(
         stream: &mut Stream,
         request: &Request<()>,
-    ) -> (GatewayEventIncoming, bool) {
+    ) -> Result<(GatewayEventIncoming, bool), CloseFrame> {
         let mut reconnected = false;
         let event = loop {
             let (message, set_reconnected) = next_message(stream, request).await;
@@ -233,13 +249,19 @@ mod internal {
                 },
                 Message::Close(frame) => {
                     tracing::debug!(close_frame = ?frame, "Gateway closed connection");
+                    if let Some(frame) = frame
+                        && let Some(close_code) = GatewayCloseCode::from_u16(frame.code.into())
+                        && !close_code.is_recoverable()
+                    {
+                        return Err(frame);
+                    }
                 }
                 message => {
                     tracing::trace!(?message, "Message is not text, skipping it");
                 }
             }
         };
-        (event, reconnected)
+        Ok((event, reconnected))
     }
 
     pub async fn send_message(

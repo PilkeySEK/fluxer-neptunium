@@ -75,10 +75,7 @@ use tokio::sync::{
 use tokio::time::Instant;
 
 use crate::{
-    client::{
-        ClientMessage,
-        error::{ClientErrorKind, Error},
-    },
+    client::{ClientMessage, error::ClientError},
     exts::ChannelExt,
 };
 
@@ -169,7 +166,7 @@ impl Context {
     pub async fn acknowledge_messages_bulk(
         &self,
         read_states: Vec<(Id<ChannelMarker>, Id<MessageMarker>)>,
-    ) -> Result<(), Error> {
+    ) -> Result<(), ClientError> {
         use neptunium_http::endpoints::channel::AcknowledgeMessagesBulk;
 
         Ok(self
@@ -186,7 +183,7 @@ impl Context {
     pub async fn request_guild_counts(
         &self,
         guild_ids: Vec<Id<GuildMarker>>,
-    ) -> Result<HashMap<Id<GuildMarker>, GuildCountsUpdateItem>, Error> {
+    ) -> Result<HashMap<Id<GuildMarker>, GuildCountsUpdateItem>, ClientError> {
         let request = RequestGuildCounts {
             guild_ids,
             nonce: Some(Nonce::generate().0),
@@ -202,36 +199,39 @@ impl Context {
             ))
             .is_err()
         {
-            return Err(Error::new(ClientErrorKind::ClientNotPresent));
+            return Err(ClientError::ClientNotPresent);
         }
 
         match oneshot_rx.await {
-            Ok(Err(e)) => return Err(Error::new(ClientErrorKind::NetworkError(e))),
-            Err(_) => return Err(Error::new(ClientErrorKind::ClientNotPresent)),
+            Ok(Err(e)) => return Err(ClientError::GatewaySessionError(e)),
+            Err(_) => return Err(ClientError::ClientNotPresent),
             Ok(Ok(())) => {}
         }
 
         match rx.await {
             Ok(data) => Ok(data.counts),
-            Err(_) => Err(Error::new(ClientErrorKind::ClientNotPresent)),
+            Err(_) => Err(ClientError::ClientNotPresent),
         }
     }
 
     /// Send the `RequestGuildCounts` message without waiting for the result. You will need to handle
     /// receiving the result yourself.
-    pub async fn request_guild_counts_raw(&self, data: RequestGuildCounts) -> Result<(), Error> {
+    pub async fn request_guild_counts_raw(
+        &self,
+        data: RequestGuildCounts,
+    ) -> Result<(), ClientError> {
         let (oneshot_tx, oneshot_rx) = oneshot::channel();
         if self
             .tx
             .send(ClientMessage::RequestGuildCounts(data, oneshot_tx, None))
             .is_err()
         {
-            return Err(Error::new(ClientErrorKind::ClientNotPresent));
+            return Err(ClientError::ClientNotPresent);
         }
 
         match oneshot_rx.await {
-            Ok(Err(e)) => Err(Error::new(ClientErrorKind::NetworkError(e))),
-            Err(_) => Err(Error::new(ClientErrorKind::ClientNotPresent)),
+            Ok(Err(e)) => Err(ClientError::GatewaySessionError(e)),
+            Err(_) => Err(ClientError::ClientNotPresent),
             Ok(Ok(())) => Ok(()),
         }
     }
@@ -240,7 +240,7 @@ impl Context {
         &self,
         channel_id: Id<ChannelMarker>,
         params: Vec<FileUploadParams>,
-    ) -> Result<Vec<AttachmentRequest>, Error> {
+    ) -> Result<Vec<AttachmentRequest>, ClientError> {
         let mut attachment_data = Vec::with_capacity(params.len());
         let attachments = params
             .into_iter()
@@ -293,12 +293,16 @@ impl Context {
         &self,
         channel_id: Id<ChannelMarker>,
         params: FileUploadParams,
-    ) -> Result<AttachmentRequest, Error> {
+    ) -> Result<AttachmentRequest, ClientError> {
         let files = self.upload_files(channel_id, vec![params]).await?;
         Ok(match files.into_iter().next() {
             Some(file) => file,
             // Should never happen
-            None => return Err(Error::new(ClientErrorKind::UnexpectedDataReceived)),
+            None => {
+                return Err(ClientError::UnexpectedDataReceived(
+                    "too few attachments returned".to_owned(),
+                ));
+            }
         })
     }
 
@@ -317,22 +321,22 @@ impl Context {
 
     /// Update the presence by sending a gateway request. Due to
     /// how the crate is structured currently, this does not block.
-    pub async fn update_presence(&self, data: PresenceUpdateOutgoing) -> Result<(), Error> {
+    pub async fn update_presence(&self, data: PresenceUpdateOutgoing) -> Result<(), ClientError> {
         let (tx, rx) = oneshot::channel();
         if self
             .tx
             .send(ClientMessage::UpdatePresence(data, tx))
             .is_err()
         {
-            return Err(Error::new(ClientErrorKind::ClientNotPresent));
+            return Err(ClientError::ClientNotPresent);
         }
         if let Ok(result) = rx.await {
             match result {
                 Ok(()) => Ok(()),
-                Err(e) => Err(Error::new(ClientErrorKind::NetworkError(e))),
+                Err(e) => Err(ClientError::GatewaySessionError(e)),
             }
         } else {
-            Err(Error::new(ClientErrorKind::ClientNotPresent))
+            Err(ClientError::ClientNotPresent)
         }
     }
 
@@ -347,7 +351,7 @@ impl Context {
     pub async fn request_guild_members(
         &self,
         mut data: RequestGuildMembers,
-    ) -> Result<Vec<Cached<CachedGuildMember>>, Error> {
+    ) -> Result<Vec<Cached<CachedGuildMember>>, ClientError> {
         // This is to make sure that the request has a proper nonce.
         data.nonce = Some(Nonce::generate().0);
         let (oneshot_tx, oneshot_rx) = oneshot::channel();
@@ -361,12 +365,12 @@ impl Context {
             ))
             .is_err()
         {
-            return Err(Error::new(ClientErrorKind::ClientNotPresent));
+            return Err(ClientError::ClientNotPresent);
         }
 
         match oneshot_rx.await {
-            Ok(Err(e)) => return Err(Error::new(ClientErrorKind::NetworkError(e))),
-            Err(_) => return Err(Error::new(ClientErrorKind::ClientNotPresent)),
+            Ok(Err(e)) => return Err(ClientError::GatewaySessionError(e)),
+            Err(_) => return Err(ClientError::ClientNotPresent),
             Ok(Ok(())) => {}
         }
 
@@ -384,19 +388,22 @@ impl Context {
 
     /// Send `RequestGuildMembers` to the gateway without waiting for the result.
     /// You will need to manage receiving the members yourself.
-    pub async fn request_guild_members_raw(&self, data: RequestGuildMembers) -> Result<(), Error> {
+    pub async fn request_guild_members_raw(
+        &self,
+        data: RequestGuildMembers,
+    ) -> Result<(), ClientError> {
         let (tx, rx) = oneshot::channel();
         if self
             .tx
             .send(ClientMessage::RequestGuildMembers(data, tx, None))
             .is_err()
         {
-            return Err(Error::new(ClientErrorKind::ClientNotPresent));
+            return Err(ClientError::ClientNotPresent);
         }
 
         match rx.await {
-            Ok(Err(e)) => Err(Error::new(ClientErrorKind::NetworkError(e))),
-            Err(_) => Err(Error::new(ClientErrorKind::ClientNotPresent)),
+            Ok(Err(e)) => Err(ClientError::GatewaySessionError(e)),
+            Err(_) => Err(ClientError::ClientNotPresent),
             Ok(Ok(())) => Ok(()),
         }
     }
@@ -404,7 +411,7 @@ impl Context {
     pub async fn update_guild_event_subscriptions(
         &self,
         subscriptions: HashMap<Id<GuildMarker>, GuildSubscriptionRequest>,
-    ) -> Result<(), Error> {
+    ) -> Result<(), ClientError> {
         let (tx, mut rx) = unbounded_channel();
         if self
             .tx
@@ -414,15 +421,15 @@ impl Context {
             ))
             .is_err()
         {
-            return Err(Error::new(ClientErrorKind::ClientNotPresent));
+            return Err(ClientError::ClientNotPresent);
         }
         if let Some(result) = rx.recv().await {
             match result {
                 Ok(()) => Ok(()),
-                Err(e) => Err(Error::new(ClientErrorKind::NetworkError(e))),
+                Err(e) => Err(ClientError::GatewaySessionError(e)),
             }
         } else {
-            Err(Error::new(ClientErrorKind::ClientNotPresent))
+            Err(ClientError::ClientNotPresent)
         }
     }
 
@@ -433,7 +440,7 @@ impl Context {
     pub async fn fetch_channel(
         &self,
         channel_id: Id<ChannelMarker>,
-    ) -> Result<Cached<CachedChannel>, Error> {
+    ) -> Result<Cached<CachedChannel>, ClientError> {
         channel_id.get(self).await
     }
 
@@ -441,12 +448,12 @@ impl Context {
     /// # Errors
     /// Returns an error if there was a network error, the API did not return OK,
     /// or the API returned unexpected data that could not be parsed.
-    pub async fn get_gateway_information(&self) -> Result<GatewayInformation, Error> {
+    pub async fn get_gateway_information(&self) -> Result<GatewayInformation, ClientError> {
         Ok(self.http_client.execute(GetGatewayInformation).await?)
     }
 
     /// List all of the current user guilds (up to 200).
-    pub async fn list_own_guilds(&self) -> Result<Vec<Cached<Guild>>, Error> {
+    pub async fn list_own_guilds(&self) -> Result<Vec<Cached<Guild>>, ClientError> {
         Ok(ListCurrentUserGuilds {
             params: ListCurrentUserGuildsParams::builder().limit(200).build(),
         }
@@ -457,14 +464,14 @@ impl Context {
     pub async fn list_own_guilds_with_params(
         &self,
         params: ListCurrentUserGuildsParams,
-    ) -> Result<Vec<Guild>, Error> {
+    ) -> Result<Vec<Guild>, ClientError> {
         Ok(self
             .http_client
             .execute(ListCurrentUserGuilds::builder().params(params).build())
             .await?)
     }
 
-    pub async fn get_own_profile(&self) -> Result<Cached<UserPrivateResponse>, Error> {
+    pub async fn get_own_profile(&self) -> Result<Cached<UserPrivateResponse>, ClientError> {
         Ok(GetCurrentUserProfile
             .execute_cached(self.get_http_client(), &self.cache)
             .await?)
@@ -474,7 +481,7 @@ impl Context {
     pub async fn update_own_profile(
         &self,
         body: UpdateCurrentUserProfile,
-    ) -> Result<Cached<UserPrivateResponse>, Error> {
+    ) -> Result<Cached<UserPrivateResponse>, ClientError> {
         Ok(body
             .execute_cached(self.get_http_client(), &self.cache)
             .await?)
@@ -484,7 +491,7 @@ impl Context {
     pub async fn forget_authorized_ips_for_current_user(
         &self,
         auth: SudoVerification,
-    ) -> Result<(), Error> {
+    ) -> Result<(), ClientError> {
         use neptunium_http::endpoints::users::ForgetAuthorizedIps;
 
         Ok(self
@@ -494,7 +501,9 @@ impl Context {
     }
 
     /// List DM channels. This includes group DMs.
-    pub async fn list_own_private_channels(&self) -> Result<Vec<Cached<CachedChannel>>, Error> {
+    pub async fn list_own_private_channels(
+        &self,
+    ) -> Result<Vec<Cached<CachedChannel>>, ClientError> {
         Ok(ListPrivateChannels
             .execute_cached(self.get_http_client(), &self.cache)
             .await?)
@@ -504,7 +513,7 @@ impl Context {
     pub async fn create_private_channel(
         &self,
         body: CreatePrivateChannel,
-    ) -> Result<Cached<CachedChannel>, Error> {
+    ) -> Result<Cached<CachedChannel>, ClientError> {
         Ok(body
             .execute_cached(self.get_http_client(), &self.cache)
             .await?)
@@ -515,7 +524,7 @@ impl Context {
     pub async fn preload_messages_for_channels_alternative(
         &self,
         channel_ids: Vec<Id<ChannelMarker>>,
-    ) -> Result<HashMap<Id<ChannelMarker>, Message>, Error> {
+    ) -> Result<HashMap<Id<ChannelMarker>, Message>, ClientError> {
         use neptunium_http::endpoints::channel::PreloadMessagesForChannelsAlternative;
 
         Ok(self
@@ -529,7 +538,7 @@ impl Context {
     /// Permanently deletes the current user’s account and all associated data.
     /// This action is irreversible and will remove all user data, messages, and connections.
     #[cfg(feature = "user_api")]
-    pub async fn delete_own_account(&self, auth: SudoVerification) -> Result<(), Error> {
+    pub async fn delete_own_account(&self, auth: SudoVerification) -> Result<(), ClientError> {
         use neptunium_http::endpoints::users::DeleteCurrentUserAccount;
 
         self.http_client
@@ -542,7 +551,7 @@ impl Context {
     /// Temporarily disables the current user’s account. The account can be re-enabled by logging in again.
     /// User data is preserved but the account will be inaccessible during the disabled period.
     #[cfg(feature = "user_api")]
-    pub async fn disable_own_account(&self, auth: SudoVerification) -> Result<(), Error> {
+    pub async fn disable_own_account(&self, auth: SudoVerification) -> Result<(), ClientError> {
         use neptunium_http::endpoints::users::DisableCurrentUserAccount;
 
         Ok(self
@@ -559,7 +568,7 @@ impl Context {
     pub async fn request_replacement_email_for_bounced_address(
         &self,
         new_email: String,
-    ) -> Result<RequestNewEmailAddressResponse, Error> {
+    ) -> Result<RequestNewEmailAddressResponse, ClientError> {
         use neptunium_http::endpoints::users::RequestReplacementEmailForBouncedAddress;
 
         Ok(self
@@ -570,7 +579,7 @@ impl Context {
 
     /// Resends the verification code for the bounced-email recovery flow to the replacement email address.
     #[cfg(feature = "user_api")]
-    pub async fn resend_replacement_email_code(&self, ticket: String) -> Result<(), Error> {
+    pub async fn resend_replacement_email_code(&self, ticket: String) -> Result<(), ClientError> {
         use neptunium_http::endpoints::users::ResendReplacementEmailCode;
 
         Ok(self
@@ -586,7 +595,7 @@ impl Context {
         &self,
         ticket: String,
         code: String,
-    ) -> Result<UserPrivateResponse, Error> {
+    ) -> Result<UserPrivateResponse, ClientError> {
         use neptunium_http::endpoints::users::VerifyReplacementEmailForBouncedAddress;
 
         Ok(self
@@ -601,14 +610,14 @@ impl Context {
     pub async fn request_new_email_address(
         &self,
         body: RequestNewEmailAddress,
-    ) -> Result<RequestNewEmailAddressResponse, Error> {
+    ) -> Result<RequestNewEmailAddressResponse, ClientError> {
         Ok(self.http_client.execute(body).await?)
     }
 
     /// Resends a confirmation code to the new email address during the email change process.
     /// Use this if the new email confirmation was not received. Requires valid email change ticket.
     #[cfg(feature = "user_api")]
-    pub async fn resend_new_email_confirmation(&self, ticket: String) -> Result<(), Error> {
+    pub async fn resend_new_email_confirmation(&self, ticket: String) -> Result<(), ClientError> {
         use neptunium_http::endpoints::users::ResendNewEmailConfirmation;
 
         Ok(self
@@ -620,7 +629,10 @@ impl Context {
     /// Resends a confirmation code to the user’s original email address during the email change process.
     /// Use this if the original confirmation email was not received. Requires valid email change ticket.
     #[cfg(feature = "user_api")]
-    pub async fn resend_original_email_confirmation(&self, ticket: String) -> Result<(), Error> {
+    pub async fn resend_original_email_confirmation(
+        &self,
+        ticket: String,
+    ) -> Result<(), ClientError> {
         use neptunium_http::endpoints::users::ResendOriginalEmailConfirmation;
 
         Ok(self
@@ -633,7 +645,7 @@ impl Context {
     /// the original email address before requesting a new email.
     /// Returns ticket for use in subsequent email change steps.
     #[cfg(feature = "user_api")]
-    pub async fn start_email_change(&self) -> Result<StartEmailChangeResponse, Error> {
+    pub async fn start_email_change(&self) -> Result<StartEmailChangeResponse, ClientError> {
         use neptunium_http::endpoints::users::StartEmailChange;
 
         Ok(self.http_client.execute(StartEmailChange).await?)
@@ -645,7 +657,7 @@ impl Context {
     pub async fn verify_new_email_address(
         &self,
         body: VerifyNewEmailAddress,
-    ) -> Result<VerifyNewEmailAddressResponse, Error> {
+    ) -> Result<VerifyNewEmailAddressResponse, ClientError> {
         Ok(self.http_client.execute(body).await?)
     }
 
@@ -655,13 +667,13 @@ impl Context {
     pub async fn verify_original_email_address(
         &self,
         body: VerifyOriginalEmailAddress,
-    ) -> Result<VerifyOriginalEmailAddressResponse, Error> {
+    ) -> Result<VerifyOriginalEmailAddressResponse, ClientError> {
         Ok(self.http_client.execute(body).await?)
     }
 
     /// Lists all gift codes created by the authenticated user.
     #[cfg(feature = "user_api")]
-    pub async fn list_gifts(&self) -> Result<Vec<GiftPrivateResponse>, Error> {
+    pub async fn list_gifts(&self) -> Result<Vec<GiftPrivateResponse>, ClientError> {
         use neptunium_http::endpoints::users::ListUserGifts;
 
         Ok(self.http_client.execute(ListUserGifts).await?)
@@ -677,14 +689,14 @@ impl Context {
     pub async fn update_dm_notification_settings(
         &self,
         body: UpdateDmNotificationSettings,
-    ) -> Result<UserGuildSettings, Error> {
+    ) -> Result<UserGuildSettings, ClientError> {
         Ok(self.http_client.execute(body).await?)
     }
 
     /// Requests a data harvest of all user data and content. Initiates an asynchronous process
     /// to compile and prepare all data for download in a portable format.
     #[cfg(feature = "user_api")]
-    pub async fn request_data_harvest(&self) -> Result<RequestDataHarvestResponse, Error> {
+    pub async fn request_data_harvest(&self) -> Result<RequestDataHarvestResponse, ClientError> {
         use neptunium_http::endpoints::users::RequestDataHarvest;
 
         Ok(self.http_client.execute(RequestDataHarvest).await?)
@@ -693,7 +705,9 @@ impl Context {
     /// Retrieves the status of the most recent data harvest request.
     /// Returns `None` if no harvest has been requested yet.
     #[cfg(feature = "user_api")]
-    pub async fn get_latest_data_harvest(&self) -> Result<Option<DataHarvestResponse>, Error> {
+    pub async fn get_latest_data_harvest(
+        &self,
+    ) -> Result<Option<DataHarvestResponse>, ClientError> {
         use neptunium_http::endpoints::users::GetLatestDataHarvest;
 
         Ok(self.http_client.execute(GetLatestDataHarvest).await?)
@@ -704,7 +718,7 @@ impl Context {
     pub async fn get_data_harvest_status(
         &self,
         harvest_id: String,
-    ) -> Result<DataHarvestResponse, Error> {
+    ) -> Result<DataHarvestResponse, ClientError> {
         use neptunium_http::endpoints::users::GetDataHarvestStatus;
 
         Ok(self
@@ -717,7 +731,7 @@ impl Context {
     pub async fn get_data_harvest_download_url(
         &self,
         harvest_id: String,
-    ) -> Result<GetDataHarvestDownloadUrlResponse, Error> {
+    ) -> Result<GetDataHarvestDownloadUrlResponse, ClientError> {
         use neptunium_http::endpoints::users::GetDataHarvestDownloadUrl;
 
         Ok(self
@@ -731,7 +745,7 @@ impl Context {
     pub async fn list_own_mentions(
         &self,
         params: ListCurrentUserMentions,
-    ) -> Result<Vec<Cached<CachedMessage>>, Error> {
+    ) -> Result<Vec<Cached<CachedMessage>>, ClientError> {
         // let messages = self.http_client.execute(params).await?;
         // Ok(self.cache.batch_insert(messages))
         Ok(params
@@ -742,7 +756,10 @@ impl Context {
     /// Initiates bulk deletion of all messages sent by the current user.
     /// The deletion process is asynchronous and may take time to complete. User data remains intact.
     #[cfg(feature = "user_api")]
-    pub async fn request_bulk_message_deletion(&self, auth: SudoVerification) -> Result<(), Error> {
+    pub async fn request_bulk_message_deletion(
+        &self,
+        auth: SudoVerification,
+    ) -> Result<(), ClientError> {
         use neptunium_http::endpoints::users::RequestBulkMessageDeletion;
 
         Ok(self
@@ -753,7 +770,7 @@ impl Context {
 
     /// Cancels an in-progress bulk message deletion request. Can only be used if the deletion has not yet completed.
     #[cfg(feature = "user_api")]
-    pub async fn cancel_bulk_message_deletion(&self) -> Result<(), Error> {
+    pub async fn cancel_bulk_message_deletion(&self) -> Result<(), ClientError> {
         use neptunium_http::endpoints::users::CancelBulkMessageDeletion;
 
         self.http_client.execute(CancelBulkMessageDeletion).await?;
@@ -763,7 +780,7 @@ impl Context {
     /// Staff-only endpoint for testing bulk message deletion functionality.
     /// Creates a test deletion request with a 1-minute delay.
     #[cfg(feature = "staff_api")]
-    pub async fn test_bulk_message_deletion(&self) -> Result<(), Error> {
+    pub async fn test_bulk_message_deletion(&self) -> Result<(), ClientError> {
         use neptunium_http::endpoints::users::TestBulkMessageDeletion;
 
         Ok(self.http_client.execute(TestBulkMessageDeletion).await?)
@@ -774,13 +791,13 @@ impl Context {
     pub async fn get_mfa_backup_codes(
         &self,
         body: GetMfaBackupCodes,
-    ) -> Result<MfaBackupCodesResponse, Error> {
+    ) -> Result<MfaBackupCodesResponse, ClientError> {
         Ok(self.http_client.execute(body).await?)
     }
 
     /// Disable SMS-based multi-factor authentication on the current account.
     #[cfg(feature = "user_api")]
-    pub async fn disable_sms_mfa(&self, auth: SudoVerification) -> Result<(), Error> {
+    pub async fn disable_sms_mfa(&self, auth: SudoVerification) -> Result<(), ClientError> {
         use neptunium_http::endpoints::users::DisableSmsMfa;
 
         Ok(self.http_client.execute(DisableSmsMfa { auth }).await?)
@@ -789,7 +806,7 @@ impl Context {
     /// Enable SMS-based multi-factor authentication on the current account.
     /// Requires a verified phone number.
     #[cfg(feature = "user_api")]
-    pub async fn enable_sms_mfa(&self, auth: SudoVerification) -> Result<(), Error> {
+    pub async fn enable_sms_mfa(&self, auth: SudoVerification) -> Result<(), ClientError> {
         use neptunium_http::endpoints::users::EnableSmsMfa;
 
         Ok(self.http_client.execute(EnableSmsMfa { auth }).await?)
@@ -797,7 +814,7 @@ impl Context {
 
     /// Disable TOTP multi-factor authentication on the current account.
     #[cfg(feature = "user_api")]
-    pub async fn disable_totp_mfa(&self, body: DisableTotpMfa) -> Result<(), Error> {
+    pub async fn disable_totp_mfa(&self, body: DisableTotpMfa) -> Result<(), ClientError> {
         Ok(self.http_client.execute(body).await?)
     }
 
@@ -806,7 +823,7 @@ impl Context {
     pub async fn enable_totp_mfa(
         &self,
         body: EnableTotpMfa,
-    ) -> Result<MfaBackupCodesResponse, Error> {
+    ) -> Result<MfaBackupCodesResponse, ClientError> {
         Ok(self.http_client.execute(body).await?)
     }
 
@@ -815,7 +832,7 @@ impl Context {
     #[cfg(feature = "user_api")]
     pub async fn list_webauthn_credentials(
         &self,
-    ) -> Result<Vec<ListWebauthnCredentialsResponseEntry>, Error> {
+    ) -> Result<Vec<ListWebauthnCredentialsResponseEntry>, ClientError> {
         use neptunium_http::endpoints::users::ListWebauthnCredentials;
 
         Ok(self.http_client.execute(ListWebauthnCredentials).await?)
@@ -827,7 +844,7 @@ impl Context {
     pub async fn register_webauthn_credential(
         &self,
         body: RegisterWebauthnCredential,
-    ) -> Result<(), Error> {
+    ) -> Result<(), ClientError> {
         Ok(self.http_client.execute(body).await?)
     }
 
@@ -837,7 +854,7 @@ impl Context {
     pub async fn get_webauthn_registration_options(
         &self,
         auth: SudoVerification,
-    ) -> Result<GetWebauthnRegistrationOptionsResponse, Error> {
+    ) -> Result<GetWebauthnRegistrationOptionsResponse, ClientError> {
         use neptunium_http::endpoints::users::GetWebauthnRegistrationOptions;
 
         Ok(self
@@ -852,7 +869,7 @@ impl Context {
     pub async fn delete_webauthn_credential(
         &self,
         body: DeleteWebauthnCredential,
-    ) -> Result<(), Error> {
+    ) -> Result<(), ClientError> {
         Ok(self.http_client.execute(body).await?)
     }
 
@@ -862,13 +879,13 @@ impl Context {
     pub async fn update_webauthn_credential(
         &self,
         body: UpdateWebauthnCredential,
-    ) -> Result<(), Error> {
+    ) -> Result<(), ClientError> {
         Ok(self.http_client.execute(body).await?)
     }
 
     /// Retrieves all notes the current user has written about other users.
     #[cfg(feature = "user_api")]
-    pub async fn list_user_notes(&self) -> Result<HashMap<Id<UserMarker>, String>, Error> {
+    pub async fn list_user_notes(&self) -> Result<HashMap<Id<UserMarker>, String>, ClientError> {
         use neptunium_http::endpoints::users::ListCurrentUserNotes;
 
         Ok(self.http_client.execute(ListCurrentUserNotes).await?)
@@ -879,7 +896,7 @@ impl Context {
     pub async fn complete_password_change(
         &self,
         body: CompletePasswordChange,
-    ) -> Result<(), Error> {
+    ) -> Result<(), ClientError> {
         Ok(self.http_client.execute(body).await?)
     }
 
@@ -888,7 +905,7 @@ impl Context {
     pub async fn resend_password_change_verification_code(
         &self,
         ticket: String,
-    ) -> Result<(), Error> {
+    ) -> Result<(), ClientError> {
         use neptunium_http::endpoints::users::ResendPasswordChangeVerificationCode;
 
         Ok(self
@@ -899,7 +916,7 @@ impl Context {
 
     /// Initiates a password change process. Sends a verification code to the user’s email address.
     #[cfg(feature = "user_api")]
-    pub async fn start_password_change(&self) -> Result<StartPasswordChangeResponse, Error> {
+    pub async fn start_password_change(&self) -> Result<StartPasswordChangeResponse, ClientError> {
         use neptunium_http::endpoints::users::StartPasswordChange;
 
         Ok(self.http_client.execute(StartPasswordChange).await?)
@@ -910,7 +927,7 @@ impl Context {
     pub async fn verify_password_change_code(
         &self,
         body: VerifyPasswordChangeCode,
-    ) -> Result<VerifyPasswordChangeCodeResponse, Error> {
+    ) -> Result<VerifyPasswordChangeCodeResponse, ClientError> {
         Ok(self.http_client.execute(body).await?)
     }
 
@@ -919,7 +936,7 @@ impl Context {
     pub async fn add_phone_number_to_account(
         &self,
         body: AddPhoneNumberToAccount,
-    ) -> Result<(), Error> {
+    ) -> Result<(), ClientError> {
         Ok(self.http_client.execute(body).await?)
     }
 
@@ -928,7 +945,7 @@ impl Context {
     pub async fn remove_phone_number_from_account(
         &self,
         auth: SudoVerification,
-    ) -> Result<(), Error> {
+    ) -> Result<(), ClientError> {
         use neptunium_http::endpoints::users::RemovePhoneNumberFromAccount;
 
         Ok(self
@@ -939,7 +956,7 @@ impl Context {
 
     /// Request a verification code to be sent via SMS to the provided phone number.
     #[cfg(feature = "user_api")]
-    pub async fn send_phone_verification_code(&self, phone: String) -> Result<(), Error> {
+    pub async fn send_phone_verification_code(&self, phone: String) -> Result<(), ClientError> {
         use neptunium_http::endpoints::users::SendPhoneVerificationCode;
 
         Ok(self
@@ -953,7 +970,7 @@ impl Context {
     pub async fn verify_phone_code(
         &self,
         body: VerifyPhoneCode,
-    ) -> Result<VerifyPhoneCodeResponse, Error> {
+    ) -> Result<VerifyPhoneCodeResponse, ClientError> {
         Ok(self.http_client.execute(body).await?)
     }
 
@@ -962,7 +979,7 @@ impl Context {
     pub async fn preload_messages_for_channels(
         &self,
         channel_ids: Vec<Id<ChannelMarker>>,
-    ) -> Result<HashMap<Id<ChannelMarker>, Cached<CachedMessage>>, Error> {
+    ) -> Result<HashMap<Id<ChannelMarker>, Cached<CachedMessage>>, ClientError> {
         use neptunium_http::endpoints::channel::PreloadMessagesForChannels;
 
         Ok(PreloadMessagesForChannels {
@@ -974,7 +991,7 @@ impl Context {
 
     /// Staff-only endpoint that clears premium status and related premium metadata for the current user account.
     #[cfg(feature = "staff_api")]
-    pub async fn reset_own_premium_state(&self) -> Result<(), Error> {
+    pub async fn reset_own_premium_state(&self) -> Result<(), ClientError> {
         use neptunium_http::endpoints::users::ResetCurrentUserPremiumState;
 
         Ok(self
@@ -989,7 +1006,7 @@ impl Context {
     pub async fn subscribe_to_push_notifications(
         &self,
         body: SubscribeToPushNotifications,
-    ) -> Result<SubscribeToPushNotificationsResponse, Error> {
+    ) -> Result<SubscribeToPushNotificationsResponse, ClientError> {
         Ok(self.http_client.execute(body).await?)
     }
 
@@ -997,7 +1014,7 @@ impl Context {
     #[cfg(feature = "user_api")]
     pub async fn list_push_subscriptions(
         &self,
-    ) -> Result<Vec<ListPushSubscriptionsResponseEntry>, Error> {
+    ) -> Result<Vec<ListPushSubscriptionsResponseEntry>, ClientError> {
         use neptunium_http::endpoints::users::ListPushSubscriptions;
 
         let response = self.http_client.execute(ListPushSubscriptions).await?;
@@ -1011,7 +1028,7 @@ impl Context {
     pub async fn unsubscribe_from_push_notifications(
         &self,
         subscription_id: String,
-    ) -> Result<(), Error> {
+    ) -> Result<(), ClientError> {
         use neptunium_http::endpoints::users::UnsubscribeFromPushNotifications;
 
         self.http_client
@@ -1022,7 +1039,7 @@ impl Context {
 
     /// Retrieves all relationships for the current user, including friends, friend requests (incoming and outgoing), and blocked users.
     #[cfg(feature = "user_api")]
-    pub async fn list_relationships(&self) -> Result<Vec<Relationship>, Error> {
+    pub async fn list_relationships(&self) -> Result<Vec<Relationship>, ClientError> {
         use neptunium_http::endpoints::users::ListRelationships;
 
         Ok(self.http_client.execute(ListRelationships).await?)
@@ -1034,7 +1051,7 @@ impl Context {
         &self,
         username: String,
         discriminator: String,
-    ) -> Result<Relationship, Error> {
+    ) -> Result<Relationship, ClientError> {
         use neptunium_http::endpoints::users::SendFriendRequestByTag;
 
         Ok(self
@@ -1050,12 +1067,15 @@ impl Context {
     pub async fn update_relationship(
         &self,
         body: UpdateRelationship,
-    ) -> Result<Relationship, Error> {
+    ) -> Result<Relationship, ClientError> {
         Ok(self.http_client.execute(body).await?)
     }
 
     #[cfg(feature = "user_api")]
-    pub async fn list_saved_messages(&self, limit: Option<u8>) -> Result<Vec<SavedMessage>, Error> {
+    pub async fn list_saved_messages(
+        &self,
+        limit: Option<u8>,
+    ) -> Result<Vec<SavedMessage>, ClientError> {
         use neptunium_http::endpoints::channel::ListSavedMessages;
 
         Ok(self
@@ -1065,14 +1085,16 @@ impl Context {
     }
 
     #[cfg(feature = "user_api")]
-    pub async fn list_scheduled_message(&self) -> Result<Vec<ScheduledMessageResponse>, Error> {
+    pub async fn list_scheduled_message(
+        &self,
+    ) -> Result<Vec<ScheduledMessageResponse>, ClientError> {
         use neptunium_http::endpoints::channel::ListScheduledMessages;
 
         Ok(self.http_client.execute(ListScheduledMessages).await?)
     }
 
     #[cfg(feature = "user_api")]
-    pub async fn get_settings(&self) -> Result<Cached<UserSettings>, Error> {
+    pub async fn get_settings(&self) -> Result<Cached<UserSettings>, ClientError> {
         use neptunium_http::endpoints::users::GetUserSettings;
 
         Ok(GetUserSettings
@@ -1084,7 +1106,7 @@ impl Context {
     pub async fn update_settings(
         &self,
         body: UpdateUserSettings,
-    ) -> Result<Cached<UserSettings>, Error> {
+    ) -> Result<Cached<UserSettings>, ClientError> {
         Ok(body
             .execute_cached(self.get_http_client(), &self.cache)
             .await?)
@@ -1093,7 +1115,7 @@ impl Context {
     #[cfg(feature = "user_api")]
     pub async fn list_sudo_mfa_authentication_methods(
         &self,
-    ) -> Result<ListSudoMfaAuthenticationMethodsResponse, Error> {
+    ) -> Result<ListSudoMfaAuthenticationMethodsResponse, ClientError> {
         use neptunium_http::endpoints::users::ListSudoMfaAuthenticationMethods;
 
         Ok(self
@@ -1104,7 +1126,7 @@ impl Context {
 
     /// Request an SMS code to be sent for sudo mode verification.
     #[cfg(feature = "user_api")]
-    pub async fn send_sudo_sms_code(&self) -> Result<(), Error> {
+    pub async fn send_sudo_sms_code(&self) -> Result<(), ClientError> {
         use neptunium_http::endpoints::users::SendSudoSmsCode;
 
         Ok(self.http_client.execute(SendSudoSmsCode).await?)
@@ -1115,7 +1137,7 @@ impl Context {
     #[cfg(feature = "user_api")]
     pub async fn get_sudo_webauthn_authentication_options(
         &self,
-    ) -> Result<GetSudoWebauthnAuthenticationOptionsResponse, Error> {
+    ) -> Result<GetSudoWebauthnAuthenticationOptionsResponse, ClientError> {
         use neptunium_http::endpoints::users::GetSudoWebauthnAuthenticationOptions;
 
         Ok(self
@@ -1131,7 +1153,7 @@ impl Context {
         &self,
         username: String,
         discriminator: String,
-    ) -> Result<bool, Error> {
+    ) -> Result<bool, ClientError> {
         use neptunium_http::endpoints::users::CheckUsernameTagAvailability;
 
         let response = self
@@ -1147,7 +1169,7 @@ impl Context {
 
     /// Create a theme with the given CSS text. Returns the theme ID on success.
     #[cfg(feature = "user_api")]
-    pub async fn create_theme(&self, css: String) -> Result<String, Error> {
+    pub async fn create_theme(&self, css: String) -> Result<String, ClientError> {
         use neptunium_http::endpoints::themes::CreateTheme;
 
         let response = self.http_client.execute(CreateTheme { css }).await?;
@@ -1157,7 +1179,7 @@ impl Context {
     /// Purge the personal notes. Returns the number of messages that were
     /// deleted.
     #[cfg(feature = "user_api")]
-    pub async fn purge_personal_notes(&self) -> Result<usize, Error> {
+    pub async fn purge_personal_notes(&self) -> Result<usize, ClientError> {
         use neptunium_http::endpoints::channel::PurgeChannelMessages;
 
         // The personal notes channel has the same ID as the user.

@@ -1,4 +1,5 @@
 use thiserror::Error;
+use tokio_tungstenite::tungstenite::protocol::CloseFrame;
 
 #[derive(Debug, Error)]
 pub enum SessionError {
@@ -13,6 +14,8 @@ pub enum SessionError {
     Deserialize(serde_json::Error),
     #[error("The session is invalid and reconnecting is not possible")]
     InvalidSessionUnresumable,
+    #[error("Gateway closed connection with unrecoverable code: {0:?}")]
+    ClosedUnrecoverable(CloseFrame),
 }
 
 impl From<tokio_tungstenite::tungstenite::Error> for SessionError {

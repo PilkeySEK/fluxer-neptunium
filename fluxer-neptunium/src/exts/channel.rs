@@ -28,7 +28,7 @@ use neptunium_model::{
 };
 
 use crate::{
-    client::error::Error,
+    client::error::ClientError,
     events::context::{ApplyDefaultAllowedMentions, Context},
     exts::PartialUserExt,
     internal::traits::channel::ChannelTrait,
@@ -36,29 +36,33 @@ use crate::{
 
 #[async_trait]
 pub trait ChannelExt {
-    async fn delete(&self, ctx: &Context) -> Result<(), Error>;
-    async fn delete_silent(&self, ctx: &Context) -> Result<(), Error>;
+    async fn delete(&self, ctx: &Context) -> Result<(), ClientError>;
+    async fn delete_silent(&self, ctx: &Context) -> Result<(), ClientError>;
     // TODO: Maybe make a builder or something around the ChannelSettingsUpdates
     // because it's annoying to create ig
     async fn update_settings(
         &self,
         ctx: &Context,
         settings: ChannelSettingsUpdates,
-    ) -> Result<Cached<CachedChannel>, Error>;
-    async fn get(&self, ctx: &Context) -> Result<Cached<CachedChannel>, Error>;
+    ) -> Result<Cached<CachedChannel>, ClientError>;
+    async fn get(&self, ctx: &Context) -> Result<Cached<CachedChannel>, ClientError>;
     async fn get_call_eligibility_status(
         &self,
         ctx: &Context,
-    ) -> Result<CallEligibilityStatus, Error>;
+    ) -> Result<CallEligibilityStatus, ClientError>;
     /// Update the voice region for an ongoing call.
-    async fn update_call_region(&self, ctx: &Context, region: VoiceRegion) -> Result<(), Error>;
+    async fn update_call_region(
+        &self,
+        ctx: &Context,
+        region: VoiceRegion,
+    ) -> Result<(), ClientError>;
     /// Sends ringing notifications to specfied users in a call. If the recipients
     /// are set to `None`, rings all channel members.
     async fn ring_call_recipients(
         &self,
         ctx: &Context,
         recipients: Option<Vec<Id<UserMarker>>>,
-    ) -> Result<(), Error>;
+    ) -> Result<(), ClientError>;
     /// Stops ringing notifications for specified users in a call. This allows callers
     /// to stop notifying users who have declined or not responded. Pass `None` for the
     /// recipients to stop ringing everyone.
@@ -66,45 +70,45 @@ pub trait ChannelExt {
         &self,
         ctx: &Context,
         recipients: Option<Vec<Id<UserMarker>>>,
-    ) -> Result<(), Error>;
+    ) -> Result<(), ClientError>;
     async fn list_messages(
         &self,
         ctx: &Context,
         params: ListChannelMessagesParams,
-    ) -> Result<Vec<Cached<CachedMessage>>, Error>;
+    ) -> Result<Vec<Cached<CachedMessage>>, ClientError>;
     async fn bulk_delete_messages(
         &self,
         ctx: &Context,
         messages: Vec<Id<MessageMarker>>,
-    ) -> Result<(), Error>;
+    ) -> Result<(), ClientError>;
     /// Same as `create_message`.
     async fn send_message(
         &self,
         ctx: &Context,
         message: impl Into<CreateMessageBody> + Send,
-    ) -> Result<Cached<CachedMessage>, Error>;
+    ) -> Result<Cached<CachedMessage>, ClientError>;
     async fn create_message(
         &self,
         ctx: &Context,
         message: impl Into<CreateMessageBody> + Send,
-    ) -> Result<Cached<CachedMessage>, Error>;
+    ) -> Result<Cached<CachedMessage>, ClientError>;
     async fn set_permission_overwrite(
         &self,
         ctx: &Context,
         update: PermissionOverwriteUpdate,
-    ) -> Result<(), Error>;
+    ) -> Result<(), ClientError>;
     async fn delete_permission_overwrite(
         &self,
         ctx: &Context,
         overwrite_id: Id<GenericMarker>,
-    ) -> Result<(), Error>;
+    ) -> Result<(), ClientError>;
     #[cfg(feature = "user_api")]
-    async fn acknowledge_new_pin_notifications(&self, ctx: &Context) -> Result<(), Error>;
+    async fn acknowledge_new_pin_notifications(&self, ctx: &Context) -> Result<(), ClientError>;
     async fn add_user_to_group_dm(
         &self,
         ctx: &Context,
         user_id: Id<UserMarker>,
-    ) -> Result<(), Error>;
+    ) -> Result<(), ClientError>;
     /// Remove a user from a group DM or leave a group DM by specifying
     /// your own user ID. Set `silent` to `true` to suppress the system
     /// message when leaving.
@@ -113,41 +117,44 @@ pub trait ChannelExt {
         ctx: &Context,
         user_id: Id<UserMarker>,
         silent: bool,
-    ) -> Result<(), Error>;
+    ) -> Result<(), ClientError>;
     async fn list_rtc_regions(
         &self,
         ctx: &Context,
-    ) -> Result<Vec<ListRtcRegionsResponseEntry>, Error>;
-    async fn indicate_typing(&self, ctx: &Context) -> Result<(), Error>;
+    ) -> Result<Vec<ListRtcRegionsResponseEntry>, ClientError>;
+    async fn indicate_typing(&self, ctx: &Context) -> Result<(), ClientError>;
     async fn create_invite(
         &self,
         ctx: &Context,
         options: CreateChannelInviteOptions,
-    ) -> Result<Cached<InviteWithMetadata>, Error>;
-    async fn list_invites(&self, ctx: &Context) -> Result<Vec<Cached<InviteWithMetadata>>, Error>;
-    async fn list_webhooks(&self, ctx: &Context) -> Result<Vec<Webhook>, Error>;
+    ) -> Result<Cached<InviteWithMetadata>, ClientError>;
+    async fn list_invites(
+        &self,
+        ctx: &Context,
+    ) -> Result<Vec<Cached<InviteWithMetadata>>, ClientError>;
+    async fn list_webhooks(&self, ctx: &Context) -> Result<Vec<Webhook>, ClientError>;
     /// Create a webhook in this channel, with the given name and optionally the avatar image as a base64-encoded data URI.
     async fn create_webhook(
         &self,
         ctx: &Context,
         name: String,
         avatar: Option<String>,
-    ) -> Result<Webhook, Error>;
+    ) -> Result<Webhook, ClientError>;
     /// Pin this channel for the current user if it is a DM channel.
-    async fn pin(&self, ctx: &Context) -> Result<(), Error>;
+    async fn pin(&self, ctx: &Context) -> Result<(), ClientError>;
     /// Unpin this channel for the current user if it is a DM channel.
-    async fn unpin(&self, ctx: &Context) -> Result<(), Error>;
+    async fn unpin(&self, ctx: &Context) -> Result<(), ClientError>;
     /// Get slowmode information for this channel and the current user, including when the
     /// current user may send the next message.
     async fn get_slowmode_information(
         &self,
         ctx: &Context,
-    ) -> Result<ChannelSlowmodeInformation, Error>;
+    ) -> Result<ChannelSlowmodeInformation, ClientError>;
     async fn create_attachments(
         &self,
         ctx: &Context,
         attachments: Vec<CreateAttachmentsInChannelAttachment>,
-    ) -> Result<CreateAttachmentsInChannelResponse, Error>;
+    ) -> Result<CreateAttachmentsInChannelResponse, ClientError>;
 }
 
 pub trait ChannelDataExt {
@@ -191,7 +198,7 @@ impl ChannelDataExt for CachedChannel {
 
 #[async_trait]
 impl<T: ChannelTrait> ChannelExt for T {
-    async fn delete(&self, ctx: &Context) -> Result<(), Error> {
+    async fn delete(&self, ctx: &Context) -> Result<(), ClientError> {
         Ok(DeleteChannel {
             channel_id: self.get_channel_id(),
             silent: None,
@@ -200,7 +207,7 @@ impl<T: ChannelTrait> ChannelExt for T {
         .await?)
     }
 
-    async fn delete_silent(&self, ctx: &Context) -> Result<(), Error> {
+    async fn delete_silent(&self, ctx: &Context) -> Result<(), ClientError> {
         Ok(DeleteChannel {
             channel_id: self.get_channel_id(),
             silent: Some(true),
@@ -213,7 +220,7 @@ impl<T: ChannelTrait> ChannelExt for T {
         &self,
         ctx: &Context,
         settings: ChannelSettingsUpdates,
-    ) -> Result<Cached<CachedChannel>, Error> {
+    ) -> Result<Cached<CachedChannel>, ClientError> {
         Ok(UpdateChannelSettings {
             channel_id: self.get_channel_id(),
             updates: settings,
@@ -222,7 +229,7 @@ impl<T: ChannelTrait> ChannelExt for T {
         .await?)
     }
 
-    async fn get(&self, ctx: &Context) -> Result<Cached<CachedChannel>, Error> {
+    async fn get(&self, ctx: &Context) -> Result<Cached<CachedChannel>, ClientError> {
         Ok(GetChannel {
             channel_id: self.get_channel_id(),
         }
@@ -233,7 +240,7 @@ impl<T: ChannelTrait> ChannelExt for T {
     async fn get_call_eligibility_status(
         &self,
         ctx: &Context,
-    ) -> Result<CallEligibilityStatus, Error> {
+    ) -> Result<CallEligibilityStatus, ClientError> {
         Ok(ctx
             .get_http_client()
             .execute(
@@ -244,7 +251,11 @@ impl<T: ChannelTrait> ChannelExt for T {
             .await?)
     }
 
-    async fn update_call_region(&self, ctx: &Context, region: VoiceRegion) -> Result<(), Error> {
+    async fn update_call_region(
+        &self,
+        ctx: &Context,
+        region: VoiceRegion,
+    ) -> Result<(), ClientError> {
         Ok(UpdateCallRegion {
             channel_id: self.get_channel_id(),
             region,
@@ -257,7 +268,7 @@ impl<T: ChannelTrait> ChannelExt for T {
         &self,
         ctx: &Context,
         recipients: Option<Vec<Id<UserMarker>>>,
-    ) -> Result<(), Error> {
+    ) -> Result<(), ClientError> {
         Ok(ctx
             .get_http_client()
             .execute(
@@ -273,7 +284,7 @@ impl<T: ChannelTrait> ChannelExt for T {
         &self,
         ctx: &Context,
         recipients: Option<Vec<Id<UserMarker>>>,
-    ) -> Result<(), Error> {
+    ) -> Result<(), ClientError> {
         Ok(ctx
             .get_http_client()
             .execute(
@@ -289,7 +300,7 @@ impl<T: ChannelTrait> ChannelExt for T {
         &self,
         ctx: &Context,
         params: ListChannelMessagesParams,
-    ) -> Result<Vec<Cached<CachedMessage>>, Error> {
+    ) -> Result<Vec<Cached<CachedMessage>>, ClientError> {
         Ok(ListChannelMessages {
             channel_id: self.get_channel_id(),
             params,
@@ -302,7 +313,7 @@ impl<T: ChannelTrait> ChannelExt for T {
         &self,
         ctx: &Context,
         messages: Vec<Id<MessageMarker>>,
-    ) -> Result<(), Error> {
+    ) -> Result<(), ClientError> {
         Ok(BulkDeleteMessages {
             channel_id: self.get_channel_id(),
             messages,
@@ -315,7 +326,7 @@ impl<T: ChannelTrait> ChannelExt for T {
         &self,
         ctx: &Context,
         message: impl Into<CreateMessageBody> + Send,
-    ) -> Result<Cached<CachedMessage>, Error> {
+    ) -> Result<Cached<CachedMessage>, ClientError> {
         self.create_message(ctx, message).await
     }
 
@@ -323,7 +334,7 @@ impl<T: ChannelTrait> ChannelExt for T {
         &self,
         ctx: &Context,
         message: impl Into<CreateMessageBody> + Send,
-    ) -> Result<Cached<CachedMessage>, Error> {
+    ) -> Result<Cached<CachedMessage>, ClientError> {
         Ok(CreateMessage {
             channel_id: self.get_channel_id(),
             message: message.into().apply_default_allowed_mentions(ctx),
@@ -336,7 +347,7 @@ impl<T: ChannelTrait> ChannelExt for T {
         &self,
         ctx: &Context,
         update: PermissionOverwriteUpdate,
-    ) -> Result<(), Error> {
+    ) -> Result<(), ClientError> {
         Ok(SetPermissionOverwrite {
             channel_id: self.get_channel_id(),
             overwrite: update,
@@ -349,7 +360,7 @@ impl<T: ChannelTrait> ChannelExt for T {
         &self,
         ctx: &Context,
         overwrite_id: Id<GenericMarker>,
-    ) -> Result<(), Error> {
+    ) -> Result<(), ClientError> {
         Ok(DeletePermissionOverwrite {
             channel_id: self.get_channel_id(),
             overwrite_id,
@@ -359,7 +370,7 @@ impl<T: ChannelTrait> ChannelExt for T {
     }
 
     #[cfg(feature = "user_api")]
-    async fn acknowledge_new_pin_notifications(&self, ctx: &Context) -> Result<(), Error> {
+    async fn acknowledge_new_pin_notifications(&self, ctx: &Context) -> Result<(), ClientError> {
         use neptunium_http::endpoints::channel::AcknowledgeNewPinNotifications;
 
         Ok(ctx
@@ -374,7 +385,7 @@ impl<T: ChannelTrait> ChannelExt for T {
         &self,
         ctx: &Context,
         user_id: Id<UserMarker>,
-    ) -> Result<(), Error> {
+    ) -> Result<(), ClientError> {
         Ok(AddUserToGroupDm {
             channel_id: self.get_channel_id(),
             user_id,
@@ -388,7 +399,7 @@ impl<T: ChannelTrait> ChannelExt for T {
         ctx: &Context,
         user_id: Id<UserMarker>,
         silent: bool,
-    ) -> Result<(), Error> {
+    ) -> Result<(), ClientError> {
         Ok(RemoveUserFromGroupDm {
             channel_id: self.get_channel_id(),
             silent,
@@ -401,7 +412,7 @@ impl<T: ChannelTrait> ChannelExt for T {
     async fn list_rtc_regions(
         &self,
         ctx: &Context,
-    ) -> Result<Vec<ListRtcRegionsResponseEntry>, Error> {
+    ) -> Result<Vec<ListRtcRegionsResponseEntry>, ClientError> {
         Ok(ctx
             .get_http_client()
             .execute(ListRtcRegions {
@@ -410,7 +421,7 @@ impl<T: ChannelTrait> ChannelExt for T {
             .await?)
     }
 
-    async fn indicate_typing(&self, ctx: &Context) -> Result<(), Error> {
+    async fn indicate_typing(&self, ctx: &Context) -> Result<(), ClientError> {
         Ok(ctx
             .get_http_client()
             .execute(IndicateTyping {
@@ -423,7 +434,7 @@ impl<T: ChannelTrait> ChannelExt for T {
         &self,
         ctx: &Context,
         options: CreateChannelInviteOptions,
-    ) -> Result<Cached<InviteWithMetadata>, Error> {
+    ) -> Result<Cached<InviteWithMetadata>, ClientError> {
         Ok(CreateChannelInvite {
             channel_id: self.get_channel_id(),
             options,
@@ -432,7 +443,10 @@ impl<T: ChannelTrait> ChannelExt for T {
         .await?)
     }
 
-    async fn list_invites(&self, ctx: &Context) -> Result<Vec<Cached<InviteWithMetadata>>, Error> {
+    async fn list_invites(
+        &self,
+        ctx: &Context,
+    ) -> Result<Vec<Cached<InviteWithMetadata>>, ClientError> {
         Ok(ListChannelInvites {
             channel_id: self.get_channel_id(),
         }
@@ -440,7 +454,7 @@ impl<T: ChannelTrait> ChannelExt for T {
         .await?)
     }
 
-    async fn list_webhooks(&self, ctx: &Context) -> Result<Vec<Webhook>, Error> {
+    async fn list_webhooks(&self, ctx: &Context) -> Result<Vec<Webhook>, ClientError> {
         Ok(ctx
             .get_http_client()
             .execute(ListChannelWebhooks {
@@ -454,7 +468,7 @@ impl<T: ChannelTrait> ChannelExt for T {
         ctx: &Context,
         name: String,
         avatar: Option<String>,
-    ) -> Result<Webhook, Error> {
+    ) -> Result<Webhook, ClientError> {
         Ok(ctx
             .get_http_client()
             .execute(CreateWebhook {
@@ -465,7 +479,7 @@ impl<T: ChannelTrait> ChannelExt for T {
             .await?)
     }
 
-    async fn pin(&self, ctx: &Context) -> Result<(), Error> {
+    async fn pin(&self, ctx: &Context) -> Result<(), ClientError> {
         ctx.get_http_client()
             .execute(PinDirectMessageChannel {
                 channel_id: self.get_channel_id(),
@@ -474,7 +488,7 @@ impl<T: ChannelTrait> ChannelExt for T {
         Ok(())
     }
 
-    async fn unpin(&self, ctx: &Context) -> Result<(), Error> {
+    async fn unpin(&self, ctx: &Context) -> Result<(), ClientError> {
         ctx.get_http_client()
             .execute(UnpinDirectMessageChannel {
                 channel_id: self.get_channel_id(),
@@ -486,7 +500,7 @@ impl<T: ChannelTrait> ChannelExt for T {
     async fn get_slowmode_information(
         &self,
         ctx: &Context,
-    ) -> Result<ChannelSlowmodeInformation, Error> {
+    ) -> Result<ChannelSlowmodeInformation, ClientError> {
         Ok(ctx
             .get_http_client()
             .execute(GetChannelSlowmodeInformation {
@@ -499,7 +513,7 @@ impl<T: ChannelTrait> ChannelExt for T {
         &self,
         ctx: &Context,
         attachments: Vec<CreateAttachmentsInChannelAttachment>,
-    ) -> Result<CreateAttachmentsInChannelResponse, Error> {
+    ) -> Result<CreateAttachmentsInChannelResponse, ClientError> {
         Ok(ctx
             .get_http_client()
             .execute(CreateAttachmentsInChannel {
@@ -513,12 +527,16 @@ impl<T: ChannelTrait> ChannelExt for T {
 #[async_trait]
 pub trait IntoCachedChannel {
     /// Convert this into a `Cached<CachedChannel>`, possibly getting it from the API.
-    async fn into_cached_channel(self, ctx: &Context) -> Result<Cached<CachedChannel>, Error>;
+    async fn into_cached_channel(self, ctx: &Context)
+    -> Result<Cached<CachedChannel>, ClientError>;
 }
 
 #[async_trait]
 impl IntoCachedChannel for Channel {
-    async fn into_cached_channel(self, ctx: &Context) -> Result<Cached<CachedChannel>, Error> {
+    async fn into_cached_channel(
+        self,
+        ctx: &Context,
+    ) -> Result<Cached<CachedChannel>, ClientError> {
         let cached_channel = CachedChannel::from_channel(self, &ctx.cache);
         Ok(cached_channel.insert_and_return(&ctx.cache))
     }
@@ -526,21 +544,30 @@ impl IntoCachedChannel for Channel {
 
 #[async_trait]
 impl IntoCachedChannel for CachedChannel {
-    async fn into_cached_channel(self, ctx: &Context) -> Result<Cached<CachedChannel>, Error> {
+    async fn into_cached_channel(
+        self,
+        ctx: &Context,
+    ) -> Result<Cached<CachedChannel>, ClientError> {
         Ok(self.insert_and_return(&ctx.cache))
     }
 }
 
 #[async_trait]
 impl IntoCachedChannel for Cached<CachedChannel> {
-    async fn into_cached_channel(self, _ctx: &Context) -> Result<Cached<CachedChannel>, Error> {
+    async fn into_cached_channel(
+        self,
+        _ctx: &Context,
+    ) -> Result<Cached<CachedChannel>, ClientError> {
         Ok(self)
     }
 }
 
 #[async_trait]
 impl IntoCachedChannel for Id<ChannelMarker> {
-    async fn into_cached_channel(self, ctx: &Context) -> Result<Cached<CachedChannel>, Error> {
+    async fn into_cached_channel(
+        self,
+        ctx: &Context,
+    ) -> Result<Cached<CachedChannel>, ClientError> {
         self.get(ctx).await
     }
 }
