@@ -14,6 +14,7 @@ use tokio::sync::{
     mpsc::{UnboundedReceiver, UnboundedSender, unbounded_channel},
     oneshot,
 };
+use tokio_tungstenite::tungstenite::protocol::CloseFrame;
 use tokio_util::{sync::CancellationToken, task::TaskTracker, time::FutureExt};
 use zeroize::Zeroizing;
 
@@ -34,6 +35,14 @@ pub struct ResumeInfo {
     pub last_sequence_number: u64,
 }
 
+#[derive(Debug, thiserror::Error)]
+pub enum ConnectError {
+    #[error("network error: {0}")]
+    Tungstenite(tokio_tungstenite::tungstenite::Error),
+    #[error("disconnected with unrecoverable close code: {0:?}")]
+    ClosedUnrecoverable(CloseFrame),
+}
+
 pub struct Session {
     conn: Connection,
     token: Zeroizing<String>,
@@ -49,9 +58,7 @@ pub struct Session {
 }
 
 impl Session {
-    pub async fn connect(
-        config: SessionConfig,
-    ) -> Result<Self, tokio_tungstenite::tungstenite::Error> {
+    pub async fn connect(config: SessionConfig) -> Result<Self, ConnectError> {
         let cancellation_token = CancellationToken::new();
         let tracker = TaskTracker::new();
         let conn = Connection::connect_and_await_hello(format!(
@@ -159,7 +166,8 @@ impl Session {
                     }
                 }
                 // TODO: Technically cancel-unsafe
-                event = self.next_event_with_timeout_and_heartbeats_and_identifying_or_resuming() => {
+                event_result = self.next_event_with_timeout_and_heartbeats_and_identifying_or_resuming() => {
+                    let event = event_result.map_err(SessionError::ClosedUnrecoverable)?;
                     tracing::trace!(?event, "Received event");
                     if let Err(e) = self.handle_event(event, &mut event_handler).await {
                         break Err(e);
@@ -277,7 +285,7 @@ impl Session {
 
     async fn next_event_with_timeout_and_heartbeats_and_identifying_or_resuming(
         &mut self,
-    ) -> GatewayEventIncoming {
+    ) -> Result<GatewayEventIncoming, CloseFrame> {
         loop {
             self.maybe_identify_or_resume().await;
             let heartbeat_ack_timeout_at =
@@ -299,7 +307,7 @@ impl Session {
                     }
                 }
             }
-            let event = match maybe_event {
+            let event_result = match maybe_event {
                 Ok(event) => event,
                 Err(e) => {
                     tracing::error!("Timed out waiting for heartbeat acknowledgement: {e}");
@@ -307,7 +315,7 @@ impl Session {
                     continue;
                 }
             };
-            break event;
+            break event_result;
         }
     }
 

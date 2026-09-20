@@ -487,12 +487,12 @@ impl EventError {
 
 #[derive(Debug)]
 pub enum EventErrorKind {
-    ClientError(crate::client::error::Error),
+    ClientError(crate::client::error::ClientError),
 }
 
 // Mainly for use with the `?` operator.
-impl From<crate::client::error::Error> for EventError {
-    fn from(value: crate::client::error::Error) -> Self {
+impl From<crate::client::error::ClientError> for EventError {
+    fn from(value: crate::client::error::ClientError) -> Self {
         Self {
             propagate: false,
             kind: EventErrorKind::ClientError(value),

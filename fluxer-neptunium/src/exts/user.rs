@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use crate::{
-    client::error::Error,
+    client::error::ClientError,
     events::context::Context,
     exts::{GuildExt, IntoCachedChannel},
     internal::traits::user::UserTrait,
@@ -27,32 +27,32 @@ use neptunium_model::{
 #[async_trait]
 pub trait UserExt {
     #[cfg(feature = "user_api")]
-    async fn send_friend_request(&self, ctx: &Context) -> Result<Relationship, Error>;
+    async fn send_friend_request(&self, ctx: &Context) -> Result<Relationship, ClientError>;
     /// Creates or updates a private note on this user.
     /// Pass `None` for the `note` to clear the note.
     #[cfg(feature = "user_api")]
-    async fn set_user_note(&self, ctx: &Context, note: Option<String>) -> Result<(), Error>;
+    async fn set_user_note(&self, ctx: &Context, note: Option<String>) -> Result<(), ClientError>;
     /// Retrieves a specific note the current user has written about this user.
     #[cfg(feature = "user_api")]
-    async fn get_user_note(&self, ctx: &Context) -> Result<String, Error>;
+    async fn get_user_note(&self, ctx: &Context) -> Result<String, ClientError>;
     /// Removes a relationship with another user by ID. Removes friends, cancels
     /// friend requests (incoming or outgoing), or unblocks a blocked user
     /// depending on current relationship type.
     #[cfg(feature = "user_api")]
-    async fn remove_relationship(&self, ctx: &Context) -> Result<(), Error>;
+    async fn remove_relationship(&self, ctx: &Context) -> Result<(), ClientError>;
     #[cfg(feature = "user_api")]
     async fn update_friend_nickname(
         &self,
         ctx: &Context,
         nickname: Option<String>,
-    ) -> Result<Relationship, Error>;
+    ) -> Result<Relationship, ClientError>;
     /// May respect privacy settings.
     async fn get_profile(
         &self,
         ctx: &Context,
         params: GetUserProfileParams,
-    ) -> Result<Cached<CachedUserProfileFullResponse>, Error>;
-    async fn get_user(&self, ctx: &Context) -> Result<Cached<PartialUser>, Error>;
+    ) -> Result<Cached<CachedUserProfileFullResponse>, ClientError>;
+    async fn get_user(&self, ctx: &Context) -> Result<Cached<PartialUser>, ClientError>;
     /// Returns the avatar ID, for which the corresponding default profile picture from Fluxer will be displayed in the Fluxer client if no `avatar` is set.
     /// Currently this returns 0-5 and the ID is derived from the user ID.
     fn get_default_avatar_id(&self) -> u8;
@@ -61,7 +61,7 @@ pub trait UserExt {
 #[async_trait]
 impl<T: UserTrait> UserExt for T {
     #[cfg(feature = "user_api")]
-    async fn send_friend_request(&self, ctx: &Context) -> Result<Relationship, Error> {
+    async fn send_friend_request(&self, ctx: &Context) -> Result<Relationship, ClientError> {
         use neptunium_http::endpoints::users::SendFriendRequest;
 
         Ok(ctx
@@ -73,7 +73,7 @@ impl<T: UserTrait> UserExt for T {
     }
 
     #[cfg(feature = "user_api")]
-    async fn set_user_note(&self, ctx: &Context, note: Option<String>) -> Result<(), Error> {
+    async fn set_user_note(&self, ctx: &Context, note: Option<String>) -> Result<(), ClientError> {
         use neptunium_http::endpoints::users::SetUserNote;
 
         Ok(ctx
@@ -87,7 +87,7 @@ impl<T: UserTrait> UserExt for T {
 
     /// Retrieves a specific note the current user has written about another user.
     #[cfg(feature = "user_api")]
-    async fn get_user_note(&self, ctx: &Context) -> Result<String, Error> {
+    async fn get_user_note(&self, ctx: &Context) -> Result<String, ClientError> {
         use neptunium_http::endpoints::users::GetUserNote;
 
         let response = ctx
@@ -100,7 +100,7 @@ impl<T: UserTrait> UserExt for T {
     }
 
     #[cfg(feature = "user_api")]
-    async fn remove_relationship(&self, ctx: &Context) -> Result<(), Error> {
+    async fn remove_relationship(&self, ctx: &Context) -> Result<(), ClientError> {
         use neptunium_http::endpoints::users::RemoveRelationship;
 
         Ok(ctx
@@ -118,7 +118,7 @@ impl<T: UserTrait> UserExt for T {
         &self,
         ctx: &Context,
         nickname: Option<String>,
-    ) -> Result<Relationship, Error> {
+    ) -> Result<Relationship, ClientError> {
         use neptunium_http::endpoints::users::UpdateRelationshipNickname;
 
         Ok(ctx
@@ -134,7 +134,7 @@ impl<T: UserTrait> UserExt for T {
         &self,
         ctx: &Context,
         params: GetUserProfileParams,
-    ) -> Result<Cached<CachedUserProfileFullResponse>, Error> {
+    ) -> Result<Cached<CachedUserProfileFullResponse>, ClientError> {
         Ok(GetUserProfile {
             user_id: self.get_user_id(),
             params,
@@ -143,7 +143,7 @@ impl<T: UserTrait> UserExt for T {
         .await?)
     }
 
-    async fn get_user(&self, ctx: &Context) -> Result<Cached<PartialUser>, Error> {
+    async fn get_user(&self, ctx: &Context) -> Result<Cached<PartialUser>, ClientError> {
         Ok(GetUserById {
             user_id: self.get_user_id(),
         }
@@ -192,7 +192,7 @@ pub trait GuildMemberExt {
     /// # Errors
     /// Because it (at least currently) cannot be guaranteed that the guild roles are already cached,
     /// the roles may be fetched from the API, which can produce network errors.
-    async fn get_permissions(&self, ctx: &Context) -> Result<Permissions, Error>;
+    async fn get_permissions(&self, ctx: &Context) -> Result<Permissions, ClientError>;
     /// Calculate the member's permissions in the given channel. The permissions are calculated with the following precedence
     /// (from lowest to highest precedence):
     ///
@@ -221,17 +221,20 @@ pub trait GuildMemberExt {
         &self,
         ctx: &Context,
         channel: T,
-    ) -> Result<Permissions, Error>;
+    ) -> Result<Permissions, ClientError>;
     /// Whether this member is the guild owner.
-    async fn is_guild_owner(&self, ctx: &Context) -> Result<bool, Error>;
+    async fn is_guild_owner(&self, ctx: &Context) -> Result<bool, ClientError>;
     /// Calculate whether the member has the provided permissions based on their roles (and the permissions of `@everyone`).
     /// If the member is the guild owner or has administrator permissions, this will always return `true`.
     ///
     /// # Errors
     /// Because it (at least currently) cannot be guaranteed that the guild roles are already cached,
     /// the roles may be fetched from the API, which can produce network errors.
-    async fn has_permissions(&self, ctx: &Context, permissions: Permissions)
-    -> Result<bool, Error>;
+    async fn has_permissions(
+        &self,
+        ctx: &Context,
+        permissions: Permissions,
+    ) -> Result<bool, ClientError>;
     /// Calculate whether the member has the provided permissions based on their roles (and the permissions of `@everyone`)
     /// and the permission overwrites of the given channel.
     /// If the member is the guild owner or has administrator permissions, this will always return `true`.
@@ -246,31 +249,31 @@ pub trait GuildMemberExt {
         ctx: &Context,
         channel: T,
         permissions: Permissions,
-    ) -> Result<bool, Error>;
-    async fn add_role(&self, ctx: &Context, role_id: Id<RoleMarker>) -> Result<(), Error>;
-    async fn remove_role(&self, ctx: &Context, role_id: Id<RoleMarker>) -> Result<(), Error>;
+    ) -> Result<bool, ClientError>;
+    async fn add_role(&self, ctx: &Context, role_id: Id<RoleMarker>) -> Result<(), ClientError>;
+    async fn remove_role(&self, ctx: &Context, role_id: Id<RoleMarker>) -> Result<(), ClientError>;
     async fn timeout(
         &self,
         ctx: &Context,
         until: impl Into<Timestamp<Iso8601>> + Send,
-    ) -> Result<Cached<CachedGuildMember>, Error>;
+    ) -> Result<Cached<CachedGuildMember>, ClientError>;
     async fn timeout_with_reason(
         &self,
         ctx: &Context,
         until: impl Into<Timestamp<Iso8601>> + Send,
         reason: impl Into<String> + Send,
-    ) -> Result<Cached<CachedGuildMember>, Error>;
-    async fn untimeout(&self, ctx: &Context) -> Result<Cached<CachedGuildMember>, Error>;
+    ) -> Result<Cached<CachedGuildMember>, ClientError>;
+    async fn untimeout(&self, ctx: &Context) -> Result<Cached<CachedGuildMember>, ClientError>;
     async fn untimeout_with_reason(
         &self,
         ctx: &Context,
         reason: impl Into<String> + Send,
-    ) -> Result<Cached<CachedGuildMember>, Error>;
+    ) -> Result<Cached<CachedGuildMember>, ClientError>;
 }
 
 #[async_trait]
 impl GuildMemberExt for CachedGuildMember {
-    async fn get_permissions(&self, ctx: &Context) -> Result<Permissions, Error> {
+    async fn get_permissions(&self, ctx: &Context) -> Result<Permissions, ClientError> {
         let own_role_ids = &self.roles;
         let guild_roles_permissions = self
             .guild_id
@@ -309,7 +312,7 @@ impl GuildMemberExt for CachedGuildMember {
         &self,
         ctx: &Context,
         channel: T,
-    ) -> Result<Permissions, Error> {
+    ) -> Result<Permissions, ClientError> {
         let mut calculated_permissions = self.get_permissions(ctx).await?;
         let channel_permission_overwrites = {
             let channel = channel.into_cached_channel(ctx).await?;
@@ -359,7 +362,7 @@ impl GuildMemberExt for CachedGuildMember {
         Ok(calculated_permissions)
     }
 
-    async fn is_guild_owner(&self, ctx: &Context) -> Result<bool, Error> {
+    async fn is_guild_owner(&self, ctx: &Context) -> Result<bool, ClientError> {
         let guild = self.guild_id.fetch(ctx).await?.load();
         Ok(self.id == guild.owner_id)
     }
@@ -368,7 +371,7 @@ impl GuildMemberExt for CachedGuildMember {
         &self,
         ctx: &Context,
         permissions: Permissions,
-    ) -> Result<bool, Error> {
+    ) -> Result<bool, ClientError> {
         if self.is_guild_owner(ctx).await? {
             return Ok(true);
         }
@@ -384,7 +387,7 @@ impl GuildMemberExt for CachedGuildMember {
         ctx: &Context,
         channel: T,
         permissions: Permissions,
-    ) -> Result<bool, Error> {
+    ) -> Result<bool, ClientError> {
         if self.is_guild_owner(ctx).await? {
             return Ok(true);
         }
@@ -395,13 +398,13 @@ impl GuildMemberExt for CachedGuildMember {
         Ok(member_permissions.contains(permissions))
     }
 
-    async fn add_role(&self, ctx: &Context, role_id: Id<RoleMarker>) -> Result<(), Error> {
+    async fn add_role(&self, ctx: &Context, role_id: Id<RoleMarker>) -> Result<(), ClientError> {
         self.guild_id
             .add_role_to_member(ctx, self.id, role_id)
             .await
     }
 
-    async fn remove_role(&self, ctx: &Context, role_id: Id<RoleMarker>) -> Result<(), Error> {
+    async fn remove_role(&self, ctx: &Context, role_id: Id<RoleMarker>) -> Result<(), ClientError> {
         self.guild_id
             .remove_role_from_member(ctx, self.id, role_id)
             .await
@@ -411,7 +414,7 @@ impl GuildMemberExt for CachedGuildMember {
         &self,
         ctx: &Context,
         until: impl Into<Timestamp<Iso8601>> + Send,
-    ) -> Result<Cached<CachedGuildMember>, Error> {
+    ) -> Result<Cached<CachedGuildMember>, ClientError> {
         self.guild_id.timeout_member(ctx, self.id, until).await
     }
 
@@ -420,13 +423,13 @@ impl GuildMemberExt for CachedGuildMember {
         ctx: &Context,
         until: impl Into<Timestamp<Iso8601>> + Send,
         reason: impl Into<String> + Send,
-    ) -> Result<Cached<CachedGuildMember>, Error> {
+    ) -> Result<Cached<CachedGuildMember>, ClientError> {
         self.guild_id
             .timeout_member_with_reason(ctx, self.id, until, reason)
             .await
     }
 
-    async fn untimeout(&self, ctx: &Context) -> Result<Cached<CachedGuildMember>, Error> {
+    async fn untimeout(&self, ctx: &Context) -> Result<Cached<CachedGuildMember>, ClientError> {
         self.guild_id.untimeout_member(ctx, self.id).await
     }
 
@@ -434,7 +437,7 @@ impl GuildMemberExt for CachedGuildMember {
         &self,
         ctx: &Context,
         reason: impl Into<String> + Send,
-    ) -> Result<Cached<CachedGuildMember>, Error> {
+    ) -> Result<Cached<CachedGuildMember>, ClientError> {
         self.guild_id
             .untimeout_member_with_reason(ctx, self.id, reason)
             .await

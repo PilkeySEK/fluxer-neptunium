@@ -14,66 +14,71 @@ use neptunium_model::{
 };
 use zeroize::Zeroizing;
 
-use crate::{
-    client::error::{ClientErrorKind, Error},
-    events::context::Context,
-};
+use crate::{client::error::ClientError, events::context::Context};
 
 #[async_trait]
 pub trait WebhookExt {
     /// Fetch webhook information from the API.
-    async fn fetch(&self, ctx: &Context) -> Result<Webhook, Error>;
-    async fn delete(&self, ctx: &Context) -> Result<(), Error>;
-    async fn update(&self, ctx: &Context, updates: UpdateWebhookBody) -> Result<Webhook, Error>;
+    async fn fetch(&self, ctx: &Context) -> Result<Webhook, ClientError>;
+    async fn delete(&self, ctx: &Context) -> Result<(), ClientError>;
+    async fn update(
+        &self,
+        ctx: &Context,
+        updates: UpdateWebhookBody,
+    ) -> Result<Webhook, ClientError>;
     /// Fetch the webhook using the webhook token (not the bot token).
     async fn fetch_with_token(
         &self,
         ctx: &Context,
         token: String,
-    ) -> Result<GetWebhookWithTokenResponse, Error>;
+    ) -> Result<GetWebhookWithTokenResponse, ClientError>;
     async fn execute(
         &self,
         ctx: &Context,
         token: String,
         message: WebhookMessage,
-    ) -> Result<(), Error>;
+    ) -> Result<(), ClientError>;
     /// Execute the webhook and wait for a message response.
     async fn execute_and_wait(
         &self,
         ctx: &Context,
         token: String,
         message: WebhookMessage,
-    ) -> Result<Message, Error>;
+    ) -> Result<Message, ClientError>;
     async fn delete_with_token(
         &self,
         ctx: &Context,
         token: impl Into<Zeroizing<String>> + Send,
-    ) -> Result<(), Error>;
+    ) -> Result<(), ClientError>;
     async fn delete_message(
         &self,
         ctx: &Context,
         token: impl Into<Zeroizing<String>> + Send,
         message_id: Id<MessageMarker>,
-    ) -> Result<(), Error>;
+    ) -> Result<(), ClientError>;
 }
 
 #[async_trait]
 impl WebhookExt for Id<WebhookMarker> {
-    async fn fetch(&self, ctx: &Context) -> Result<Webhook, Error> {
+    async fn fetch(&self, ctx: &Context) -> Result<Webhook, ClientError> {
         Ok(ctx
             .get_http_client()
             .execute(GetWebhook { webhook_id: *self })
             .await?)
     }
 
-    async fn delete(&self, ctx: &Context) -> Result<(), Error> {
+    async fn delete(&self, ctx: &Context) -> Result<(), ClientError> {
         Ok(ctx
             .get_http_client()
             .execute(DeleteWebhook { webhook_id: *self })
             .await?)
     }
 
-    async fn update(&self, ctx: &Context, updates: UpdateWebhookBody) -> Result<Webhook, Error> {
+    async fn update(
+        &self,
+        ctx: &Context,
+        updates: UpdateWebhookBody,
+    ) -> Result<Webhook, ClientError> {
         Ok(ctx
             .get_http_client()
             .execute(UpdateWebhook {
@@ -87,7 +92,7 @@ impl WebhookExt for Id<WebhookMarker> {
         &self,
         ctx: &Context,
         token: String,
-    ) -> Result<GetWebhookWithTokenResponse, Error> {
+    ) -> Result<GetWebhookWithTokenResponse, ClientError> {
         Ok(ctx
             .get_http_client()
             .execute(GetWebhookWithToken {
@@ -102,7 +107,7 @@ impl WebhookExt for Id<WebhookMarker> {
         ctx: &Context,
         token: String,
         message: WebhookMessage,
-    ) -> Result<(), Error> {
+    ) -> Result<(), ClientError> {
         let None = ctx
             .get_http_client()
             .execute(ExecuteWebhook {
@@ -113,9 +118,9 @@ impl WebhookExt for Id<WebhookMarker> {
             })
             .await?
         else {
-            return Err(Error::new(ClientErrorKind::HttpInvalidResponse(
-                "Expected no content.".to_owned(),
-            )));
+            return Err(ClientError::HttpInvalidResponse(
+                "Expected no content".to_owned(),
+            ));
         };
         Ok(())
     }
@@ -125,7 +130,7 @@ impl WebhookExt for Id<WebhookMarker> {
         ctx: &Context,
         token: String,
         message: WebhookMessage,
-    ) -> Result<Message, Error> {
+    ) -> Result<Message, ClientError> {
         let Some(response) = ctx
             .get_http_client()
             .execute(ExecuteWebhook {
@@ -136,9 +141,9 @@ impl WebhookExt for Id<WebhookMarker> {
             })
             .await?
         else {
-            return Err(Error::new(ClientErrorKind::HttpInvalidResponse(
-                "Expected a message.".to_owned(),
-            )));
+            return Err(ClientError::HttpInvalidResponse(
+                "Expected a message".to_owned(),
+            ));
         };
         Ok(response)
     }
@@ -147,7 +152,7 @@ impl WebhookExt for Id<WebhookMarker> {
         &self,
         ctx: &Context,
         token: impl Into<Zeroizing<String>> + Send,
-    ) -> Result<(), Error> {
+    ) -> Result<(), ClientError> {
         Ok(ctx
             .get_http_client()
             .execute(DeleteWebhookWithToken {
@@ -162,7 +167,7 @@ impl WebhookExt for Id<WebhookMarker> {
         ctx: &Context,
         token: impl Into<Zeroizing<String>> + Send,
         message_id: Id<MessageMarker>,
-    ) -> Result<(), Error> {
+    ) -> Result<(), ClientError> {
         Ok(ctx
             .get_http_client()
             .execute(DeleteWebhookMessage {

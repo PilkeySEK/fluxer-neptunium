@@ -15,7 +15,7 @@ use neptunium_model::{
 };
 
 use crate::{
-    client::error::Error,
+    client::error::ClientError,
     events::context::{ApplyDefaultAllowedMentions, Context},
 };
 
@@ -34,51 +34,51 @@ pub trait MessageExt {
         &self,
         ctx: &Context,
         message_body: impl Into<CreateMessageBody> + Send,
-    ) -> Result<Cached<CachedMessage>, Error>;
+    ) -> Result<Cached<CachedMessage>, ClientError>;
 
     async fn add_reaction(
         &self,
         ctx: &Context,
         reaction: impl Into<Reaction> + Send,
-    ) -> Result<(), Error>;
+    ) -> Result<(), ClientError>;
 
     async fn delete_own_reaction(
         &self,
         ctx: &Context,
         reaction: impl Into<Reaction> + Send,
-    ) -> Result<(), Error>;
+    ) -> Result<(), ClientError>;
 
     async fn delete_reaction(
         &self,
         ctx: &Context,
         reaction: impl Into<Reaction> + Send,
         target: Id<UserMarker>,
-    ) -> Result<(), Error>;
+    ) -> Result<(), ClientError>;
 
     async fn delete_all_reactions_of_emoji(
         &self,
         ctx: &Context,
         reaction: impl Into<Reaction> + Send,
-    ) -> Result<(), Error>;
+    ) -> Result<(), ClientError>;
 
-    async fn delete_all_reactions(&self, ctx: &Context) -> Result<(), Error>;
+    async fn delete_all_reactions(&self, ctx: &Context) -> Result<(), ClientError>;
 
     /// Delete this message.
-    async fn delete(&self, ctx: &Context) -> Result<(), Error>;
+    async fn delete(&self, ctx: &Context) -> Result<(), ClientError>;
 
     /// Edit this message.
     async fn edit(
         &self,
         ctx: &Context,
         updates: impl Into<EditMessageBody> + Send,
-    ) -> Result<Cached<CachedMessage>, Error>;
+    ) -> Result<Cached<CachedMessage>, ClientError>;
 
     /// Re-fetches this message and returns the result.
-    async fn fetch(&self, ctx: &Context) -> Result<Cached<CachedMessage>, Error>;
+    async fn fetch(&self, ctx: &Context) -> Result<Cached<CachedMessage>, ClientError>;
 
     /// Mark the message as read.
     #[cfg(feature = "user_api")]
-    async fn acknowledge(&self, ctx: &Context) -> Result<(), Error>;
+    async fn acknowledge(&self, ctx: &Context) -> Result<(), ClientError>;
 
     /// Mark the message as read.
     #[cfg(feature = "user_api")]
@@ -87,28 +87,28 @@ pub trait MessageExt {
         ctx: &Context,
         mention_count: Option<u64>,
         manual: Option<bool>,
-    ) -> Result<(), Error>;
+    ) -> Result<(), ClientError>;
 
     async fn delete_attachment(
         &self,
         ctx: &Context,
         attachment_id: Id<AttachmentMarker>,
-    ) -> Result<(), Error>;
+    ) -> Result<(), ClientError>;
 
-    async fn pin(&self, ctx: &Context) -> Result<(), Error>;
-    async fn unpin(&self, ctx: &Context) -> Result<(), Error>;
+    async fn pin(&self, ctx: &Context) -> Result<(), ClientError>;
+    async fn unpin(&self, ctx: &Context) -> Result<(), ClientError>;
     /// If this message mentions the current user, deletes it from the user's mention
     /// history. Note that this does not delete the message.
     #[cfg(feature = "user_api")]
-    async fn delete_mention(&self, ctx: &Context) -> Result<(), Error>;
+    async fn delete_mention(&self, ctx: &Context) -> Result<(), ClientError>;
     /// Saves a message for the current user. Saved messages can be accessed
     /// later from the saved messages list. Messages are saved privately.
     #[cfg(feature = "user_api")]
-    async fn save(&self, ctx: &Context) -> Result<(), Error>;
+    async fn save(&self, ctx: &Context) -> Result<(), ClientError>;
     /// Removes a message from the current user’s saved messages.
     /// Does not delete the original message, only removes it from the user’s saved collection.
     #[cfg(feature = "user_api")]
-    async fn unsave(&self, ctx: &Context) -> Result<(), Error>;
+    async fn unsave(&self, ctx: &Context) -> Result<(), ClientError>;
 }
 
 #[async_trait]
@@ -117,7 +117,7 @@ impl MessageExt for Message {
         &self,
         ctx: &Context,
         message_body: impl Into<CreateMessageBody> + Send,
-    ) -> Result<Cached<CachedMessage>, crate::client::error::Error> {
+    ) -> Result<Cached<CachedMessage>, crate::client::error::ClientError> {
         let mut message_body = message_body.into().apply_default_allowed_mentions(ctx);
         message_body.message_reference = Some(
             MessageReference::builder()
@@ -137,7 +137,7 @@ impl MessageExt for Message {
         &self,
         ctx: &Context,
         reaction: impl Into<Reaction> + Send,
-    ) -> Result<(), crate::client::error::Error> {
+    ) -> Result<(), crate::client::error::ClientError> {
         Ok(ctx
             .get_http_client()
             .execute(
@@ -154,7 +154,7 @@ impl MessageExt for Message {
         &self,
         ctx: &Context,
         reaction: impl Into<Reaction> + Send,
-    ) -> Result<(), Error> {
+    ) -> Result<(), ClientError> {
         Ok(ctx
             .get_http_client()
             .execute(
@@ -172,7 +172,7 @@ impl MessageExt for Message {
         ctx: &Context,
         reaction: impl Into<Reaction> + Send,
         target: Id<UserMarker>,
-    ) -> Result<(), Error> {
+    ) -> Result<(), ClientError> {
         Ok(ctx
             .get_http_client()
             .execute(
@@ -190,7 +190,7 @@ impl MessageExt for Message {
         &self,
         ctx: &Context,
         reaction: impl Into<Reaction> + Send,
-    ) -> Result<(), Error> {
+    ) -> Result<(), ClientError> {
         Ok(ctx
             .get_http_client()
             .execute(
@@ -203,7 +203,7 @@ impl MessageExt for Message {
             .await?)
     }
 
-    async fn delete_all_reactions(&self, ctx: &Context) -> Result<(), Error> {
+    async fn delete_all_reactions(&self, ctx: &Context) -> Result<(), ClientError> {
         Ok(ctx
             .get_http_client()
             .execute(
@@ -215,7 +215,7 @@ impl MessageExt for Message {
             .await?)
     }
 
-    async fn delete(&self, ctx: &Context) -> Result<(), Error> {
+    async fn delete(&self, ctx: &Context) -> Result<(), ClientError> {
         Ok(DeleteMessage {
             channel_id: self.channel_id,
             message_id: self.id,
@@ -228,7 +228,7 @@ impl MessageExt for Message {
         &self,
         ctx: &Context,
         updates: impl Into<EditMessageBody> + Send,
-    ) -> Result<Cached<CachedMessage>, Error> {
+    ) -> Result<Cached<CachedMessage>, ClientError> {
         Ok(EditMessage {
             channel_id: self.channel_id,
             message_id: self.id,
@@ -238,7 +238,7 @@ impl MessageExt for Message {
         .await?)
     }
 
-    async fn fetch(&self, ctx: &Context) -> Result<Cached<CachedMessage>, Error> {
+    async fn fetch(&self, ctx: &Context) -> Result<Cached<CachedMessage>, ClientError> {
         Ok(FetchMessage {
             channel_id: self.channel_id,
             message_id: self.id,
@@ -248,7 +248,7 @@ impl MessageExt for Message {
     }
 
     #[cfg(feature = "user_api")]
-    async fn acknowledge(&self, ctx: &Context) -> Result<(), Error> {
+    async fn acknowledge(&self, ctx: &Context) -> Result<(), ClientError> {
         use neptunium_http::endpoints::channel::AcknowledgeMessage;
 
         Ok(ctx
@@ -268,7 +268,7 @@ impl MessageExt for Message {
         ctx: &Context,
         mention_count: Option<u64>,
         manual: Option<bool>,
-    ) -> Result<(), Error> {
+    ) -> Result<(), ClientError> {
         use neptunium_http::endpoints::channel::AcknowledgeMessage;
 
         Ok(ctx
@@ -286,7 +286,7 @@ impl MessageExt for Message {
         &self,
         ctx: &Context,
         attachment_id: Id<AttachmentMarker>,
-    ) -> Result<(), Error> {
+    ) -> Result<(), ClientError> {
         Ok(DeleteMessageAttachment {
             channel_id: self.channel_id,
             message_id: self.id,
@@ -296,7 +296,7 @@ impl MessageExt for Message {
         .await?)
     }
 
-    async fn pin(&self, ctx: &Context) -> Result<(), Error> {
+    async fn pin(&self, ctx: &Context) -> Result<(), ClientError> {
         Ok(ctx
             .get_http_client()
             .execute(PinMessage {
@@ -306,7 +306,7 @@ impl MessageExt for Message {
             .await?)
     }
 
-    async fn unpin(&self, ctx: &Context) -> Result<(), Error> {
+    async fn unpin(&self, ctx: &Context) -> Result<(), ClientError> {
         Ok(ctx
             .get_http_client()
             .execute(UnpinMessage {
@@ -317,7 +317,7 @@ impl MessageExt for Message {
     }
 
     #[cfg(feature = "user_api")]
-    async fn delete_mention(&self, ctx: &Context) -> Result<(), Error> {
+    async fn delete_mention(&self, ctx: &Context) -> Result<(), ClientError> {
         use neptunium_http::endpoints::users::DeleteMention;
 
         Ok(ctx
@@ -329,7 +329,7 @@ impl MessageExt for Message {
     }
 
     #[cfg(feature = "user_api")]
-    async fn save(&self, ctx: &Context) -> Result<(), Error> {
+    async fn save(&self, ctx: &Context) -> Result<(), ClientError> {
         use neptunium_http::endpoints::channel::SaveMessage;
 
         Ok(ctx
@@ -341,7 +341,7 @@ impl MessageExt for Message {
             .await?)
     }
     #[cfg(feature = "user_api")]
-    async fn unsave(&self, ctx: &Context) -> Result<(), Error> {
+    async fn unsave(&self, ctx: &Context) -> Result<(), ClientError> {
         use neptunium_http::endpoints::channel::UnsaveMessage;
 
         Ok(ctx
@@ -359,7 +359,7 @@ impl MessageExt for CachedMessage {
         &self,
         ctx: &Context,
         message_body: impl Into<CreateMessageBody> + Send,
-    ) -> Result<Cached<CachedMessage>, crate::client::error::Error> {
+    ) -> Result<Cached<CachedMessage>, crate::client::error::ClientError> {
         let mut message_body = message_body.into().apply_default_allowed_mentions(ctx);
         message_body.message_reference = Some(
             MessageReference::builder()
@@ -379,7 +379,7 @@ impl MessageExt for CachedMessage {
         &self,
         ctx: &Context,
         reaction: impl Into<Reaction> + Send,
-    ) -> Result<(), crate::client::error::Error> {
+    ) -> Result<(), crate::client::error::ClientError> {
         Ok(ctx
             .get_http_client()
             .execute(
@@ -396,7 +396,7 @@ impl MessageExt for CachedMessage {
         &self,
         ctx: &Context,
         reaction: impl Into<Reaction> + Send,
-    ) -> Result<(), Error> {
+    ) -> Result<(), ClientError> {
         Ok(ctx
             .get_http_client()
             .execute(
@@ -414,7 +414,7 @@ impl MessageExt for CachedMessage {
         ctx: &Context,
         reaction: impl Into<Reaction> + Send,
         target: Id<UserMarker>,
-    ) -> Result<(), Error> {
+    ) -> Result<(), ClientError> {
         Ok(ctx
             .get_http_client()
             .execute(
@@ -432,7 +432,7 @@ impl MessageExt for CachedMessage {
         &self,
         ctx: &Context,
         reaction: impl Into<Reaction> + Send,
-    ) -> Result<(), Error> {
+    ) -> Result<(), ClientError> {
         Ok(ctx
             .get_http_client()
             .execute(
@@ -445,7 +445,7 @@ impl MessageExt for CachedMessage {
             .await?)
     }
 
-    async fn delete_all_reactions(&self, ctx: &Context) -> Result<(), Error> {
+    async fn delete_all_reactions(&self, ctx: &Context) -> Result<(), ClientError> {
         Ok(ctx
             .get_http_client()
             .execute(
@@ -457,7 +457,7 @@ impl MessageExt for CachedMessage {
             .await?)
     }
 
-    async fn delete(&self, ctx: &Context) -> Result<(), Error> {
+    async fn delete(&self, ctx: &Context) -> Result<(), ClientError> {
         Ok(DeleteMessage {
             channel_id: self.channel_id,
             message_id: self.id,
@@ -470,7 +470,7 @@ impl MessageExt for CachedMessage {
         &self,
         ctx: &Context,
         updates: impl Into<EditMessageBody> + Send,
-    ) -> Result<Cached<CachedMessage>, Error> {
+    ) -> Result<Cached<CachedMessage>, ClientError> {
         Ok(EditMessage {
             channel_id: self.channel_id,
             message_id: self.id,
@@ -480,7 +480,7 @@ impl MessageExt for CachedMessage {
         .await?)
     }
 
-    async fn fetch(&self, ctx: &Context) -> Result<Cached<CachedMessage>, Error> {
+    async fn fetch(&self, ctx: &Context) -> Result<Cached<CachedMessage>, ClientError> {
         Ok(FetchMessage {
             channel_id: self.channel_id,
             message_id: self.id,
@@ -490,7 +490,7 @@ impl MessageExt for CachedMessage {
     }
 
     #[cfg(feature = "user_api")]
-    async fn acknowledge(&self, ctx: &Context) -> Result<(), Error> {
+    async fn acknowledge(&self, ctx: &Context) -> Result<(), ClientError> {
         use neptunium_http::endpoints::channel::AcknowledgeMessage;
 
         Ok(ctx
@@ -510,7 +510,7 @@ impl MessageExt for CachedMessage {
         ctx: &Context,
         mention_count: Option<u64>,
         manual: Option<bool>,
-    ) -> Result<(), Error> {
+    ) -> Result<(), ClientError> {
         use neptunium_http::endpoints::channel::AcknowledgeMessage;
 
         Ok(ctx
@@ -528,7 +528,7 @@ impl MessageExt for CachedMessage {
         &self,
         ctx: &Context,
         attachment_id: Id<AttachmentMarker>,
-    ) -> Result<(), Error> {
+    ) -> Result<(), ClientError> {
         Ok(DeleteMessageAttachment {
             channel_id: self.channel_id,
             message_id: self.id,
@@ -538,7 +538,7 @@ impl MessageExt for CachedMessage {
         .await?)
     }
 
-    async fn pin(&self, ctx: &Context) -> Result<(), Error> {
+    async fn pin(&self, ctx: &Context) -> Result<(), ClientError> {
         Ok(ctx
             .get_http_client()
             .execute(PinMessage {
@@ -548,7 +548,7 @@ impl MessageExt for CachedMessage {
             .await?)
     }
 
-    async fn unpin(&self, ctx: &Context) -> Result<(), Error> {
+    async fn unpin(&self, ctx: &Context) -> Result<(), ClientError> {
         Ok(ctx
             .get_http_client()
             .execute(UnpinMessage {
@@ -559,7 +559,7 @@ impl MessageExt for CachedMessage {
     }
 
     #[cfg(feature = "user_api")]
-    async fn delete_mention(&self, ctx: &Context) -> Result<(), Error> {
+    async fn delete_mention(&self, ctx: &Context) -> Result<(), ClientError> {
         use neptunium_http::endpoints::users::DeleteMention;
 
         Ok(ctx
@@ -571,7 +571,7 @@ impl MessageExt for CachedMessage {
     }
 
     #[cfg(feature = "user_api")]
-    async fn save(&self, ctx: &Context) -> Result<(), Error> {
+    async fn save(&self, ctx: &Context) -> Result<(), ClientError> {
         use neptunium_http::endpoints::channel::SaveMessage;
 
         Ok(ctx
@@ -583,7 +583,7 @@ impl MessageExt for CachedMessage {
             .await?)
     }
     #[cfg(feature = "user_api")]
-    async fn unsave(&self, ctx: &Context) -> Result<(), Error> {
+    async fn unsave(&self, ctx: &Context) -> Result<(), ClientError> {
         use neptunium_http::endpoints::channel::UnsaveMessage;
 
         Ok(ctx
@@ -601,15 +601,15 @@ pub trait MessageIdExt {
         &self,
         ctx: &Context,
         channel_id: Id<ChannelMarker>,
-    ) -> Result<Cached<CachedMessage>, Error>;
+    ) -> Result<Cached<CachedMessage>, ClientError>;
     /// Saves a message for the current user. Saved messages can be accessed
     /// later from the saved messages list. Messages are saved privately.
     #[cfg(feature = "user_api")]
-    async fn save(&self, ctx: &Context, channel_id: Id<ChannelMarker>) -> Result<(), Error>;
+    async fn save(&self, ctx: &Context, channel_id: Id<ChannelMarker>) -> Result<(), ClientError>;
     /// Removes a message from the current user’s saved messages.
     /// Does not delete the original message, only removes it from the user’s saved collection.
     #[cfg(feature = "user_api")]
-    async fn unsave(&self, ctx: &Context) -> Result<(), Error>;
+    async fn unsave(&self, ctx: &Context) -> Result<(), ClientError>;
 }
 
 #[async_trait]
@@ -618,7 +618,7 @@ impl MessageIdExt for Id<MessageMarker> {
         &self,
         ctx: &Context,
         channel_id: Id<ChannelMarker>,
-    ) -> Result<Cached<CachedMessage>, Error> {
+    ) -> Result<Cached<CachedMessage>, ClientError> {
         Ok(FetchMessage {
             channel_id,
             message_id: *self,
@@ -628,7 +628,7 @@ impl MessageIdExt for Id<MessageMarker> {
     }
 
     #[cfg(feature = "user_api")]
-    async fn save(&self, ctx: &Context, channel_id: Id<ChannelMarker>) -> Result<(), Error> {
+    async fn save(&self, ctx: &Context, channel_id: Id<ChannelMarker>) -> Result<(), ClientError> {
         use neptunium_http::endpoints::channel::SaveMessage;
 
         Ok(ctx
@@ -641,7 +641,7 @@ impl MessageIdExt for Id<MessageMarker> {
     }
 
     #[cfg(feature = "user_api")]
-    async fn unsave(&self, ctx: &Context) -> Result<(), Error> {
+    async fn unsave(&self, ctx: &Context) -> Result<(), ClientError> {
         use neptunium_http::endpoints::channel::UnsaveMessage;
 
         Ok(ctx
@@ -654,9 +654,11 @@ impl MessageIdExt for Id<MessageMarker> {
 #[cfg(feature = "user_api")]
 #[async_trait]
 pub trait ScheduledMessageIdExt {
-    async fn get_scheduled_message(&self, ctx: &Context)
-    -> Result<ScheduledMessageResponse, Error>;
-    async fn cancel_scheduled_message(&self, ctx: &Context) -> Result<(), Error>;
+    async fn get_scheduled_message(
+        &self,
+        ctx: &Context,
+    ) -> Result<ScheduledMessageResponse, ClientError>;
+    async fn cancel_scheduled_message(&self, ctx: &Context) -> Result<(), ClientError>;
 }
 
 #[cfg(feature = "user_api")]
@@ -665,7 +667,7 @@ impl ScheduledMessageIdExt for Id<ScheduledMessageMarker> {
     async fn get_scheduled_message(
         &self,
         ctx: &Context,
-    ) -> Result<ScheduledMessageResponse, Error> {
+    ) -> Result<ScheduledMessageResponse, ClientError> {
         use neptunium_http::endpoints::channel::GetScheduledMessage;
 
         Ok(ctx
@@ -676,7 +678,7 @@ impl ScheduledMessageIdExt for Id<ScheduledMessageMarker> {
             .await?)
     }
 
-    async fn cancel_scheduled_message(&self, ctx: &Context) -> Result<(), Error> {
+    async fn cancel_scheduled_message(&self, ctx: &Context) -> Result<(), ClientError> {
         use neptunium_http::endpoints::channel::CancelScheduledMessage;
 
         Ok(ctx
