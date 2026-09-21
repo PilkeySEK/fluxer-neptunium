@@ -1,14 +1,13 @@
 use std::time::Duration;
 
 use bon::Builder;
-use debug_ignore::DebugIgnore;
 use neptunium_model::gateway::{intents::GatewayEventFlags, shard::ShardInfo};
 use serde::{Deserialize, Serialize};
 use zeroize::Zeroizing;
 
-use crate::session::{ResumeInfo, SessionHandle};
+use crate::session::ResumeInfo;
 
-#[derive(Debug, Builder)]
+#[derive(Debug, Builder, Clone)]
 pub struct SessionConfig {
     #[builder(default)]
     pub shard_info: ShardInfo,

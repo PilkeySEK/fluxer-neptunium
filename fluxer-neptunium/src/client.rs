@@ -2,12 +2,12 @@ use std::{
     collections::HashMap,
     convert::Infallible,
     future,
-    ops::{ControlFlow, Deref, DerefMut},
+    ops::{Deref, DerefMut},
     sync::Arc,
 };
 
 use neptunium_cache_inmemory::{Cache, gateway::cached_payload::CachedGuildMembersChunk};
-use neptunium_gateway::session::{ResumeInfo, Session, config::SessionConfig};
+use neptunium_gateway::session::{ResumeInfo, Session, SessionHandle, config::SessionConfig};
 
 use neptunium_http::client::HttpClient;
 use neptunium_model::gateway::payload::{
@@ -225,10 +225,11 @@ impl Client {
 
         let (event_tx, mut event_rx) = unbounded_channel();
         let session_config = self.session_config.clone();
+        let mut session = Session::connect(session_config)
+            .await
+            .map_err(ClientError::GatewayConnectError)?;
+        let handle = session.handle();
         let mut session_task = tokio::spawn(async move {
-            let mut session = Session::connect(session_config)
-                .await
-                .map_err(ClientError::GatewayConnectError)?;
             session
                 .run_cancellable(
                     |event| {
@@ -257,7 +258,7 @@ impl Client {
                     let Some(client_message) = maybe_client_message else {
                         panic!("context_tx is closed");
                     };
-                    self.handle_client_message(client_message);
+                    tokio::spawn(self.handle_client_message(client_message, handle.clone()));
                 }
             }
         };
@@ -272,26 +273,18 @@ impl Client {
         result
     }
 
-    fn handle_client_message(
-        &mut self,
-        msg: ClientMessage,
-        session_task_tx: &UnboundedSender<SessionTaskMessage>,
-    ) {
+    async fn handle_client_message(&mut self, msg: ClientMessage, session_handle: SessionHandle) {
         match msg {
             ClientMessage::RequestGuildCounts(request, result_tx, update_tx) => {
                 if let Some(tx) = update_tx {
                     self.guild_counts_update_listeners
                         .insert(request.nonce.clone().unwrap(), tx);
                 }
-                if session_task_tx
-                    .send(SessionTaskMessage::SendWithResultOneshot(
-                        OutgoingGatewayMessage::RequestGuildCounts(request),
-                        result_tx,
-                    ))
-                    .is_err()
-                {
-                    tracing::warn!("session task channel closed");
-                }
+                let _ = result_tx.send(
+                    session_handle
+                        .send_message(OutgoingGatewayMessage::RequestGuildCounts(request))
+                        .await,
+                );
             }
         }
     }

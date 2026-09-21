@@ -5,6 +5,7 @@ use tokio::sync::{Notify, mpsc::UnboundedSender};
 
 use crate::session::SessionMessage;
 
+#[derive(Clone)]
 pub struct SessionHandle {
     pub(super) tx: UnboundedSender<SessionMessage>,
 }
