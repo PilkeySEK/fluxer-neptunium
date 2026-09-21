@@ -92,7 +92,7 @@ impl Session {
             cancellation_token.clone(),
         ));
         let (tx, rx) = unbounded_channel();
-        Ok(Self {
+        let mut this = Self {
             conn,
             token: config.token.clone(),
             // state: SessionState::default(),
@@ -137,7 +137,10 @@ impl Session {
             //         initial_guild_id: None,
             //     })
             // },
-        })
+        };
+        let identify_or_resume = this.create_identify_or_resume_message();
+        this.conn.send_message(&identify_or_resume).await;
+        Ok(this)
     }
 
     pub fn handle(&self) -> SessionHandle {
