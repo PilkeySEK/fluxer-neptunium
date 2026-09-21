@@ -12,8 +12,8 @@ pub enum SessionError {
     // ReconnectFailed { num_tries: usize },
     #[error("failed to deserialize: {0}")]
     Deserialize(serde_json::Error),
-    #[error("The session is invalid and reconnecting is not possible")]
-    InvalidSessionUnresumable,
+    // #[error("The session is invalid and reconnecting is not possible")]
+    // InvalidSessionUnresumable,
     #[error("Gateway closed connection with unrecoverable code: {0:?}")]
     ClosedUnrecoverable(CloseFrame),
 }

@@ -8,3 +8,5 @@ pub mod invites;
 pub mod misc;
 pub mod time;
 pub mod user;
+
+pub use serde_bool;

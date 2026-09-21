@@ -1,13 +1,14 @@
 use std::time::Duration;
 
 use bon::Builder;
+use debug_ignore::DebugIgnore;
 use neptunium_model::gateway::{intents::GatewayEventFlags, shard::ShardInfo};
 use serde::{Deserialize, Serialize};
 use zeroize::Zeroizing;
 
-use crate::session::ResumeInfo;
+use crate::session::{ResumeInfo, SessionHandle};
 
-#[derive(Debug, Builder, Clone)]
+#[derive(Debug, Builder)]
 pub struct SessionConfig {
     #[builder(default)]
     pub shard_info: ShardInfo,
@@ -29,6 +30,10 @@ pub struct SessionConfig {
     /// try to resume with this info, but discard it if the resuming fails and
     /// reconnect normally instead.
     pub resume_info: Option<ResumeInfo>,
+    // /// Called on every `Hello` received. This is likely where you want to send `Identify` or `Resume`.
+    // #[builder(into)]
+    // pub on_hello:
+    //     Option<DebugIgnore<Box<dyn FnMut(SessionHandle) -> Box<dyn Future<Output = ()>>>>>,
 }
 
 #[derive(Serialize, Deserialize, Copy, Clone, PartialEq, Eq, Debug)]

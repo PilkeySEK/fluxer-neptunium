@@ -37,9 +37,6 @@ pub use async_trait::async_trait;
 pub use neptunium_http as http;
 pub use neptunium_model as model;
 
-// const VERSION: &str = unwrap_or(option_env!("CARGO_PKG_VERSION"), "unknown");
-const LIBRARY_NAME: &str = "fluxer-neptunium";
-
 pub use neptunium_cache_inmemory as cache;
 pub use neptunium_cache_inmemory::gateway::cached_payload;
 

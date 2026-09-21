@@ -1,16 +1,26 @@
 use std::{
+    cell::RefCell,
     env::consts,
+    rc::Rc,
     sync::Arc,
     time::{Duration, Instant},
 };
 
-use neptunium_model::gateway::{
-    event::{dispatch::DispatchEvent, gateway::GatewayEventIncoming},
-    payload::outgoing::{Heartbeat, Identify, IdentifyProperties, OutgoingGatewayMessage, Resume},
+use neptunium_model::{
+    gateway::{
+        event::{
+            dispatch::DispatchEvent, gateway::GatewayEventIncoming,
+            invalid_session::InvalidSessionEvent,
+        },
+        payload::outgoing::{
+            Heartbeat, Identify, IdentifyProperties, OutgoingGatewayMessage, Resume,
+        },
+    },
+    serde_bool,
 };
 use serde::{Deserialize, Serialize};
 use tokio::sync::{
-    OnceCell,
+    Notify, OnceCell,
     mpsc::{UnboundedReceiver, UnboundedSender, unbounded_channel},
     oneshot,
 };
@@ -18,15 +28,14 @@ use tokio_tungstenite::tungstenite::protocol::CloseFrame;
 use tokio_util::{sync::CancellationToken, task::TaskTracker, time::FutureExt};
 use zeroize::Zeroizing;
 
-use crate::session::{
-    config::SessionConfig,
-    connection::{Connection, ConnectionState},
-};
+use crate::session::{config::SessionConfig, connection::Connection};
 
 pub mod config;
 mod error;
 pub use error::*;
 mod connection;
+mod handle;
+pub use handle::*;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct ResumeInfo {
@@ -43,6 +52,10 @@ pub enum ConnectError {
     ClosedUnrecoverable(CloseFrame),
 }
 
+enum SessionMessage {
+    SendMessage(OutgoingGatewayMessage, Arc<Notify>),
+}
+
 pub struct Session {
     conn: Connection,
     token: Zeroizing<String>,
@@ -55,6 +68,11 @@ pub struct Session {
     cancellation_token: CancellationToken,
     // _cancellation_token_drop_guard: DropGuard,
     tracker: TaskTracker,
+    // TODO: Could refactor `Session` a little bit to avoid having to do this Rc<RefCell<T>> thing,
+    // but right now it's not that important tbh
+    rx: Rc<RefCell<UnboundedReceiver<SessionMessage>>>,
+    tx: UnboundedSender<SessionMessage>,
+    // identify_or_resume: OutgoingGatewayMessage,
 }
 
 impl Session {
@@ -64,7 +82,7 @@ impl Session {
         let conn = Connection::connect_and_await_hello(format!(
             "{}?{}",
             config.gateway_base_url,
-            serde_qs::to_string(&config.connection_params).unwrap()
+            serde_qs::to_string(&config.connection_params).unwrap(),
         ))
         .await?;
         let (heartbeat_task_tx, heartbeat_task_rx) = unbounded_channel();
@@ -73,9 +91,10 @@ impl Session {
             conn.heartbeat_interval,
             cancellation_token.clone(),
         ));
+        let (tx, rx) = unbounded_channel();
         Ok(Self {
             conn,
-            token: config.token,
+            token: config.token.clone(),
             // state: SessionState::default(),
             // gateway_base_url: config.gateway_base_url,
             // connection_params: config.connection_params,
@@ -88,7 +107,43 @@ impl Session {
             // _cancellation_token_drop_guard: cancellation_token.drop_guard(),
             cancellation_token,
             tracker,
+            tx,
+            rx: Rc::new(RefCell::new(rx)),
+            // identify_or_resume: if let Some(resume_info) = config.resume_info {
+            //     OutgoingGatewayMessage::Resume(Resume {
+            //         token: config.token,
+            //         session_id: resume_info.session_id,
+            //         seq: resume_info.last_sequence_number,
+            //     })
+            // } else {
+            //     OutgoingGatewayMessage::Identify(Identify {
+            //         token: config.token,
+            //         properties: IdentifyProperties {
+            //             os: consts::OS.to_owned(),
+            //             browser: env!("CARGO_CRATE_NAME").to_owned(),
+            //             device: "desktop".to_owned(),
+            //             // TODO:
+            //             e2ee_capable: None,
+            //             mobile: None,
+            //             latitude: None,
+            //             longitude: None,
+            //         },
+            //         // TODO:
+            //         shard: None,
+            //         // TODO:
+            //         presence: None,
+            //         ignored_events: None,
+            //         flags: None,
+            //         initial_guild_id: None,
+            //     })
+            // },
         })
+    }
+
+    pub fn handle(&self) -> SessionHandle {
+        SessionHandle {
+            tx: self.tx.clone(),
+        }
     }
 
     pub async fn run_cancellable<T: Send + Sync + 'static>(
@@ -136,6 +191,8 @@ impl Session {
         }
 
         let result = loop {
+            let rx = Rc::clone(&self.rx);
+            let mut rx = rx.borrow_mut();
             tokio::select! {
                 msg = heartbeat_rx.recv() => {
                     let Some(()) = msg else {
@@ -173,6 +230,10 @@ impl Session {
                         break Err(e);
                     }
                 }
+                msg = rx.recv() => {
+                    let msg = msg.expect("channel should be open");
+                    self.handle_session_message(msg).await;
+                }
             }
         };
 
@@ -181,6 +242,15 @@ impl Session {
         tracker.wait().await;
 
         result
+    }
+
+    async fn handle_session_message(&mut self, msg: SessionMessage) {
+        match msg {
+            SessionMessage::SendMessage(message, finished) => {
+                self.conn.send_message(&message).await;
+                finished.notify_one();
+            }
+        }
     }
 
     async fn handle_event(
@@ -198,13 +268,14 @@ impl Session {
             GatewayEventIncoming::Hello(event) => {
                 self.conn.heartbeat_interval = event.heartbeat_interval.into();
                 self.respawn_heartbeat_task();
+                let identify_or_resume = self.create_identify_or_resume_message();
+                self.conn.send_message(&identify_or_resume).await;
             }
-            GatewayEventIncoming::InvalidSession(event) => {
-                if !event.resumable {
-                    return Err(SessionError::InvalidSessionUnresumable);
-                } else {
-                    self.conn.reconnect_with_backoff(None).await;
-                }
+            GatewayEventIncoming::InvalidSession(InvalidSessionEvent {
+                resumable: serde_bool::False,
+            }) => {
+                self.resume_info_session_id = None;
+                self.conn.reconnect_with_backoff(None).await;
             }
             GatewayEventIncoming::GatewayError(event) => {
                 tracing::warn!(?event, "Gateway error event received");
@@ -222,12 +293,10 @@ impl Session {
                 self.last_sequence_number = Some(payload.sequence_number);
                 match payload.event {
                     DispatchEvent::Ready(ready) => {
-                        self.conn.state = ConnectionState::Ready;
                         self.resume_info_session_id = Some(ready.session_id.clone());
                         event_handler(DispatchEvent::Ready(ready));
                     }
                     DispatchEvent::Resumed(resumed) => {
-                        self.conn.state = ConnectionState::Ready;
                         event_handler(DispatchEvent::Resumed(resumed));
                     }
                     event => event_handler(event),
@@ -287,7 +356,6 @@ impl Session {
         &mut self,
     ) -> Result<GatewayEventIncoming, CloseFrame> {
         loop {
-            self.maybe_identify_or_resume().await;
             let heartbeat_ack_timeout_at =
                 self.conn.last_heartbeat_ack_at + (self.conn.heartbeat_interval * 2);
             let maybe_event;
@@ -319,28 +387,28 @@ impl Session {
         }
     }
 
-    async fn maybe_identify_or_resume(&mut self) {
-        if self.conn.state != ConnectionState::Initial {
-            return;
-        }
-        let message = self.create_identify_or_resume_message();
-        loop {
-            match self.conn.state {
-                ConnectionState::Initial => {
-                    if let OutgoingGatewayMessage::Resume(_) = &message {
-                        self.conn.state = ConnectionState::Resuming;
-                    } else {
-                        self.conn.state = ConnectionState::Identifying;
-                    }
-                    self.last_sequence_number = None;
-                    self.conn.send_message(&message).await;
-                }
-                ConnectionState::Ready
-                | ConnectionState::Resuming
-                | ConnectionState::Identifying => break,
-            }
-        }
-    }
+    // async fn maybe_identify_or_resume(&mut self) {
+    //     if self.conn.state != ConnectionState::Initial {
+    //         return;
+    //     }
+    //     let message = self.create_identify_or_resume_message();
+    //     loop {
+    //         match self.conn.state {
+    //             ConnectionState::Initial => {
+    //                 if let OutgoingGatewayMessage::Resume(_) = &message {
+    //                     self.conn.state = ConnectionState::Resuming;
+    //                 } else {
+    //                     self.conn.state = ConnectionState::Identifying;
+    //                 }
+    //                 self.last_sequence_number = None;
+    //                 self.conn.send_message(&message).await;
+    //             }
+    //             ConnectionState::Ready
+    //             | ConnectionState::Resuming
+    //             | ConnectionState::Identifying => break,
+    //         }
+    //     }
+    // }
 
     /// Either `Resume` or `Identify`.
     fn create_identify_or_resume_message(&mut self) -> OutgoingGatewayMessage {
@@ -393,7 +461,6 @@ impl Session {
                 last_sequence_number: self.last_sequence_number,
             }))
             .await;
-        self.maybe_identify_or_resume().await;
     }
 }
 
@@ -406,6 +473,7 @@ async fn heartbeat_task(
     let mut interval = tokio::time::interval(heartbeat_interval);
     // The first tick completes immediately
     interval.tick().await;
+    // TODO: Is there something like waiting random(0..heartbeat_interval) time on the first heartbeat documented?
     loop {
         tokio::select! {
             _ = interval.tick() => {

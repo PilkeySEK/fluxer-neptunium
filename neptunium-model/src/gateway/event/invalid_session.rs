@@ -2,7 +2,9 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Copy, Clone)]
 pub struct InvalidSessionEvent {
-    pub resumable: bool,
+    // Source: https://docs.fluxer.app/gateway/overview/#invalid-session
+    /// Is always `false`.
+    pub resumable: serde_bool::False,
 }
 
 impl<'de> Deserialize<'de> for InvalidSessionEvent {
@@ -10,7 +12,7 @@ impl<'de> Deserialize<'de> for InvalidSessionEvent {
     where
         D: serde::Deserializer<'de>,
     {
-        let resumable = bool::deserialize(deserializer)?;
+        let resumable = serde_bool::False::deserialize(deserializer)?;
         Ok(Self { resumable })
     }
 }

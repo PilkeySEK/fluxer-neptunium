@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 use std::sync::Arc;
-use std::time::Duration;
 
 use bon::Builder;
 #[cfg(feature = "user_api")]
@@ -72,7 +71,6 @@ use tokio::sync::{
     mpsc::{UnboundedSender, unbounded_channel},
     oneshot,
 };
-use tokio::time::Instant;
 
 use crate::{
     client::{ClientMessage, error::ClientError},
@@ -153,12 +151,6 @@ impl Context {
     pub fn get_user_id_from_token(&self) -> Option<Id<UserMarker>> {
         let (id_str, _) = self.http_client.token.split_once('.')?;
         Id::try_from(id_str).ok()
-    }
-
-    /// Gracefully stops the client, causing `Client::start()` to return
-    /// with `Ok(...)`.
-    pub fn gracefully_stop_client(&self) {
-        let _ = self.tx.send(ClientMessage::GracefullyStop);
     }
 
     /// Bulk-acknowledge messages (mark as read).
@@ -304,19 +296,6 @@ impl Context {
                 ));
             }
         })
-    }
-
-    /// Measure the gateway latency by sending a heartbeat and waiting for the response, with
-    /// millisecond precision.
-    /// Returns `None` if the client has exited or the measurement timed out.
-    #[must_use]
-    pub async fn measure_gateway_latency(&self, max_wait_time: Duration) -> Option<Duration> {
-        let (tx, rx) = oneshot::channel();
-        let start_time = Instant::now();
-        self.tx.send(ClientMessage::LatencyMeasurement(tx)).ok()?;
-        tokio::time::timeout(max_wait_time, rx).await.ok()?.ok()?;
-        let end_time = Instant::now();
-        Some(end_time - start_time)
     }
 
     /// Update the presence by sending a gateway request. Due to
