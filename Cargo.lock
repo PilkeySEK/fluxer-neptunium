@@ -1141,7 +1141,6 @@ name = "neptunium-gateway"
 version = "0.7.3"
 dependencies = [
  "bon",
- "debug-ignore",
  "futures-util",
  "neptunium-model",
  "serde",
