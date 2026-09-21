@@ -25,15 +25,6 @@ pub struct Connection {
     request: tokio_tungstenite::tungstenite::http::Request<()>,
     pub last_heartbeat_ack_at: Instant,
     pub heartbeat_interval: Duration,
-    pub state: ConnectionState,
-}
-
-#[derive(PartialEq, Eq)]
-pub enum ConnectionState {
-    Initial,
-    Identifying,
-    Resuming,
-    Ready,
 }
 
 impl Connection {
@@ -82,7 +73,6 @@ impl Connection {
             request,
             last_heartbeat_ack_at: Instant::now(),
             heartbeat_interval,
-            state: ConnectionState::Initial,
         })
     }
 
@@ -111,7 +101,6 @@ impl Connection {
     pub async fn next_event(&mut self) -> Result<GatewayEventIncoming, CloseFrame> {
         let (event, reconnected) = internal::next_event(&mut self.stream, &self.request).await?;
         if reconnected {
-            self.state = ConnectionState::Initial;
             self.last_heartbeat_ack_at = Instant::now();
         }
         Ok(event)
@@ -122,7 +111,6 @@ impl Connection {
     /// one occurs.
     pub async fn reconnect_with_backoff(&mut self, close_frame: Option<CloseFrame>) {
         internal::reconnect_with_backoff(&mut self.stream, &self.request, close_frame).await;
-        self.state = ConnectionState::Initial;
         self.last_heartbeat_ack_at = Instant::now();
     }
 
@@ -142,7 +130,6 @@ impl Connection {
     pub async fn send_message(&mut self, event: &OutgoingGatewayMessage) {
         let reconnected = internal::send_message(&mut self.stream, &self.request, event).await;
         if reconnected {
-            self.state = ConnectionState::Initial;
             self.last_heartbeat_ack_at = Instant::now();
         }
     }

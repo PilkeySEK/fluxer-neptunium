@@ -20,6 +20,7 @@ zeroize = { version = "1.9.0", features = ["serde"] }
 bon = "3.9.3"
 language-tags = { version = "0.3.2", features = ["serde"] }
 chrono = { version = "0.4.45", optional = true }
+serde-bool = "0.1.5"
 
 
 [features]

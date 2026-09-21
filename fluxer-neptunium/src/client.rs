@@ -2,7 +2,7 @@ use std::{
     collections::HashMap,
     convert::Infallible,
     future,
-    ops::{Deref, DerefMut},
+    ops::{ControlFlow, Deref, DerefMut},
     sync::Arc,
 };
 
@@ -12,10 +12,13 @@ use neptunium_gateway::session::{ResumeInfo, Session, config::SessionConfig};
 use neptunium_http::client::HttpClient;
 use neptunium_model::gateway::payload::{
     incoming::GuildCountsUpdate,
-    outgoing::{LazyRequest, PresenceUpdateOutgoing, RequestGuildCounts, RequestGuildMembers},
+    outgoing::{
+        LazyRequest, OutgoingGatewayMessage, PresenceUpdateOutgoing, RequestGuildCounts,
+        RequestGuildMembers,
+    },
 };
 use tokio::sync::{
-    mpsc::{UnboundedSender, unbounded_channel},
+    mpsc::{UnboundedReceiver, UnboundedSender, unbounded_channel},
     oneshot,
 };
 use tokio_util::sync::CancellationToken;
@@ -34,27 +37,24 @@ struct ClientInternalConfig {
 }
 
 pub(crate) enum ClientMessage {
-    UpdatePresence(
-        PresenceUpdateOutgoing,
-        oneshot::Sender<Result<(), neptunium_gateway::session::SessionError>>,
-    ),
+    UpdatePresence(PresenceUpdateOutgoing, oneshot::Sender<bool>),
     RequestGuildMembers(
         RequestGuildMembers,
-        oneshot::Sender<Result<(), neptunium_gateway::session::SessionError>>,
+        oneshot::Sender<bool>,
         Option<UnboundedSender<CachedGuildMembersChunk>>,
     ),
-    SendLazyRequest(
-        LazyRequest,
-        UnboundedSender<Result<(), neptunium_gateway::session::SessionError>>,
-    ),
-    // PropagateEventError(EventError),
-    LatencyMeasurement(oneshot::Sender<()>),
+    SendLazyRequest(LazyRequest, UnboundedSender<()>),
     RequestGuildCounts(
         RequestGuildCounts,
-        oneshot::Sender<Result<(), neptunium_gateway::session::SessionError>>,
+        oneshot::Sender<bool>,
         Option<oneshot::Sender<GuildCountsUpdate>>,
     ),
-    GracefullyStop,
+}
+
+enum SessionTaskMessage {
+    Send(OutgoingGatewayMessage),
+    SendWithResultOneshot(OutgoingGatewayMessage, oneshot::Sender<bool>),
+    SendWithResultUnbounded(OutgoingGatewayMessage, UnboundedSender<bool>),
 }
 
 pub struct Client {
@@ -65,6 +65,7 @@ pub struct Client {
     session_config: SessionConfig,
     guild_members_chunk_listeners: HashMap<String, UnboundedSender<CachedGuildMembersChunk>>,
     guild_counts_update_listeners: HashMap<String, oneshot::Sender<GuildCountsUpdate>>,
+    context_rx: UnboundedReceiver<ClientMessage>,
 }
 
 impl Deref for Client {
@@ -105,7 +106,7 @@ impl Client {
     ) -> Self {
         let session_config = session_config.into();
 
-        let (tx, rx) = unbounded_channel();
+        let (context_tx, context_rx) = unbounded_channel();
 
         Self {
             context: Context {
@@ -120,7 +121,7 @@ impl Client {
                     }
                     api_client
                 }),
-                tx,
+                tx: context_tx,
                 cache: Arc::new(Cache::new(client_config.cache_config)),
                 default_allowed_mentions: Arc::new(client_config.default_allowed_mentions),
             },
@@ -132,6 +133,7 @@ impl Client {
             },
             guild_counts_update_listeners: HashMap::new(),
             guild_members_chunk_listeners: HashMap::new(),
+            context_rx,
         }
     }
 
@@ -251,6 +253,12 @@ impl Client {
                     };
                     self.handle_dispatch_event(event);
                 }
+                maybe_client_message = self.context_rx.recv() => {
+                    let Some(client_message) = maybe_client_message else {
+                        panic!("context_tx is closed");
+                    };
+                    self.handle_client_message(client_message);
+                }
             }
         };
         let result = match session_task_result {
@@ -262,6 +270,30 @@ impl Client {
         // so that the drop guard isn't dropped before
         drop(cancellation_token_drop_guard);
         result
+    }
+
+    fn handle_client_message(
+        &mut self,
+        msg: ClientMessage,
+        session_task_tx: &UnboundedSender<SessionTaskMessage>,
+    ) {
+        match msg {
+            ClientMessage::RequestGuildCounts(request, result_tx, update_tx) => {
+                if let Some(tx) = update_tx {
+                    self.guild_counts_update_listeners
+                        .insert(request.nonce.clone().unwrap(), tx);
+                }
+                if session_task_tx
+                    .send(SessionTaskMessage::SendWithResultOneshot(
+                        OutgoingGatewayMessage::RequestGuildCounts(request),
+                        result_tx,
+                    ))
+                    .is_err()
+                {
+                    tracing::warn!("session task channel closed");
+                }
+            }
+        }
     }
 
     #[cfg(feature = "user_api")]
