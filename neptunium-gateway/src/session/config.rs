@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use bon::Builder;
-use neptunium_model::gateway::{intents::GatewayEventFlags, shard::ShardInfo};
+use neptunium_model::gateway::{payload::outgoing::InitialPresence, shard::ShardInfo};
 use serde::{Deserialize, Serialize};
 use zeroize::Zeroizing;
 
@@ -9,15 +9,12 @@ use crate::session::ResumeInfo;
 
 #[derive(Debug, Builder, Clone)]
 pub struct SessionConfig {
-    #[builder(default)]
-    pub shard_info: ShardInfo,
     #[builder(default = SessionConfig::DEFAULT_GATEWAY_URL.to_owned())]
     pub gateway_base_url: String,
     #[builder(into)]
     pub token: Zeroizing<String>,
-    pub ignored_events: Option<GatewayEventFlags>,
-    #[builder(default = false)]
-    pub force_ipv4: bool,
+    /// The Dispatch event names this session does not want, at most 256 entries.
+    pub ignored_events: Option<Vec<String>>,
     /// Timeout for establishing a new connection to the gateway.
     #[builder(default = Duration::from_mins(1))]
     pub connection_timeout: Duration,
@@ -25,7 +22,7 @@ pub struct SessionConfig {
     pub send_timeout: Option<Duration>,
     #[builder(default)]
     pub connection_params: GatewayConnectionParams,
-    /// Existing resume info to pass. On the first connect, the session will
+    /// Existing resume info to use on the first connect. The session will
     /// try to resume with this info, but discard it if the resuming fails and
     /// reconnect normally instead.
     pub resume_info: Option<ResumeInfo>,
@@ -33,6 +30,10 @@ pub struct SessionConfig {
     // #[builder(into)]
     // pub on_hello:
     //     Option<DebugIgnore<Box<dyn FnMut(SessionHandle) -> Box<dyn Future<Output = ()>>>>>,
+    pub initial_presence: Option<InitialPresence>,
+    #[builder(default = false)]
+    pub send_initial_presence_on_every_reconnect: bool,
+    pub shard: Option<ShardInfo>,
 }
 
 #[derive(Serialize, Deserialize, Copy, Clone, PartialEq, Eq, Debug)]
