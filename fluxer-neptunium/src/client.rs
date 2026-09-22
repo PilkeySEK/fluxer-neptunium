@@ -43,18 +43,12 @@ pub(crate) enum ClientMessage {
         oneshot::Sender<bool>,
         Option<UnboundedSender<CachedGuildMembersChunk>>,
     ),
-    SendLazyRequest(LazyRequest, UnboundedSender<()>),
+    SendLazyRequest(LazyRequest, oneshot::Sender<bool>),
     RequestGuildCounts(
         RequestGuildCounts,
         oneshot::Sender<bool>,
         Option<oneshot::Sender<GuildCountsUpdate>>,
     ),
-}
-
-enum SessionTaskMessage {
-    Send(OutgoingGatewayMessage),
-    SendWithResultOneshot(OutgoingGatewayMessage, oneshot::Sender<bool>),
-    SendWithResultUnbounded(OutgoingGatewayMessage, UnboundedSender<bool>),
 }
 
 pub struct Client {
@@ -258,7 +252,7 @@ impl Client {
                     let Some(client_message) = maybe_client_message else {
                         panic!("context_tx is closed");
                     };
-                    tokio::spawn(self.handle_client_message(client_message, handle.clone()));
+                    self.handle_client_message(client_message, handle.clone()).await;
                 }
             }
         };
@@ -283,6 +277,31 @@ impl Client {
                 let _ = result_tx.send(
                     session_handle
                         .send_message(OutgoingGatewayMessage::RequestGuildCounts(request))
+                        .await,
+                );
+            }
+            ClientMessage::RequestGuildMembers(request, result_tx, update_tx) => {
+                if let Some(tx) = update_tx {
+                    self.guild_members_chunk_listeners
+                        .insert(request.nonce.clone().unwrap(), tx);
+                }
+                let _ = result_tx.send(
+                    session_handle
+                        .send_message(OutgoingGatewayMessage::RequestGuildMembers(request))
+                        .await,
+                );
+            }
+            ClientMessage::SendLazyRequest(request, result_tx) => {
+                let _ = result_tx.send(
+                    session_handle
+                        .send_message(OutgoingGatewayMessage::LazyRequest(request))
+                        .await,
+                );
+            }
+            ClientMessage::UpdatePresence(request, result_tx) => {
+                let _ = result_tx.send(
+                    session_handle
+                        .send_message(OutgoingGatewayMessage::PresenceUpdate(request))
                         .await,
                 );
             }

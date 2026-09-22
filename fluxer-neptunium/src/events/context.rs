@@ -195,9 +195,9 @@ impl Context {
         }
 
         match oneshot_rx.await {
-            Ok(Err(e)) => return Err(ClientError::GatewaySessionError(e)),
+            Ok(true) => {}
+            Ok(false) => return Err(ClientError::SessionNotPresent),
             Err(_) => return Err(ClientError::ClientNotPresent),
-            Ok(Ok(())) => {}
         }
 
         match rx.await {
@@ -222,9 +222,9 @@ impl Context {
         }
 
         match oneshot_rx.await {
-            Ok(Err(e)) => Err(ClientError::GatewaySessionError(e)),
+            Ok(true) => Ok(()),
+            Ok(false) => Err(ClientError::SessionNotPresent),
             Err(_) => Err(ClientError::ClientNotPresent),
-            Ok(Ok(())) => Ok(()),
         }
     }
 
@@ -309,13 +309,10 @@ impl Context {
         {
             return Err(ClientError::ClientNotPresent);
         }
-        if let Ok(result) = rx.await {
-            match result {
-                Ok(()) => Ok(()),
-                Err(e) => Err(ClientError::GatewaySessionError(e)),
-            }
-        } else {
-            Err(ClientError::ClientNotPresent)
+        match rx.await {
+            Ok(true) => Ok(()),
+            Ok(false) => Err(ClientError::SessionNotPresent),
+            Err(_) => Err(ClientError::ClientNotPresent),
         }
     }
 
@@ -348,9 +345,9 @@ impl Context {
         }
 
         match oneshot_rx.await {
-            Ok(Err(e)) => return Err(ClientError::GatewaySessionError(e)),
+            Ok(true) => {}
+            Ok(false) => return Err(ClientError::SessionNotPresent),
             Err(_) => return Err(ClientError::ClientNotPresent),
-            Ok(Ok(())) => {}
         }
 
         let mut members = Vec::new();
@@ -381,9 +378,9 @@ impl Context {
         }
 
         match rx.await {
-            Ok(Err(e)) => Err(ClientError::GatewaySessionError(e)),
+            Ok(true) => Ok(()),
+            Ok(false) => Err(ClientError::SessionNotPresent),
             Err(_) => Err(ClientError::ClientNotPresent),
-            Ok(Ok(())) => Ok(()),
         }
     }
 
@@ -391,7 +388,7 @@ impl Context {
         &self,
         subscriptions: HashMap<Id<GuildMarker>, GuildSubscriptionRequest>,
     ) -> Result<(), ClientError> {
-        let (tx, mut rx) = unbounded_channel();
+        let (tx, rx) = oneshot::channel();
         if self
             .tx
             .send(ClientMessage::SendLazyRequest(
@@ -402,13 +399,10 @@ impl Context {
         {
             return Err(ClientError::ClientNotPresent);
         }
-        if let Some(result) = rx.recv().await {
-            match result {
-                Ok(()) => Ok(()),
-                Err(e) => Err(ClientError::GatewaySessionError(e)),
-            }
-        } else {
-            Err(ClientError::ClientNotPresent)
+        match rx.await {
+            Ok(true) => Ok(()),
+            Ok(false) => Err(ClientError::SessionNotPresent),
+            Err(_) => Err(ClientError::ClientNotPresent),
         }
     }
 

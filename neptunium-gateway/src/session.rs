@@ -1,7 +1,5 @@
 use std::{
-    cell::RefCell,
     env::consts,
-    rc::Rc,
     sync::Arc,
     time::{Duration, Instant},
 };
@@ -20,7 +18,7 @@ use neptunium_model::{
 };
 use serde::{Deserialize, Serialize};
 use tokio::sync::{
-    Notify, OnceCell,
+    Mutex, Notify, OnceCell,
     mpsc::{UnboundedReceiver, UnboundedSender, unbounded_channel},
     oneshot,
 };
@@ -68,9 +66,9 @@ pub struct Session {
     cancellation_token: CancellationToken,
     // _cancellation_token_drop_guard: DropGuard,
     tracker: TaskTracker,
-    // TODO: Could refactor `Session` a little bit to avoid having to do this Rc<RefCell<T>> thing,
+    // TODO: Could refactor `Session` a little bit to avoid having to do this Arc<Mutex<T>> thing,
     // but right now it's not that important tbh
-    rx: Rc<RefCell<UnboundedReceiver<SessionMessage>>>,
+    rx: Arc<tokio::sync::Mutex<UnboundedReceiver<SessionMessage>>>,
     tx: UnboundedSender<SessionMessage>,
     // identify_or_resume: OutgoingGatewayMessage,
 }
@@ -108,7 +106,7 @@ impl Session {
             cancellation_token,
             tracker,
             tx,
-            rx: Rc::new(RefCell::new(rx)),
+            rx: Arc::new(Mutex::new(rx)),
             // identify_or_resume: if let Some(resume_info) = config.resume_info {
             //     OutgoingGatewayMessage::Resume(Resume {
             //         token: config.token,
@@ -194,8 +192,8 @@ impl Session {
         }
 
         let result = loop {
-            let rx = Rc::clone(&self.rx);
-            let mut rx = rx.borrow_mut();
+            let rx = Arc::clone(&self.rx);
+            let mut rx = rx.lock().await;
             tokio::select! {
                 msg = heartbeat_rx.recv() => {
                     let Some(()) = msg else {

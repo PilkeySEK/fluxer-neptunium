@@ -1,8 +1,4 @@
-use std::{
-    env,
-    sync::Arc,
-    time::{Duration, SystemTime},
-};
+use std::{env, sync::Arc, time::SystemTime};
 
 use fluxer_neptunium::{
     cached_payload::CachedMessageCreate,
@@ -31,14 +27,11 @@ impl EventHandler for Handler {
             .map_or("<error>".to_owned(), |duration| {
                 duration.as_millis().to_string()
             });
-        let gateway_latency = ctx
-            .measure_gateway_latency(Duration::from_secs(10))
-            .await
-            .map_or("<timed out>".to_owned(), |duration| {
-                duration.as_millis().to_string()
-            });
         if !event.message.author.bot && event.message.content == "n?ping" {
-            event.message.reply(&ctx, format!("Pong! API latency: {message_latency} ms, Gateway latency: {gateway_latency} ms")).await?;
+            event
+                .message
+                .reply(&ctx, format!("Pong! API latency: {message_latency} ms"))
+                .await?;
         }
 
         Ok(())
