@@ -1,11 +1,6 @@
-use std::time::Duration;
-
 use bon::Builder;
-use debug_ignore::DebugIgnore;
 use neptunium_cache_inmemory::CacheConfig;
-use neptunium_gateway::session::ResumeInfo;
 use neptunium_http::endpoints::channel::AllowedMentions;
-use neptunium_model::gateway::payload::outgoing::PresenceUpdateOutgoing;
 
 #[derive(Builder, Debug)]
 pub struct ClientConfig {
@@ -21,9 +16,7 @@ pub struct ClientConfig {
     pub cache_config: CacheConfig,
     // #[builder(default = Duration::from_secs(60))]
     // pub connection_process_timeout: Duration,
-    pub initial_presence: Option<PresenceUpdateOutgoing>,
-    #[builder(default = true)]
-    pub send_initial_presence_on_every_reconnect: bool,
+    /*
     #[builder(default = DebugIgnore::from(Box::new(|num_tries: usize| {
         const MIN_TIME: Duration = Duration::from_secs(3);
         const MAX_TIME: Duration = Duration::from_mins(1);
@@ -39,9 +32,7 @@ pub struct ClientConfig {
         }
     }) as Box<dyn Fn(usize) -> Duration + Send + Sync>), into)]
     pub gateway_retry_wait_time_fn: DebugIgnore<Box<dyn Fn(usize) -> Duration + Send + Sync>>,
-    /// Add resume info so that the client will try to resume on the first start instead
-    /// of creating a new session.
-    pub resume_info: Option<ResumeInfo>,
+    */
     /// If `allowed_mentions` is not provided when sending a message, this value will be used instead.
     /// The value will only be overwritten when using methods defined in this crate, not in `neptunium-http` or somewhere else.
     /// When sending a request manually using the HTTP client, this will not be applied.
@@ -51,9 +42,6 @@ pub struct ClientConfig {
     /// Example format: `MyBot (+User#0000)` (you should specify contact information as seen here.)
     #[builder(into)]
     pub bot_user_agent_information: Option<String>,
-    /// Whether to overwrite the send timeout in the `ShardConfig` when it is set to `None`.
-    #[builder(default = true)]
-    pub overwrite_send_timeout: bool,
     /// Whether to automatically subscribe to all guild events.
     /// Useful for user bots.
     ///

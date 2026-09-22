@@ -11,8 +11,10 @@ use neptunium_model::{
             invalid_session::InvalidSessionEvent,
         },
         payload::outgoing::{
-            Heartbeat, Identify, IdentifyProperties, OutgoingGatewayMessage, Resume,
+            Heartbeat, Identify, IdentifyProperties, InitialPresence, OutgoingGatewayMessage,
+            Resume,
         },
+        shard::ShardInfo,
     },
     serde_bool,
 };
@@ -71,6 +73,10 @@ pub struct Session {
     rx: Arc<tokio::sync::Mutex<UnboundedReceiver<SessionMessage>>>,
     tx: UnboundedSender<SessionMessage>,
     // identify_or_resume: OutgoingGatewayMessage,
+    send_initial_presence_on_every_reconnect: bool,
+    initial_presence: Option<InitialPresence>,
+    shard: Option<ShardInfo>,
+    ignored_events: Option<Vec<String>>,
 }
 
 impl Session {
@@ -107,34 +113,11 @@ impl Session {
             tracker,
             tx,
             rx: Arc::new(Mutex::new(rx)),
-            // identify_or_resume: if let Some(resume_info) = config.resume_info {
-            //     OutgoingGatewayMessage::Resume(Resume {
-            //         token: config.token,
-            //         session_id: resume_info.session_id,
-            //         seq: resume_info.last_sequence_number,
-            //     })
-            // } else {
-            //     OutgoingGatewayMessage::Identify(Identify {
-            //         token: config.token,
-            //         properties: IdentifyProperties {
-            //             os: consts::OS.to_owned(),
-            //             browser: env!("CARGO_CRATE_NAME").to_owned(),
-            //             device: "desktop".to_owned(),
-            //             // TODO:
-            //             e2ee_capable: None,
-            //             mobile: None,
-            //             latitude: None,
-            //             longitude: None,
-            //         },
-            //         // TODO:
-            //         shard: None,
-            //         // TODO:
-            //         presence: None,
-            //         ignored_events: None,
-            //         flags: None,
-            //         initial_guild_id: None,
-            //     })
-            // },
+            send_initial_presence_on_every_reconnect: config
+                .send_initial_presence_on_every_reconnect,
+            initial_presence: config.initial_presence,
+            shard: config.shard,
+            ignored_events: config.ignored_events,
         };
         let identify_or_resume = this.create_identify_or_resume_message();
         this.conn.send_message(&identify_or_resume).await;
@@ -307,52 +290,6 @@ impl Session {
         Ok(())
     }
 
-    /*
-    async fn connection_process(&mut self) -> Result<(), SessionError> {
-        let identify = OutgoingGatewayMessage::Identify(Identify {
-            token: self.token.clone(),
-            properties: IdentifyProperties {
-                os: consts::OS.to_owned(),
-                browser: env!("CARGO_CRATE_NAME").to_owned(),
-                device: "desktop".to_owned(),
-                // TODO:
-                e2ee_capable: None,
-                mobile: None,
-                latitude: None,
-                longitude: None,
-            },
-            // TODO:
-            shard: None,
-            // TODO:
-            presence: None,
-            ignored_events: None,
-            flags: None,
-            initial_guild_id: None,
-        });
-        loop {
-            self.conn.send_message(&identify).await;
-
-            let next_event = self.next_event_with_timeout_and_heartbeats().await;
-
-            match  {
-                GatewayEventIncoming::Heartbeat => {
-                    self.conn
-                        .send_message(&OutgoingGatewayMessage::Heartbeat(Heartbeat {
-                            last_sequence_number: self.last_sequence_number,
-                        }))
-                        .await;
-                }
-                GatewayEventIncoming::HeartbeatAck => {
-                    self.conn.last_heartbeat_ack_at = Instant::now();
-                }
-                event => {
-                    tracing::warn!(?event, "Unexpected event received");
-                }
-            }
-        }
-    }
-    */
-
     async fn next_event_with_timeout_and_heartbeats_and_identifying_or_resuming(
         &mut self,
     ) -> Result<GatewayEventIncoming, CloseFrame> {
@@ -388,29 +325,6 @@ impl Session {
         }
     }
 
-    // async fn maybe_identify_or_resume(&mut self) {
-    //     if self.conn.state != ConnectionState::Initial {
-    //         return;
-    //     }
-    //     let message = self.create_identify_or_resume_message();
-    //     loop {
-    //         match self.conn.state {
-    //             ConnectionState::Initial => {
-    //                 if let OutgoingGatewayMessage::Resume(_) = &message {
-    //                     self.conn.state = ConnectionState::Resuming;
-    //                 } else {
-    //                     self.conn.state = ConnectionState::Identifying;
-    //                 }
-    //                 self.last_sequence_number = None;
-    //                 self.conn.send_message(&message).await;
-    //             }
-    //             ConnectionState::Ready
-    //             | ConnectionState::Resuming
-    //             | ConnectionState::Identifying => break,
-    //         }
-    //     }
-    // }
-
     /// Either `Resume` or `Identify`.
     fn create_identify_or_resume_message(&mut self) -> OutgoingGatewayMessage {
         if let Some(session_id) = self.resume_info_session_id.take()
@@ -434,11 +348,13 @@ impl Session {
                     latitude: None,
                     longitude: None,
                 },
-                // TODO:
-                shard: None,
-                // TODO:
-                presence: None,
-                ignored_events: None,
+                shard: self.shard,
+                presence: if self.send_initial_presence_on_every_reconnect {
+                    self.initial_presence.clone()
+                } else {
+                    self.initial_presence.take()
+                },
+                ignored_events: self.ignored_events.clone(),
                 flags: None,
                 initial_guild_id: None,
             })

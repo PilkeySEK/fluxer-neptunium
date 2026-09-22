@@ -49,5 +49,4 @@ pub mod prelude {
     pub use async_trait::async_trait;
     pub use neptunium_cache_inmemory::Cached;
     pub use neptunium_gateway::session::config::{SessionConfig, SessionConfigBuilder};
-    pub use neptunium_model::gateway::intents::GatewayEventFlags;
 }

@@ -5,11 +5,7 @@ use serde_repr::{Deserialize_repr, Serialize_repr};
 use zeroize::Zeroizing;
 
 use crate::{
-    gateway::{
-        payload::outgoing::{PresenceUpdateOutgoing, Status},
-        presence::CustomStatus,
-        shard::ShardInfo,
-    },
+    gateway::{payload::outgoing::Status, presence::CustomStatus, shard::ShardInfo},
     id::{Id, marker::GuildMarker},
     misc::serde_bitflags,
 };
@@ -195,7 +191,7 @@ pub struct Identify {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub shard: Option<ShardInfo>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub presence: Option<PresenceUpdateOutgoing>,
+    pub presence: Option<InitialPresence>,
     /// The names of dispatch events that this session does not want to receive.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ignored_events: Option<Vec<String>>,

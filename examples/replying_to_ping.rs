@@ -3,7 +3,7 @@ use std::{env, sync::Arc, time::SystemTime};
 use fluxer_neptunium::{
     cached_payload::CachedMessageCreate,
     model::{
-        gateway::{payload::outgoing::PresenceUpdateOutgoing, presence::CustomStatus},
+        gateway::{payload::outgoing::InitialPresence, presence::CustomStatus},
         time::OffsetDateTime,
     },
     prelude::*,
@@ -44,11 +44,11 @@ async fn main() {
         .with_max_level(LevelFilter::DEBUG)
         .init();
     let token = env::var("FLUXER_TOKEN").unwrap();
-    let mut client = Client::new_with_config(
-        token,
-        ClientConfig::builder()
+    let mut client = Client::new(
+        SessionConfig::builder()
+            .token(token)
             .initial_presence(
-                PresenceUpdateOutgoing::builder()
+                InitialPresence::builder()
                     .custom_status(CustomStatus::builder().text("Fluxin' it").build())
                     .build(),
             )

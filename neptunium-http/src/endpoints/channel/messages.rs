@@ -29,8 +29,6 @@ mod schedule_message;
 mod unpin_message;
 #[cfg(feature = "user_api")]
 mod unsave_message;
-#[cfg(feature = "user_api")]
-mod update_scheduled_message;
 
 #[cfg(feature = "user_api")]
 pub use acknowledge_message::*;
@@ -63,6 +61,3 @@ pub use schedule_message::*;
 pub use unpin_message::*;
 #[cfg(feature = "user_api")]
 pub use unsave_message::*;
-#[cfg(feature = "user_api")]
-#[expect(unused_imports)]
-pub use update_scheduled_message::*;

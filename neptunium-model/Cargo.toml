@@ -31,3 +31,6 @@ chrono-timestamp-conversion = ["dep:chrono"]
 
 [lints]
 workspace = true
+
+[package.metadata.cargo-shear]
+ignored-paths = ["src/gateway/intents.rs", "src/guild/audit_log/optional_entry_info.rs"]
