@@ -1,4 +1,4 @@
-use fluxer_neptunium::{client::error::ClientError, model::guild::Guild, prelude::*};
+use fluxer_neptunium::{client::ClientError, model::guild::Guild, prelude::*};
 use tokio::{task::JoinSet, time::Instant};
 use tracing_subscriber::filter::LevelFilter;
 

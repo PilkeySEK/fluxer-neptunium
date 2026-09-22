@@ -46,6 +46,8 @@ pub enum ClientError {
     NonUtf8Bytes(FromUtf8Error),
     #[error("unexpected data received: {0}")]
     UnexpectedDataReceived(String),
+    #[error("session not present")]
+    SessionNotPresent,
 }
 
 impl From<tungstenite::Error> for ClientError {
