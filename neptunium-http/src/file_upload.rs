@@ -21,7 +21,9 @@ pub async fn upload_file_s3(
         .await?;
 
     if !response.status().is_success() {
-        return Err(ExecuteEndpointRequestError::ResponseNotOk(response));
+        return Err(ExecuteEndpointRequestError::ResponseNotOk(Box::new(
+            response,
+        )));
     }
     Ok(())
 }

@@ -27,6 +27,7 @@ impl SessionHandle {
     }
 
     /// Returns `true` if the `Session` that this `Handle` is referencing has been dropped.
+    #[must_use]
     pub fn is_closed(&self) -> bool {
         self.tx.is_closed()
     }

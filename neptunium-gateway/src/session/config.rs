@@ -62,6 +62,11 @@ mod gateway_compression {
 
     use crate::session::config::GatewayCompression;
 
+    #[expect(
+        clippy::trivially_copy_pass_by_ref,
+        clippy::ref_option,
+        reason = "serde expects the function to accept a reference"
+    )]
     pub fn serialize<S: Serializer>(
         input: &Option<GatewayCompression>,
         serializer: S,
@@ -82,6 +87,7 @@ mod gateway_compression {
         }
     }
 
+    #[expect(clippy::too_many_lines)]
     pub fn deserialize<'de, D: Deserializer<'de>>(
         deserializer: D,
     ) -> Result<Option<GatewayCompression>, D::Error> {
@@ -101,7 +107,7 @@ mod gateway_compression {
             {
                 struct StreamVisitor;
 
-                impl<'de> Visitor<'de> for StreamVisitor {
+                impl Visitor<'_> for StreamVisitor {
                     type Value = Stream;
 
                     fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
@@ -120,10 +126,7 @@ mod gateway_compression {
                     where
                         E: serde::de::Error,
                     {
-                        Ok(Stream(match v {
-                            "1" | "true" => true,
-                            _ => false,
-                        }))
+                        Ok(Stream(matches!(v, "1" | "true")))
                     }
 
                     fn visit_i8<E>(self, v: i8) -> Result<Self::Value, E>
@@ -188,16 +191,13 @@ mod gateway_compression {
                     }
                 }
 
+                #[expect(clippy::unnecessary_wraps)]
                 fn visit_number_common<N, E>(num: N) -> Result<Stream, E>
                 where
                     N: TryInto<u8>,
                     E: serde::de::Error,
                 {
-                    Ok(Stream(if num.try_into().is_ok_and(|n| n == 1) {
-                        true
-                    } else {
-                        false
-                    }))
+                    Ok(Stream(num.try_into().is_ok_and(|n| n == 1)))
                 }
 
                 deserializer.deserialize_any(StreamVisitor)

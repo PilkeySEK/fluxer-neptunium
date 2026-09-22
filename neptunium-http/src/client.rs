@@ -106,7 +106,7 @@ impl HttpClient {
     pub async fn execute<T: Endpoint + Send>(
         &self,
         endpoint: T,
-    ) -> Result<T::Response, Box<ExecuteEndpointRequestError>> {
+    ) -> Result<T::Response, ExecuteEndpointRequestError> {
         let mut current_try = 0;
         loop {
             let request = endpoint.clone().into_request();
@@ -164,77 +164,68 @@ impl HttpClient {
                 }
                 StatusCode::BAD_REQUEST => {
                     let body = String::from_utf8(response.bytes().await?.to_vec())
-                        .map_err(|e| Box::new(ExecuteEndpointRequestError::NonUtf8Bytes(e)))?;
+                        .map_err(ExecuteEndpointRequestError::NonUtf8Bytes)?;
                     let mut deserializer = Deserializer::from_str(&body);
                     let api_error = serde_path_to_error::deserialize(&mut deserializer)
                         .map_err(|e| ExecuteEndpointRequestError::DeserializationError(e, body))?;
                     (
-                        Err(Box::new(ExecuteEndpointRequestError::BadRequest(api_error))),
+                        Err(ExecuteEndpointRequestError::BadRequest(api_error)),
                         false,
                     )
                 }
                 StatusCode::UNAUTHORIZED => {
                     let body = String::from_utf8(response.bytes().await?.to_vec())
-                        .map_err(|e| Box::new(ExecuteEndpointRequestError::NonUtf8Bytes(e)))?;
+                        .map_err(ExecuteEndpointRequestError::NonUtf8Bytes)?;
                     let mut deserializer = Deserializer::from_str(&body);
                     let api_error = serde_path_to_error::deserialize(&mut deserializer)
                         .map_err(|e| ExecuteEndpointRequestError::DeserializationError(e, body))?;
                     (
-                        Err(Box::new(ExecuteEndpointRequestError::Unauthorized(
-                            api_error,
-                        ))),
+                        Err(ExecuteEndpointRequestError::Unauthorized(api_error)),
                         false,
                     )
                 }
                 StatusCode::NOT_FOUND => {
                     let body = String::from_utf8(response.bytes().await?.to_vec())
-                        .map_err(|e| Box::new(ExecuteEndpointRequestError::NonUtf8Bytes(e)))?;
+                        .map_err(ExecuteEndpointRequestError::NonUtf8Bytes)?;
                     let mut deserializer = Deserializer::from_str(&body);
                     let api_error = serde_path_to_error::deserialize(&mut deserializer)
                         .map_err(|e| ExecuteEndpointRequestError::DeserializationError(e, body))?;
-                    (
-                        Err(Box::new(ExecuteEndpointRequestError::NotFound(api_error))),
-                        true,
-                    )
+                    (Err(ExecuteEndpointRequestError::NotFound(api_error)), true)
                 }
                 StatusCode::FORBIDDEN => {
                     let body = String::from_utf8(response.bytes().await?.to_vec())
-                        .map_err(|e| Box::new(ExecuteEndpointRequestError::NonUtf8Bytes(e)))?;
+                        .map_err(ExecuteEndpointRequestError::NonUtf8Bytes)?;
                     let mut deserializer = Deserializer::from_str(&body);
                     let api_error = serde_path_to_error::deserialize(&mut deserializer)
                         .map_err(|e| ExecuteEndpointRequestError::DeserializationError(e, body))?;
                     (
-                        Err(Box::new(ExecuteEndpointRequestError::Forbidden(api_error))),
+                        Err(ExecuteEndpointRequestError::Forbidden(api_error)),
                         false,
                     )
                 }
                 StatusCode::INTERNAL_SERVER_ERROR => {
                     let body = String::from_utf8(response.bytes().await?.to_vec())
-                        .map_err(|e| Box::new(ExecuteEndpointRequestError::NonUtf8Bytes(e)))?;
+                        .map_err(ExecuteEndpointRequestError::NonUtf8Bytes)?;
                     let mut deserializer = Deserializer::from_str(&body);
                     let api_error = serde_path_to_error::deserialize(&mut deserializer)
                         .map_err(|e| ExecuteEndpointRequestError::DeserializationError(e, body))?;
                     (
-                        Err(Box::new(ExecuteEndpointRequestError::InternalServerError(
-                            api_error,
-                        ))),
+                        Err(ExecuteEndpointRequestError::InternalServerError(api_error)),
                         true,
                     )
                 }
                 StatusCode::TOO_MANY_REQUESTS => {
                     let body = String::from_utf8(response.bytes().await?.to_vec())
-                        .map_err(|e| Box::new(ExecuteEndpointRequestError::NonUtf8Bytes(e)))?;
+                        .map_err(ExecuteEndpointRequestError::NonUtf8Bytes)?;
                     let mut deserializer = Deserializer::from_str(&body);
                     let api_error = serde_path_to_error::deserialize(&mut deserializer).ok();
                     (
-                        Err(Box::new(ExecuteEndpointRequestError::RateLimited(
-                            api_error,
-                        ))),
+                        Err(ExecuteEndpointRequestError::RateLimited(api_error)),
                         true,
                     )
                 }
                 _ => (
-                    Err(Box::new(ExecuteEndpointRequestError::ResponseNotOk(
+                    Err(ExecuteEndpointRequestError::ResponseNotOk(Box::new(
                         response,
                     ))),
                     true,
@@ -267,7 +258,7 @@ impl HttpClient {
         &self,
         url: impl IntoUrl,
         file_bytes: Vec<u8>,
-    ) -> Result<(), Box<ExecuteEndpointRequestError>> {
+    ) -> Result<(), ExecuteEndpointRequestError> {
         let response = self
             .reqwest_client
             .request(Method::PUT, url)
@@ -278,7 +269,7 @@ impl HttpClient {
             .await?;
 
         if !response.status().is_success() {
-            return Err(Box::new(ExecuteEndpointRequestError::ResponseNotOk(
+            return Err(ExecuteEndpointRequestError::ResponseNotOk(Box::new(
                 response,
             )));
         }

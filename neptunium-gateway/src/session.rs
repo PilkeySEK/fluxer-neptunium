@@ -80,6 +80,7 @@ pub struct Session {
 }
 
 impl Session {
+    #[expect(clippy::missing_panics_doc, clippy::missing_errors_doc)]
     pub async fn connect(config: SessionConfig) -> Result<Self, ConnectError> {
         let cancellation_token = CancellationToken::new();
         let tracker = TaskTracker::new();
@@ -130,6 +131,12 @@ impl Session {
         }
     }
 
+    /// Run the session until the `cancel` future completes, or a fatal error occurs.
+    ///
+    /// # Errors
+    /// Returns an error if the gateway closes the connection and the close code indicates that
+    /// reconnecting is not possible.
+    #[expect(clippy::missing_panics_doc)]
     pub async fn run_cancellable<T: Send + Sync + 'static>(
         &mut self,
         mut event_handler: impl FnMut(DispatchEvent),
@@ -153,9 +160,9 @@ impl Session {
                         () = cancellation_token.cancelled() => {
                             break;
                         },
-                        _ = tokio::time::sleep(wait_time) => {}
+                        () = tokio::time::sleep(wait_time) => {}
                     }
-                    if let Err(_) = heartbeat_tx.send(()) {
+                    if heartbeat_tx.send(()).is_err() {
                         break;
                     }
                 }

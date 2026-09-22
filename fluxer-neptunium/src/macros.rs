@@ -51,6 +51,7 @@ macro_rules! create_embed {
 }
 
 #[cfg(test)]
+#[expect(clippy::unreadable_literal)]
 mod tests {
     use neptunium_model::{
         channel::message::embed::{
@@ -117,6 +118,6 @@ mod tests {
                         .build()
                 )
                 .build()
-        )
+        );
     }
 }

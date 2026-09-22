@@ -182,11 +182,17 @@ impl Client {
         self.event_handlers.push(handler);
     }
 
+    /// Start the client and run forever unless a fatal error occurs.
+    ///
+    /// If you need to cancel instead of running forever, see [`start_cancellable`].
+    ///
+    /// # Errors
+    /// Returns an error if the gateway closes the connection and the close code indicates that
+    /// reconnecting is not possible.
+    ///
+    /// [`start_cancellable`]: Self::start_cancellable
     pub async fn start(&mut self) -> Result<Infallible, ClientError> {
-        match self
-            .start_cancellable(future::pending::<Infallible>())
-            .await
-        {
+        match Box::pin(self.start_cancellable(future::pending::<Infallible>())).await {
             Err(e) => Err(e),
             // This branch can never happen because it would require constructing `Infallible`
             Ok((_, infallible)) => match infallible {},
@@ -195,6 +201,11 @@ impl Client {
 
     /// Start the client and stop the client when the provided `cancel` future is fulfilled,
     /// returning `ResumeInfo` (if it is available) and the return value of the future.
+    ///
+    /// # Errors
+    /// Returns an error if the gateway closes the connection and the close code indicates that
+    /// reconnecting is not possible.
+    #[expect(clippy::missing_panics_doc)]
     pub async fn start_cancellable<T: Send + Sync + 'static>(
         &mut self,
         cancel: impl Future<Output = T> + Send + 'static,

@@ -71,6 +71,7 @@ pub struct MfaRequiredResponse {
     /// Whether TOTP authenticator MFA is available.
     pub totp: bool,
     /// Whether WebAuthn security key MFA is available.
+    #[expect(clippy::doc_markdown)]
     pub webauthn: bool,
 }
 

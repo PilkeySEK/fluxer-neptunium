@@ -33,7 +33,7 @@ pub trait CachableEndpoint: Endpoint {
         self,
         client: &Arc<HttpClient>,
         cache: &Arc<Cache>,
-    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>>;
+    ) -> Result<<Self as CachableEndpoint>::Response, ExecuteEndpointRequestError>;
 }
 
 impl CacheValue for CachedChannel {
