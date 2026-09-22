@@ -8,7 +8,7 @@ use fluxer_neptunium::{
     model::gateway::payload::incoming::PassiveUpdates,
     prelude::*,
 };
-use tracing_subscriber::{EnvFilter, fmt, layer::SubscriberExt, util::SubscriberInitExt};
+use tracing::level_filters::LevelFilter;
 
 struct Handler;
 
@@ -58,9 +58,8 @@ impl EventHandler for Handler {
 
 #[tokio::main]
 async fn main() {
-    tracing_subscriber::registry()
-        .with(fmt::layer())
-        .with(EnvFilter::from_default_env())
+    tracing_subscriber::fmt()
+        .with_max_level(LevelFilter::DEBUG)
         .init();
 
     let mut client = Client::new_with_config(

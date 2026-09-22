@@ -12,8 +12,8 @@ use tokio_tungstenite::tungstenite;
 pub enum ClientError {
     #[error("network error: {0}")]
     NetworkError(tungstenite::Error),
-    #[error("failed to parse: {0}")]
-    ParseError(serde_path_to_error::Error<serde_json::Error>),
+    #[error("failed to parse: {}, input: \"{}\"", .0, .1.trim())]
+    ParseError(serde_path_to_error::Error<serde_json::Error>, String),
     #[error("the session is invalid")]
     SessionInvalidated,
     #[error("error sending HTTP request: {0}")]
@@ -71,7 +71,9 @@ impl From<Box<ClientError>> for ClientError {
 impl From<ExecuteEndpointRequestError> for ClientError {
     fn from(value: ExecuteEndpointRequestError) -> Self {
         match value {
-            ExecuteEndpointRequestError::DeserializationError(e) => ClientError::ParseError(e),
+            ExecuteEndpointRequestError::DeserializationError(e, input) => {
+                ClientError::ParseError(e, input)
+            }
             ExecuteEndpointRequestError::NetworkError(e) => ClientError::HttpRequestError(e),
             ExecuteEndpointRequestError::NonUtf8Bytes(e) => ClientError::NonUtf8Bytes(e),
             ExecuteEndpointRequestError::ResponseNotOk(response) => {

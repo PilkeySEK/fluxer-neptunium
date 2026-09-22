@@ -2,7 +2,8 @@ use fluxer_neptunium::{client::ClientError, model::guild::Guild, prelude::*};
 use tokio::{task::JoinSet, time::Instant};
 use tracing_subscriber::filter::LevelFilter;
 
-const NUM_REQUESTS: usize = 500;
+// Failing at about 500, the rate limiting needs to be improved further...
+const NUM_REQUESTS: usize = 100;
 
 #[tokio::main]
 async fn main() {

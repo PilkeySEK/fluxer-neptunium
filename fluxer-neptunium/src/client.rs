@@ -77,15 +77,20 @@ impl DerefMut for Client {
 }
 
 impl Client {
-    /// Create a new client provided a shard config.
+    /// Create a new client provided a session config.
+    ///
+    /// Must be called from the context of a tokio runtime.
     ///
     /// # Examples
     /// ```
-    /// # use crate::client::Client;
-    /// # use neptunium_gateway::shard::config::ShardConfig;
-    /// # fn main() {
+    /// # use fluxer_neptunium::client::Client;
+    /// # use neptunium_gateway::session::{Session, config::SessionConfig};
+    /// # #[tokio::main]
+    /// # async fn main() {
+    /// // A single string will be interpreted as the token,
+    /// // which is the only required configuration:
     /// let client = Client::new("my bot token");
-    /// let client = Client::new(ShardConfig::builder().token("my bot token").build());
+    /// let client = Client::new(SessionConfig::builder().token("my bot token".to_string()).build());
     /// # }
     /// ```
     #[must_use]

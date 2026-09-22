@@ -29,11 +29,16 @@ impl<T: DeserializeOwned + Serialize> ResponseBody for T {
     fn deserialize(bytes: Vec<u8>) -> Result<Self, Box<ExecuteEndpointRequestError>> {
         if bytes.is_empty() {
             let mut deserializer = serde_json::Deserializer::from_str("null");
-            Ok(serde_path_to_error::deserialize(&mut deserializer)?)
+            Ok(
+                serde_path_to_error::deserialize(&mut deserializer).map_err(|e| {
+                    ExecuteEndpointRequestError::DeserializationError(e, "null".to_owned())
+                })?,
+            )
         } else {
             let s = String::from_utf8(bytes).map_err(ExecuteEndpointRequestError::NonUtf8Bytes)?;
             let mut deserializer = serde_json::Deserializer::from_str(&s);
-            Ok(serde_path_to_error::deserialize(&mut deserializer)?)
+            Ok(serde_path_to_error::deserialize(&mut deserializer)
+                .map_err(|e| ExecuteEndpointRequestError::DeserializationError(e, s))?)
         }
     }
     fn serialize(&self) -> Vec<u8> {
@@ -76,7 +81,7 @@ pub trait Endpoint: Clone + std::fmt::Debug {
 pub enum ExecuteEndpointRequestError {
     NetworkError(reqwest::Error),
     ResponseNotOk(reqwest::Response),
-    DeserializationError(serde_path_to_error::Error<serde_json::Error>),
+    DeserializationError(serde_path_to_error::Error<serde_json::Error>, String),
     NonUtf8Bytes(FromUtf8Error),
     // TODO: Add fields to this and stuff.
     // Also need to actually implement rate limit handling
@@ -103,9 +108,10 @@ impl std::fmt::Display for ExecuteEndpointRequestError {
         match self {
             Self::NetworkError(e) => f.write_fmt(format_args!("Network error: {e}")),
             Self::ResponseNotOk(e) => f.write_fmt(format_args!("API response is not OK: {e:?}")),
-            Self::DeserializationError(e) => {
-                f.write_fmt(format_args!("Deserialization error: {e}"))
-            }
+            Self::DeserializationError(e, input) => f.write_fmt(format_args!(
+                "Deserialization error: {e}, input: \"{}\"",
+                input.trim(),
+            )),
             Self::NonUtf8Bytes(e) => f.write_fmt(format_args!("{e}")),
             Self::RateLimited(e) => f.write_fmt(format_args!("API Rate limited: {e:?}")),
             Self::BadRequest(e) => f.write_fmt(format_args!("API Bad request: {e:?}")),
@@ -128,18 +134,6 @@ impl From<reqwest::Error> for ExecuteEndpointRequestError {
 impl From<reqwest::Error> for Box<ExecuteEndpointRequestError> {
     fn from(value: reqwest::Error) -> Self {
         Box::new(ExecuteEndpointRequestError::NetworkError(value))
-    }
-}
-
-impl From<serde_path_to_error::Error<serde_json::Error>> for Box<ExecuteEndpointRequestError> {
-    fn from(value: serde_path_to_error::Error<serde_json::Error>) -> Self {
-        Box::new(ExecuteEndpointRequestError::DeserializationError(value))
-    }
-}
-
-impl From<serde_path_to_error::Error<serde_json::Error>> for ExecuteEndpointRequestError {
-    fn from(value: serde_path_to_error::Error<serde_json::Error>) -> Self {
-        Self::DeserializationError(value)
     }
 }
 
