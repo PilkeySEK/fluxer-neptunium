@@ -225,8 +225,7 @@ impl HttpClient {
                     let body = String::from_utf8(response.bytes().await?.to_vec())
                         .map_err(|e| Box::new(ExecuteEndpointRequestError::NonUtf8Bytes(e)))?;
                     let mut deserializer = Deserializer::from_str(&body);
-                    let api_error = serde_path_to_error::deserialize(&mut deserializer)
-                        .map_err(|e| ExecuteEndpointRequestError::DeserializationError(e, body))?;
+                    let api_error = serde_path_to_error::deserialize(&mut deserializer).ok();
                     (
                         Err(Box::new(ExecuteEndpointRequestError::RateLimited(
                             api_error,

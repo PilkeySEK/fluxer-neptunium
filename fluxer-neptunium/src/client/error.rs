@@ -21,7 +21,7 @@ pub enum ClientError {
     #[error("API did not respond OK: {0:?}")]
     HttpStatusNotOk(reqwest::Response),
     #[error("rate limited from API: {0:?}")]
-    HttpRateLimited(ApiRateLimitedResponse),
+    HttpRateLimited(Option<ApiRateLimitedResponse>),
     #[error("bad request from API: {0:?}")]
     HttpBadRequest(ApiErrorResponse),
     #[error("unauthorized from API: {0:?}")]
