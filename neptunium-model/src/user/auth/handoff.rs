@@ -68,6 +68,6 @@ impl<'de> Deserialize<'de> for HandoffCode {
         D: serde::Deserializer<'de>,
     {
         let s = String::deserialize(deserializer)?;
-        Self::from_str(&s).map_err(|_| serde::de::Error::custom("failed to parse handoff code"))
+        Self::from_str(&s).map_err(|()| serde::de::Error::custom("failed to parse handoff code"))
     }
 }

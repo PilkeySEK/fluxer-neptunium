@@ -19,7 +19,7 @@ pub enum ClientError {
     #[error("error sending HTTP request: {0}")]
     HttpRequestError(reqwest::Error),
     #[error("API did not respond OK: {0:?}")]
-    HttpStatusNotOk(reqwest::Response),
+    HttpStatusNotOk(Box<reqwest::Response>),
     #[error("rate limited from API: {0:?}")]
     HttpRateLimited(Option<ApiRateLimitedResponse>),
     #[error("bad request from API: {0:?}")]
@@ -88,11 +88,5 @@ impl From<ExecuteEndpointRequestError> for ClientError {
             }
             ExecuteEndpointRequestError::Unauthorized(e) => ClientError::HttpUnauthorized(e),
         }
-    }
-}
-
-impl From<Box<ExecuteEndpointRequestError>> for ClientError {
-    fn from(value: Box<ExecuteEndpointRequestError>) -> Self {
-        Self::from(*value)
     }
 }

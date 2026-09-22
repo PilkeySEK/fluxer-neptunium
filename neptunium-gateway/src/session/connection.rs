@@ -178,18 +178,14 @@ mod internal {
         }
 
         let mut num_tries = 0;
-        loop {
-            if let Err(e) = reconnect(stream, request.clone(), close_frame.clone()).await {
-                num_tries += 1;
-                let wait_time = wait_time(num_tries);
-                tracing::error!(
-                    "Error reconnecting (try #{num_tries}), waiting {}s before reconnecting: {e}",
-                    wait_time.as_secs()
-                );
-                tokio::time::sleep(wait_time).await;
-            } else {
-                break;
-            }
+        while let Err(e) = reconnect(stream, request.clone(), close_frame.clone()).await {
+            num_tries += 1;
+            let wait_time = wait_time(num_tries);
+            tracing::error!(
+                "Error reconnecting (try #{num_tries}), waiting {}s before reconnecting: {e}",
+                wait_time.as_secs()
+            );
+            tokio::time::sleep(wait_time).await;
         }
     }
 
@@ -257,17 +253,13 @@ mod internal {
         event: &OutgoingGatewayMessage,
     ) -> bool {
         let mut reconnected = false;
-        loop {
-            if let Err(e) = stream
-                .send(Message::Text(serde_json::to_string(event).unwrap().into()))
-                .await
-            {
-                tracing::error!("Failed to send message, reconnecting and then retrying: {e}");
-                reconnect_with_backoff(stream, request, None).await;
-                reconnected = true;
-            } else {
-                break;
-            }
+        while let Err(e) = stream
+            .send(Message::Text(serde_json::to_string(event).unwrap().into()))
+            .await
+        {
+            tracing::error!("Failed to send message, reconnecting and then retrying: {e}");
+            reconnect_with_backoff(stream, request, None).await;
+            reconnected = true;
         }
         reconnected
     }

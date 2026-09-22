@@ -65,7 +65,7 @@ impl CachableEndpoint for GetUserById {
         self,
         client: &Arc<HttpClient>,
         cache: &Arc<Cache>,
-    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+    ) -> Result<<Self as CachableEndpoint>::Response, ExecuteEndpointRequestError> {
         if let Some(cached_user) = cache.users.get(&self.user_id) {
             return Ok(cached_user);
         }
@@ -84,7 +84,7 @@ impl CachableEndpoint for GetUserProfile {
         self,
         client: &Arc<HttpClient>,
         cache: &Arc<Cache>,
-    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+    ) -> Result<<Self as CachableEndpoint>::Response, ExecuteEndpointRequestError> {
         let cache_key = (self.user_id, self.params.guild_id);
         let cached_profile = cache.user_profiles.get(&cache_key);
         let return_cached_profile = 'blk: {
@@ -141,7 +141,7 @@ impl CachableEndpoint for DeleteChannel {
         self,
         client: &Arc<HttpClient>,
         cache: &Arc<Cache>,
-    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+    ) -> Result<<Self as CachableEndpoint>::Response, ExecuteEndpointRequestError> {
         let channel_id = self.channel_id;
         client.execute(self).await?;
         cache.channels.invalidate(&channel_id);
@@ -156,7 +156,7 @@ impl CachableEndpoint for GetChannel {
         self,
         client: &Arc<HttpClient>,
         cache: &Arc<Cache>,
-    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+    ) -> Result<<Self as CachableEndpoint>::Response, ExecuteEndpointRequestError> {
         if let Some(cached_channel) = cache.channels.get(&self.channel_id) {
             return Ok(cached_channel);
         }
@@ -172,7 +172,7 @@ impl CachableEndpoint for UpdateChannelSettings {
         self,
         client: &Arc<HttpClient>,
         cache: &Arc<Cache>,
-    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+    ) -> Result<<Self as CachableEndpoint>::Response, ExecuteEndpointRequestError> {
         let res = client.execute(self).await?;
         Ok(CachedChannel::from_channel(res, cache).insert_and_return(cache))
     }
@@ -185,7 +185,7 @@ impl CachableEndpoint for UpdateCallRegion {
         self,
         client: &Arc<HttpClient>,
         cache: &Arc<Cache>,
-    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+    ) -> Result<<Self as CachableEndpoint>::Response, ExecuteEndpointRequestError> {
         let channel_id = self.channel_id;
         let region_clone = self.region.clone();
         client.execute(self).await?;
@@ -203,7 +203,7 @@ impl CachableEndpoint for BulkDeleteMessages {
         self,
         client: &Arc<HttpClient>,
         cache: &Arc<Cache>,
-    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+    ) -> Result<<Self as CachableEndpoint>::Response, ExecuteEndpointRequestError> {
         let messages = self.messages.clone();
         client.execute(self).await?;
         for message in messages {
@@ -220,7 +220,7 @@ impl CachableEndpoint for ListChannelMessages {
         self,
         client: &Arc<HttpClient>,
         cache: &Arc<Cache>,
-    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+    ) -> Result<<Self as CachableEndpoint>::Response, ExecuteEndpointRequestError> {
         let res = client.execute(self).await?;
         let mut cached_messages = Vec::with_capacity(res.len());
         for message in res {
@@ -238,7 +238,7 @@ impl CachableEndpoint for GetCurrentUserProfile {
         self,
         client: &Arc<HttpClient>,
         cache: &Arc<Cache>,
-    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+    ) -> Result<<Self as CachableEndpoint>::Response, ExecuteEndpointRequestError> {
         let res = client.execute(self).await?;
         Ok(res.insert_and_return(cache))
     }
@@ -252,7 +252,7 @@ impl CachableEndpoint for UpdateCurrentUserProfile {
         self,
         client: &Arc<HttpClient>,
         cache: &Arc<Cache>,
-    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+    ) -> Result<<Self as CachableEndpoint>::Response, ExecuteEndpointRequestError> {
         let res = client.execute(self).await?;
         Ok(res.insert_and_return(cache))
     }
@@ -265,7 +265,7 @@ impl CachableEndpoint for ListPrivateChannels {
         self,
         client: &Arc<HttpClient>,
         cache: &Arc<Cache>,
-    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+    ) -> Result<<Self as CachableEndpoint>::Response, ExecuteEndpointRequestError> {
         let res = client.execute(self).await?;
         let mut cached_channels = Vec::with_capacity(res.len());
         for channel in res {
@@ -283,7 +283,7 @@ impl CachableEndpoint for CreatePrivateChannel {
         self,
         client: &Arc<HttpClient>,
         cache: &Arc<Cache>,
-    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+    ) -> Result<<Self as CachableEndpoint>::Response, ExecuteEndpointRequestError> {
         Ok(
             CachedChannel::from_channel(client.execute(self).await?, cache)
                 .insert_and_return(cache),
@@ -299,7 +299,7 @@ impl CachableEndpoint for ListCurrentUserMentions {
         self,
         client: &Arc<HttpClient>,
         cache: &Arc<Cache>,
-    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+    ) -> Result<<Self as CachableEndpoint>::Response, ExecuteEndpointRequestError> {
         let res = client.execute(self).await?;
         let mut cached_messages = Vec::with_capacity(res.len());
         for message in res {
@@ -318,7 +318,7 @@ impl CachableEndpoint for PreloadMessagesForChannels {
         self,
         client: &Arc<HttpClient>,
         cache: &Arc<Cache>,
-    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+    ) -> Result<<Self as CachableEndpoint>::Response, ExecuteEndpointRequestError> {
         let res = client.execute(self).await?;
         let mut cached_messages = HashMap::with_capacity(res.len());
         for (id, message) in res {
@@ -338,7 +338,7 @@ impl CachableEndpoint for CreateMessage {
         self,
         client: &Arc<HttpClient>,
         cache: &Arc<Cache>,
-    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+    ) -> Result<<Self as CachableEndpoint>::Response, ExecuteEndpointRequestError> {
         Ok(
             CachedMessage::from_message(client.execute(self).await?, cache)
                 .insert_and_return(cache),
@@ -353,7 +353,7 @@ impl CachableEndpoint for SetPermissionOverwrite {
         self,
         client: &Arc<HttpClient>,
         cache: &Arc<Cache>,
-    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+    ) -> Result<<Self as CachableEndpoint>::Response, ExecuteEndpointRequestError> {
         client.execute(self).await?;
         if let Some(existing_channel) = cache.channels.get(&self.channel_id) {
             existing_channel.modify(|channel| {
@@ -389,7 +389,7 @@ impl CachableEndpoint for DeletePermissionOverwrite {
         self,
         client: &Arc<HttpClient>,
         cache: &Arc<Cache>,
-    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+    ) -> Result<<Self as CachableEndpoint>::Response, ExecuteEndpointRequestError> {
         client.execute(self).await?;
         if let Some(existing_channel) = cache.channels.get(&self.channel_id) {
             existing_channel.modify(|channel| {
@@ -409,7 +409,7 @@ impl CachableEndpoint for AddUserToGroupDm {
         self,
         client: &Arc<HttpClient>,
         cache: &Arc<Cache>,
-    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+    ) -> Result<<Self as CachableEndpoint>::Response, ExecuteEndpointRequestError> {
         client.execute(self).await?;
         let Some(cached_user) = cache.users.get(&self.user_id) else {
             // TODO: Maybe spawn a new task to fetch the user, but this might not be a good idea
@@ -435,7 +435,7 @@ impl CachableEndpoint for RemoveUserFromGroupDm {
         self,
         client: &Arc<HttpClient>,
         cache: &Arc<Cache>,
-    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+    ) -> Result<<Self as CachableEndpoint>::Response, ExecuteEndpointRequestError> {
         client.execute(self).await?;
         if let Some(existing_channel) = cache.channels.get(&self.channel_id) {
             let _ = existing_channel.try_modify(|channel| {
@@ -471,7 +471,7 @@ impl CachableEndpoint for GetUserSettings {
         self,
         client: &Arc<HttpClient>,
         cache: &Arc<Cache>,
-    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+    ) -> Result<<Self as CachableEndpoint>::Response, ExecuteEndpointRequestError> {
         if let Some(cached_settings) = cache.current_user_settings.get() {
             return Ok(cached_settings.clone());
         }
@@ -491,7 +491,7 @@ impl CachableEndpoint for UpdateUserSettings {
         self,
         client: &Arc<HttpClient>,
         cache: &Arc<Cache>,
-    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+    ) -> Result<<Self as CachableEndpoint>::Response, ExecuteEndpointRequestError> {
         let settings = client.execute(self).await?;
         if let Some(cached_settings) = cache.current_user_settings.get() {
             return Ok(cached_settings.store_and_return(settings));
@@ -510,7 +510,7 @@ impl CachableEndpoint for CreateChannelInvite {
         self,
         client: &Arc<HttpClient>,
         cache: &Arc<Cache>,
-    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+    ) -> Result<<Self as CachableEndpoint>::Response, ExecuteEndpointRequestError> {
         Ok(client.execute(self).await?.insert_and_return(cache))
     }
 }
@@ -522,7 +522,7 @@ impl CachableEndpoint for ListChannelInvites {
         self,
         client: &Arc<HttpClient>,
         cache: &Arc<Cache>,
-    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+    ) -> Result<<Self as CachableEndpoint>::Response, ExecuteEndpointRequestError> {
         let invites = client.execute(self).await?;
         let cached_invites = cache_vec!(invites, cache);
         Ok(cached_invites)
@@ -536,7 +536,7 @@ impl CachableEndpoint for ListGuildInvites {
         self,
         client: &Arc<HttpClient>,
         cache: &Arc<Cache>,
-    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+    ) -> Result<<Self as CachableEndpoint>::Response, ExecuteEndpointRequestError> {
         let invites = client.execute(self).await?;
         let cached_invites = cache_vec!(invites, cache);
         Ok(cached_invites)
@@ -550,7 +550,7 @@ impl CachableEndpoint for GetGuildInformation {
         self,
         client: &Arc<HttpClient>,
         cache: &Arc<Cache>,
-    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+    ) -> Result<<Self as CachableEndpoint>::Response, ExecuteEndpointRequestError> {
         if let Some(cached_guild) = cache.guilds.get(&self.guild_id) {
             return Ok(cached_guild);
         }
@@ -566,7 +566,7 @@ impl CachableEndpoint for ListGuildChannels {
         self,
         client: &Arc<HttpClient>,
         cache: &Arc<Cache>,
-    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+    ) -> Result<<Self as CachableEndpoint>::Response, ExecuteEndpointRequestError> {
         let channels = client.execute(self).await?;
         let mut cached_channels = Vec::with_capacity(channels.len());
         for channel in channels {
@@ -584,7 +584,7 @@ impl CachableEndpoint for CreateGuildChannel {
         self,
         client: &Arc<HttpClient>,
         cache: &Arc<Cache>,
-    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+    ) -> Result<<Self as CachableEndpoint>::Response, ExecuteEndpointRequestError> {
         let res = client.execute(self).await?;
         Ok(CachedChannel::from_channel(res, cache).insert_and_return(cache))
     }
@@ -598,7 +598,7 @@ impl CachableEndpoint for DeleteGuild {
         self,
         client: &Arc<HttpClient>,
         cache: &Arc<Cache>,
-    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+    ) -> Result<<Self as CachableEndpoint>::Response, ExecuteEndpointRequestError> {
         let guild_id = self.guild_id;
         client.execute(self).await?;
         cache.guilds.invalidate(&guild_id);
@@ -613,7 +613,7 @@ impl CachableEndpoint for ToggleDetachedBanner {
         self,
         client: &Arc<HttpClient>,
         cache: &Arc<Cache>,
-    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+    ) -> Result<<Self as CachableEndpoint>::Response, ExecuteEndpointRequestError> {
         let guild = client.execute(self).await?;
         Ok(guild.insert_and_return(cache))
     }
@@ -626,7 +626,7 @@ impl CachableEndpoint for ListGuildRoles {
         self,
         client: &Arc<HttpClient>,
         cache: &Arc<Cache>,
-    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+    ) -> Result<<Self as CachableEndpoint>::Response, ExecuteEndpointRequestError> {
         let guild_id = self.guild_id;
         let roles = client.execute(self).await?;
         Ok(roles
@@ -643,7 +643,7 @@ impl CachableEndpoint for CreateGuildRole {
         self,
         client: &Arc<HttpClient>,
         cache: &Arc<Cache>,
-    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+    ) -> Result<<Self as CachableEndpoint>::Response, ExecuteEndpointRequestError> {
         let guild_id = self.guild_id;
         let role = client.execute(self).await?;
         Ok(CachedGuildRole::from_guild_role(role, guild_id).insert_and_return(cache))
@@ -657,7 +657,7 @@ impl CachableEndpoint for UpdateGuildRolePositions {
         self,
         client: &Arc<HttpClient>,
         cache: &Arc<Cache>,
-    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+    ) -> Result<<Self as CachableEndpoint>::Response, ExecuteEndpointRequestError> {
         let entries = self.body.clone();
         client.execute(self).await?;
         for UpdateGuildRolePositionsEntry { id, position } in entries {
@@ -676,7 +676,7 @@ impl CachableEndpoint for UpdateGuildRoleHoistPositions {
         self,
         client: &Arc<HttpClient>,
         cache: &Arc<Cache>,
-    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+    ) -> Result<<Self as CachableEndpoint>::Response, ExecuteEndpointRequestError> {
         let entries = self.body.clone();
         client.execute(self).await?;
         for UpdateGuildRoleHoistPositionsEntry {
@@ -699,7 +699,7 @@ impl CachableEndpoint for DeleteGuildRole {
         self,
         client: &Arc<HttpClient>,
         cache: &Arc<Cache>,
-    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+    ) -> Result<<Self as CachableEndpoint>::Response, ExecuteEndpointRequestError> {
         let role_id = self.role_id;
         client.execute(self).await?;
         cache.roles.invalidate(&role_id);
@@ -714,7 +714,7 @@ impl CachableEndpoint for UpdateGuildRole {
         self,
         client: &Arc<HttpClient>,
         cache: &Arc<Cache>,
-    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+    ) -> Result<<Self as CachableEndpoint>::Response, ExecuteEndpointRequestError> {
         let guild_id = self.guild_id;
         let role = client.execute(self).await?;
         Ok(CachedGuildRole::from_guild_role(role, guild_id).insert_and_return(cache))
@@ -728,7 +728,7 @@ impl CachableEndpoint for ToggleGuildTextChannelFlexibleNames {
         self,
         client: &Arc<HttpClient>,
         cache: &Arc<Cache>,
-    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+    ) -> Result<<Self as CachableEndpoint>::Response, ExecuteEndpointRequestError> {
         let guild = client.execute(self).await?;
         Ok(guild.insert_and_return(cache))
     }
@@ -742,7 +742,7 @@ impl CachableEndpoint for TransferGuildOwnership {
         self,
         client: &Arc<HttpClient>,
         cache: &Arc<Cache>,
-    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+    ) -> Result<<Self as CachableEndpoint>::Response, ExecuteEndpointRequestError> {
         let guild = client.execute(self).await?;
         Ok(guild.insert_and_return(cache))
     }
@@ -755,7 +755,7 @@ impl CachableEndpoint for UpdateGuildVanityUrl {
         self,
         client: &Arc<HttpClient>,
         cache: &Arc<Cache>,
-    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+    ) -> Result<<Self as CachableEndpoint>::Response, ExecuteEndpointRequestError> {
         let guild_id = self.guild_id;
         let res = client.execute(self).await?;
         let code = res.code.clone();
@@ -773,7 +773,7 @@ impl CachableEndpoint for LeaveGuild {
         self,
         client: &Arc<HttpClient>,
         cache: &Arc<Cache>,
-    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+    ) -> Result<<Self as CachableEndpoint>::Response, ExecuteEndpointRequestError> {
         let guild_id = self.guild_id;
         client.execute(self).await?;
         cache.guilds.invalidate(&guild_id);
@@ -788,7 +788,7 @@ impl CachableEndpoint for DeleteMessage {
         self,
         client: &Arc<HttpClient>,
         cache: &Arc<Cache>,
-    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+    ) -> Result<<Self as CachableEndpoint>::Response, ExecuteEndpointRequestError> {
         let message_id = self.message_id;
         client.execute(self).await?;
         cache.messages.invalidate(&message_id);
@@ -803,7 +803,7 @@ impl CachableEndpoint for EditMessage {
         self,
         client: &Arc<HttpClient>,
         cache: &Arc<Cache>,
-    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+    ) -> Result<<Self as CachableEndpoint>::Response, ExecuteEndpointRequestError> {
         let message = client.execute(self).await?;
         Ok(CachedMessage::from_message(message, cache).insert_and_return(cache))
     }
@@ -816,7 +816,7 @@ impl CachableEndpoint for FetchMessage {
         self,
         client: &Arc<HttpClient>,
         cache: &Arc<Cache>,
-    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+    ) -> Result<<Self as CachableEndpoint>::Response, ExecuteEndpointRequestError> {
         if let Some(cached_message) = cache.messages.get(&self.message_id) {
             return Ok(cached_message);
         }
@@ -832,7 +832,7 @@ impl CachableEndpoint for DeleteMessageAttachment {
         self,
         client: &Arc<HttpClient>,
         cache: &Arc<Cache>,
-    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+    ) -> Result<<Self as CachableEndpoint>::Response, ExecuteEndpointRequestError> {
         let attachment_id = self.attachment_id;
         let message_id = self.message_id;
         client.execute(self).await?;
@@ -856,7 +856,7 @@ impl CachableEndpoint for ListGuildMembers {
         self,
         client: &Arc<HttpClient>,
         cache: &Arc<Cache>,
-    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+    ) -> Result<<Self as CachableEndpoint>::Response, ExecuteEndpointRequestError> {
         let guild_id = self.guild_id;
         let res = client.execute(self).await?;
         Ok(res
@@ -876,7 +876,7 @@ impl CachableEndpoint for ListCurrentUserGuilds {
         self,
         client: &Arc<HttpClient>,
         cache: &Arc<Cache>,
-    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+    ) -> Result<<Self as CachableEndpoint>::Response, ExecuteEndpointRequestError> {
         #[cfg(feature = "user_api")]
         use neptunium_http::client::TokenType;
         #[cfg(feature = "user_api")]
@@ -918,7 +918,7 @@ impl CachableEndpoint for CreateGuild {
         self,
         client: &Arc<HttpClient>,
         cache: &Arc<Cache>,
-    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+    ) -> Result<<Self as CachableEndpoint>::Response, ExecuteEndpointRequestError> {
         let res = client.execute(self).await?;
         Ok(res.insert_and_return(cache))
     }
@@ -931,7 +931,7 @@ impl CachableEndpoint for GetGuildMember {
         self,
         client: &Arc<HttpClient>,
         cache: &Arc<Cache>,
-    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+    ) -> Result<<Self as CachableEndpoint>::Response, ExecuteEndpointRequestError> {
         if let Some(existing_guild_members) = cache.guild_members.get(&self.guild_id) {
             let existing_guild_members = existing_guild_members.load();
             if let Some(existing_member) = existing_guild_members
@@ -955,7 +955,7 @@ impl CachableEndpoint for GetCurrentUserGuildMember {
         self,
         client: &Arc<HttpClient>,
         cache: &Arc<Cache>,
-    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+    ) -> Result<<Self as CachableEndpoint>::Response, ExecuteEndpointRequestError> {
         if let Some(own_profile) = cache.current_user.get()
             && let Some(existing_guild_members) = cache.guild_members.get(&self.guild_id)
         {
@@ -982,7 +982,7 @@ impl CachableEndpoint for UpdateCurrentUserGuildMember {
         self,
         client: &Arc<HttpClient>,
         cache: &Arc<Cache>,
-    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+    ) -> Result<<Self as CachableEndpoint>::Response, ExecuteEndpointRequestError> {
         let guild_id = self.guild_id;
         let res = client.execute(self).await?;
         let cached = CachedGuildMember::from_guild_member(res, guild_id, cache);
@@ -997,7 +997,7 @@ impl CachableEndpoint for UpdateGuildMember {
         self,
         client: &Arc<HttpClient>,
         cache: &Arc<Cache>,
-    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+    ) -> Result<<Self as CachableEndpoint>::Response, ExecuteEndpointRequestError> {
         let guild_id = self.guild_id;
         let res = client.execute(self).await?;
         let cached = CachedGuildMember::from_guild_member(res, guild_id, cache);
@@ -1012,7 +1012,7 @@ impl CachableEndpoint for UpdateGuildSettings {
         self,
         client: &Arc<HttpClient>,
         cache: &Arc<Cache>,
-    ) -> Result<<Self as CachableEndpoint>::Response, Box<ExecuteEndpointRequestError>> {
+    ) -> Result<<Self as CachableEndpoint>::Response, ExecuteEndpointRequestError> {
         let res = client.execute(self).await?;
         Ok(res.insert_and_return(cache))
     }

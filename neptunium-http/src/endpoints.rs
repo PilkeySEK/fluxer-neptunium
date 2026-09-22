@@ -26,7 +26,7 @@ pub mod users;
 pub mod webhooks;
 
 impl<T: DeserializeOwned + Serialize> ResponseBody for T {
-    fn deserialize(bytes: Vec<u8>) -> Result<Self, Box<ExecuteEndpointRequestError>> {
+    fn deserialize(bytes: Vec<u8>) -> Result<Self, ExecuteEndpointRequestError> {
         if bytes.is_empty() {
             let mut deserializer = serde_json::Deserializer::from_str("null");
             Ok(
@@ -50,7 +50,7 @@ pub trait ResponseBody: Sized {
     /// Deserialize, given the response body bytes.
     /// # Errors
     /// Returns an error if deserializing failed.
-    fn deserialize(bytes: Vec<u8>) -> Result<Self, Box<ExecuteEndpointRequestError>>;
+    fn deserialize(bytes: Vec<u8>) -> Result<Self, ExecuteEndpointRequestError>;
     fn serialize(&self) -> Vec<u8>;
 }
 
@@ -80,7 +80,7 @@ pub trait Endpoint: Clone + std::fmt::Debug {
 #[derive(Debug)]
 pub enum ExecuteEndpointRequestError {
     NetworkError(reqwest::Error),
-    ResponseNotOk(reqwest::Response),
+    ResponseNotOk(Box<reqwest::Response>),
     DeserializationError(serde_path_to_error::Error<serde_json::Error>, String),
     NonUtf8Bytes(FromUtf8Error),
     // TODO: Add fields to this and stuff.
@@ -128,12 +128,6 @@ impl std::fmt::Display for ExecuteEndpointRequestError {
 impl From<reqwest::Error> for ExecuteEndpointRequestError {
     fn from(value: reqwest::Error) -> Self {
         Self::NetworkError(value)
-    }
-}
-
-impl From<reqwest::Error> for Box<ExecuteEndpointRequestError> {
-    fn from(value: reqwest::Error) -> Self {
-        Box::new(ExecuteEndpointRequestError::NetworkError(value))
     }
 }
 

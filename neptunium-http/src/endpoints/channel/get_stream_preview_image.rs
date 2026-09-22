@@ -16,9 +16,7 @@ pub struct GetStreamPreviewImage {
 pub struct StreamPreviewImageResponse(pub Vec<u8>);
 
 impl ResponseBody for StreamPreviewImageResponse {
-    fn deserialize(
-        bytes: Vec<u8>,
-    ) -> Result<Self, Box<crate::endpoints::ExecuteEndpointRequestError>> {
+    fn deserialize(bytes: Vec<u8>) -> Result<Self, crate::endpoints::ExecuteEndpointRequestError> {
         Ok(Self(bytes))
     }
     fn serialize(&self) -> Vec<u8> {

@@ -19,6 +19,7 @@ pub use request_guild_members::*;
 pub use resume::*;
 
 #[derive(Clone, Debug)]
+#[expect(clippy::large_enum_variant)]
 pub enum OutgoingGatewayMessage {
     Identify(Identify),
     Heartbeat(Heartbeat),
