@@ -285,3 +285,9 @@ impl From<Zeroizing<String>> for SessionConfig {
         Self::builder().token(value).build()
     }
 }
+
+impl From<&String> for SessionConfig {
+    fn from(value: &String) -> Self {
+        Self::from(value.as_str())
+    }
+}
