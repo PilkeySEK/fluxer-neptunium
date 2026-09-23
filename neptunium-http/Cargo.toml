@@ -11,27 +11,27 @@ publish = true
 categories = ["api-bindings"]
 
 [dependencies]
-bon = "3.9.3"
+bon = "3.10.1"
 neptunium-model = { workspace = true }
 percent-encoding = "2.3.2"
-reqwest = { version = "0.13.4", features = ["query"], default-features = false }
-serde = { version = "1.0.228", features = ["derive"] }
-serde_json = "1.0.150"
+reqwest = { version = "0.13.5", features = ["query"], default-features = false }
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.151"
 serde_path_to_error = "0.1.20"
 tracing = "0.1.44"
 zeroize = "1.9.0"
-serde_repr = "0.1.20"
+serde_repr = "0.1.21"
 hashbrown = { version = "0.17.1", default-features = false, optional = true }
-tokio = { version = "1.52.3", default-features = false, features = [
+tokio = { version = "1.53.1", default-features = false, features = [
     "macros",
     "rt",
     "sync",
     "time",
 ], optional = true }
-tokio-util = { version = "0.7.18", default-features = false, features = [
+tokio-util = { version = "0.7.19", default-features = false, features = [
     "time",
 ], optional = true }
-serde-bool = "0.1.4"
+serde-bool = "0.1.5"
 # twilight-http-ratelimiting = { version = "0.17.1", optional = true }
 
 [features]
