@@ -40,6 +40,11 @@ pub struct PartialUser {
     pub mention_flags: Option<MentionReplyPreference>,
 }
 
+#[derive(Serialize, Deserialize, Copy, Clone, Debug)]
+pub struct UserIDObject {
+    pub id: Id<UserMarker>,
+}
+
 #[derive(Deserialize, Clone, Debug, Serialize)]
 pub struct UserProfileData {
     pub bio: Option<String>,
