@@ -31,25 +31,57 @@ pub use snapshot::*;
 #[repr(u8)]
 pub enum MessageType {
     Regular = 0,
-    UserAddedToConversation = 1,
-    UserRemovedFromConversation = 2,
-    /// Representing a call.
+    RecipientAdd = 1,
+    RecipientRemove = 2,
+    /// Private call system message.
     Call = 3,
-    ChannelNameChanged = 4,
-    ChannelIconChanged = 5,
-    MessagePinned = 6,
+    ChannelNameChange = 4,
+    ChannelIconChange = 5,
+    ChannelPinnedMessage = 6,
     UserJoin = 7,
+    ChannelFollowAdd = 12,
     Reply = 19,
+}
+
+impl MessageType {
+    /// Whether a message of this type can be modified, pinned, unpinned or replied to.
+    /// If this is `false`, the API will reject these actions.
+    #[must_use]
+    pub fn can_be_modified_pinned_or_replied_to(&self) -> bool {
+        matches!(self, Self::Regular | Self::Reply)
+    }
+
+    /// Whether a message of this type can be deleted.
+    /// Trying to delete a message that cannot be deleted will be rejected by the API.
+    #[must_use]
+    pub fn can_be_deleted(&self) -> bool {
+        matches!(
+            self,
+            Self::Regular
+                | Self::ChannelPinnedMessage
+                | Self::UserJoin
+                | Self::ChannelFollowAdd
+                | Self::Reply
+        )
+    }
 }
 
 bitflags! {
     #[derive(Copy, Clone, Debug)]
     pub struct MessageFlags: u32 {
+        /// Message was published to the channels that follow its announcement channel.
+        const CROSSPOSTED = 1 << 0;
+        /// Message is a copy delivered from a followed announcement channel.
+        const IS_CROSSPOST = 1 << 1;
+        /// Suppress rendering of embeds.
         const SUPPRESS_EMBEDS = 1 << 2;
-        /// Will not trigger push or desktop notifications.
+        /// The published message this copy came from was deleted.
+        const SOURCE_MESSAGE_DELETED = 1 << 3;
+        /// Do not generate ordinary mention notifications.
         const SUPPRESS_NOTIFICATIONS = 1 << 12;
+        /// Message has one voice recording attachment.
         const VOICE_MESSAGE = 1 << 13;
-        const COMPACT_ATTACHMENTS = 1 << 17;
+        // const COMPACT_ATTACHMENTS = 1 << 17;
     }
 }
 

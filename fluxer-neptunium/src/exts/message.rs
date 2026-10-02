@@ -20,9 +20,10 @@ use crate::{
 };
 
 use neptunium_http::endpoints::channel::{
-    AddReaction, CreateMessage, CreateMessageBody, DeleteAllReactions, DeleteAllReactionsOfEmoji,
-    DeleteMessage, DeleteMessageAttachment, DeleteOwnReaction, DeleteReaction, EditMessage,
-    EditMessageBody, FetchMessage, PinMessage, Reaction, UnpinMessage,
+    AddReaction, CreateMessage, CreateMessageBody, CrosspostMessage, CrosspostSource,
+    DeleteAllReactions, DeleteAllReactionsOfEmoji, DeleteMessage, DeleteMessageAttachment,
+    DeleteOwnReaction, DeleteReaction, EditMessage, EditMessageBody, FetchMessage,
+    GetMessageCrosspostSource, PinMessage, Reaction, UnpinMessage,
 };
 
 // TODO: Many methods in MessageExt could be implemented for Id<MessageMarker> too:
@@ -109,6 +110,15 @@ pub trait MessageExt {
     /// Does not delete the original message, only removes it from the user’s saved collection.
     #[cfg(feature = "user_api")]
     async fn unsave(&self, ctx: &Context) -> Result<(), ClientError>;
+    /// Publishes a message in an announcement channel to every channel that follows it.
+    async fn crosspost(&self, ctx: &Context) -> Result<Cached<CachedMessage>, ClientError>;
+    /// Same as [`crosspost`].
+    ///
+    /// [`crosspost`]: Self::crosspost
+    async fn publish(&self, ctx: &Context) -> Result<Cached<CachedMessage>, ClientError> {
+        self.crosspost(ctx).await
+    }
+    async fn get_crosspost_source(&self, ctx: &Context) -> Result<CrosspostSource, ClientError>;
 }
 
 #[async_trait]
@@ -351,6 +361,25 @@ impl MessageExt for Message {
             })
             .await?)
     }
+
+    async fn crosspost(&self, ctx: &Context) -> Result<Cached<CachedMessage>, ClientError> {
+        Ok(CrosspostMessage {
+            message_id: self.id,
+            channel_id: self.channel_id,
+        }
+        .execute_cached(ctx.get_http_client(), &ctx.cache)
+        .await?)
+    }
+
+    async fn get_crosspost_source(&self, ctx: &Context) -> Result<CrosspostSource, ClientError> {
+        Ok(ctx
+            .get_http_client()
+            .execute(GetMessageCrosspostSource {
+                message_id: self.id,
+                channel_id: self.channel_id,
+            })
+            .await?)
+    }
 }
 
 #[async_trait]
@@ -590,6 +619,25 @@ impl MessageExt for CachedMessage {
             .get_http_client()
             .execute(UnsaveMessage {
                 message_id: self.id,
+            })
+            .await?)
+    }
+
+    async fn crosspost(&self, ctx: &Context) -> Result<Cached<CachedMessage>, ClientError> {
+        Ok(CrosspostMessage {
+            message_id: self.id,
+            channel_id: self.channel_id,
+        }
+        .execute_cached(ctx.get_http_client(), &ctx.cache)
+        .await?)
+    }
+
+    async fn get_crosspost_source(&self, ctx: &Context) -> Result<CrosspostSource, ClientError> {
+        Ok(ctx
+            .get_http_client()
+            .execute(GetMessageCrosspostSource {
+                message_id: self.id,
+                channel_id: self.channel_id,
             })
             .await?)
     }

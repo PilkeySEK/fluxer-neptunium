@@ -8,7 +8,9 @@ use crate::{
     guild::permissions::Permissions,
     id::{
         Id,
-        marker::{ChannelMarker, GenericMarker, GuildMarker, MessageMarker, UserMarker},
+        marker::{
+            ChannelMarker, GenericMarker, GuildMarker, MessageMarker, UserMarker, WebhookMarker,
+        },
     },
     time::timestamp::{Timestamp, representations::Iso8601},
     user::PartialUser,
@@ -83,6 +85,7 @@ pub enum ChannelType {
     GuildVoice = 2,
     GroupDm = 3,
     GuildCategory = 4,
+    GuildAnnouncement = 5,
     GuildLink = 998,
     DmPersonalNotes = 999,
 }
@@ -159,4 +162,10 @@ impl From<&ChannelPartial> for Id<ChannelMarker> {
     fn from(value: &ChannelPartial) -> Self {
         value.id
     }
+}
+
+#[derive(Serialize, Deserialize, Copy, Clone, Debug, PartialEq, Eq)]
+pub struct FollowedChannel {
+    pub channel_id: Id<ChannelMarker>,
+    pub webhook_id: Id<WebhookMarker>,
 }

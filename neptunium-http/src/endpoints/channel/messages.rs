@@ -8,10 +8,12 @@ mod bulk_delete_messages;
 #[cfg(feature = "user_api")]
 mod cancel_scheduled_message;
 mod create_message;
+mod crosspost_message;
 mod delete_message;
 mod delete_message_attachment;
 mod edit_message;
 mod fetch_message;
+mod get_message_crosspost_source;
 #[cfg(feature = "user_api")]
 mod get_scheduled_message;
 mod list_channel_messages;
@@ -40,10 +42,12 @@ pub use bulk_delete_messages::*;
 #[cfg(feature = "user_api")]
 pub use cancel_scheduled_message::*;
 pub use create_message::*;
+pub use crosspost_message::*;
 pub use delete_message::*;
 pub use delete_message_attachment::*;
 pub use edit_message::*;
 pub use fetch_message::*;
+pub use get_message_crosspost_source::*;
 #[cfg(feature = "user_api")]
 pub use get_scheduled_message::*;
 pub use list_channel_messages::*;

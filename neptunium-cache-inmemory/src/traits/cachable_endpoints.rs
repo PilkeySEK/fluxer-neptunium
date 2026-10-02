@@ -27,9 +27,10 @@ use neptunium_http::{
         Endpoint, ExecuteEndpointRequestError,
         channel::{
             AddUserToGroupDm, BulkDeleteMessages, CreateMessage, CreatePrivateChannel,
-            DeleteChannel, DeleteMessage, DeleteMessageAttachment, DeletePermissionOverwrite,
-            EditMessage, FetchMessage, GetChannel, ListChannelMessages, ListPrivateChannels,
-            RemoveUserFromGroupDm, SetPermissionOverwrite, UpdateCallRegion, UpdateChannelSettings,
+            CrosspostMessage, DeleteChannel, DeleteMessage, DeleteMessageAttachment,
+            DeletePermissionOverwrite, EditMessage, FetchMessage, GetChannel, ListChannelMessages,
+            ListPrivateChannels, RemoveUserFromGroupDm, SetPermissionOverwrite, UpdateCallRegion,
+            UpdateChannelSettings,
         },
         guild::{
             CreateGuildChannel, CreateGuildRole, DeleteGuildRole, GetCurrentUserGuildMember,
@@ -1015,5 +1016,18 @@ impl CachableEndpoint for UpdateGuildSettings {
     ) -> Result<<Self as CachableEndpoint>::Response, ExecuteEndpointRequestError> {
         let res = client.execute(self).await?;
         Ok(res.insert_and_return(cache))
+    }
+}
+
+#[async_trait]
+impl CachableEndpoint for CrosspostMessage {
+    type Response = Cached<CachedMessage>;
+    async fn execute_cached(
+        self,
+        client: &Arc<HttpClient>,
+        cache: &Arc<Cache>,
+    ) -> Result<<Self as CachableEndpoint>::Response, ExecuteEndpointRequestError> {
+        let res = client.execute(self).await?;
+        Ok(CachedMessage::from_message(res, cache).insert_and_return(cache))
     }
 }

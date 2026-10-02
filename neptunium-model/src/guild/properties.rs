@@ -134,69 +134,77 @@ serde_bitflags! {SystemChannelFlags, u32}
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum GuildFeatureFlag {
     AnimatedIcon,
+    /// Publishing from and following the guild’s announcement channels is disabled.
+    /// Set by an instance administrator.
+    AnnouncementChannelsDisabled,
     /// Guild can have an animated banner.
     AnimatedBanner,
-    /// Guild can have a banner.
+    #[serde(rename = "AUDIO_BITRATE_128_KBPS")]
+    AudioBitrate128Kbps,
+    #[serde(rename = "AUDIO_BITRATE_256_KBPS")]
+    AudioBitrate256Kbps,
+    #[serde(rename = "AUDIO_BITRATE_384_KBPS")]
+    AudioBitrate384Kbps,
+    /// Guild can use a banner.
     Banner,
     /// Stickers cannot be cloned using the built-in feature.
+    #[deprecated = "Use `CloneEmojiEnabled`"]
     CloneEmojiDisabled,
+    /// Stickers can be cloned using the built-in feature.
+    CloneEmojiEnabled,
     /// Stickers cannot be cloned using the built-in feature.
+    #[deprecated = "Use `CloneStickerEnabled`"]
     CloneStickerDisabled,
+    /// Stickers can be cloned using the built-in feature.
+    CloneStickerEnabled,
     /// Guild banner is detached from splash.
     DetachedBanner,
-    // https://github.com/fluxerapp/fluxer/blob/03813bbe17db008452f0f1be3090a7d2970a5447/packages/constants/src/GuildConstants.tsx#L115
-    Discoverable,
     /// Guild can have an invite splash.
     InviteSplash,
     /// Guild has invites disabled.
     InvitesDisabled,
+    /// Raid detection is active and invites are restricted.
+    RaidDetected,
     /// Guild allows flexible text channel names.
     TextChannelFlexibleNames,
-    /// Guild has increased emoji slots.
+    /// The owner crown is hidden in the UI.
+    HideOwnerCrown,
+    /// (Legacy) Guild has increased emoji slots.
     MoreEmoji,
-    /// Guild has increased sticker slots.
+    /// (Legacy) Guild has increased sticker slots.
     MoreStickers,
-    /// Guild has unlimited emoji slots.
+    /// Guild has effectively (999999) unlimited emoji slots.
     UnlimitedEmoji,
-    /// Guild has unlimited sticker slots.
+    /// Guild has effectively (999999) unlimited sticker slots.
     UnlimitedStickers,
-    /// Guild allows purging expressions.
+    /// Expression assets can be purged through delete operations.
     ExpressionPurgeAllowed,
     /// Guild can have a vanity URL.
     VanityUrl,
+    /// Guild is present in public discovery.
+    Discoverable,
+    /// Guild has partnered status.
+    Partnered,
     /// Guild is verified.
     Verified,
-    /// Guild has VIP voice features.
+    /// Guild can use voice regions that are restricted to VIP guilds.
     VipVoice,
+    /// The guild has end-to-end encrypted voice chats.
+    #[serde(rename = "VOICE_E2EE")]
+    VoiceE2EE,
     /// Guild is unavailable for everyone.
     UnavailableForEveryone,
     /// Guild is unavailable except for staff.
     UnavailableForEveryoneButStaff,
-    // TODO: What does this do?
+    /// While the guild is unavailable, the Gateway sends its unavailable guild entry
+    /// with `unavailable_hidden: true`.
     UnavailableHidden,
     /// Guild is a visionary guild.
     Visionary,
-    /// Guild is an operator guild.
-    Operator,
-    /// Guild has large guild overrides enabled.
+    /// Guild is marked as a large guild.
     LargeGuildOverride,
-    /// Guild has increased member capacity enabled.
+    /// Guild member capacity is raised.
     VeryLargeGuild,
-    // /// Guild has managed message scheduling.
-    // MtMessageScheduling,
-    // /// Guild has managed expression packs.
-    // MtExpressionPacks,
-    /// A raid has been detected in this guild.
-    RaidDetected,
-    /// The owner crown is hidden in the UI.
-    HideOwnerCrown,
-    /// The guild is partnered.
-    Partnered,
-    /// This feature flag will be removed soon.
-    ContentWarningsBackfilled,
-    /// The guild has end-to-end encrypted voice chats.
-    #[serde(rename = "VOICE_E2EE")]
-    VoiceE2EE,
     #[serde(untagged)]
     Other(String),
 }
