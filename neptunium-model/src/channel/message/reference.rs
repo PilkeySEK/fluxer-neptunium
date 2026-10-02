@@ -23,7 +23,9 @@ pub struct MessageReference {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub guild_id: Option<Id<GuildMarker>>,
     /// The ID of the referenced message.
-    pub message_id: Id<MessageMarker>,
+    /// Not present when the message is of type `ChannelFollowAdd`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub message_id: Option<Id<MessageMarker>>,
     #[builder(default)]
     #[serde(rename = "type", default)]
     pub r#type: MessageReferenceType,
