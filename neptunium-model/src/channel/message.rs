@@ -81,7 +81,6 @@ bitflags! {
         const SUPPRESS_NOTIFICATIONS = 1 << 12;
         /// Message has one voice recording attachment.
         const VOICE_MESSAGE = 1 << 13;
-        // const COMPACT_ATTACHMENTS = 1 << 17;
     }
 }
 
