@@ -14,6 +14,8 @@ const fn unwrap_or(option: Option<&'static str>, default: &'static str) -> &'sta
     }
 }
 
+pub use serde_constant;
+
 pub mod client;
 pub mod common_types;
 pub mod endpoints;
@@ -24,3 +26,7 @@ mod ratelimiting;
 pub mod request;
 // pub mod requests;
 // pub mod responses;
+
+pub(crate) mod private {
+    pub trait Sealed {}
+}

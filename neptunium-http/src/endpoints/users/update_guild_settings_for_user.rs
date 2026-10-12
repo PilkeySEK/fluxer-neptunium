@@ -7,7 +7,7 @@ use neptunium_model::{
         marker::{ChannelMarker, GuildMarker},
     },
     user::settings::{
-        UserGuildSettings, UserGuildSettingsChannelOverride, UserGuildSettingsMuteConfig,
+        GuildMuteConfiguration, UserGuildSettings, UserGuildSettingsChannelOverride,
         UserNotificationSettings,
     },
 };
@@ -23,7 +23,7 @@ pub struct UpdateUserGuildSettingsBody {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub muted: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub mute_config: Option<UserGuildSettingsMuteConfig>,
+    pub mute_config: Option<GuildMuteConfiguration>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub mobile_push: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]

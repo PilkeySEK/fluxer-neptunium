@@ -7,7 +7,7 @@ use crate::id::{
     marker::{ChannelMarker, GuildMarker, MessageMarker},
 };
 
-#[derive(Serialize_repr, Deserialize_repr, Copy, Clone, Debug, Default)]
+#[derive(Serialize_repr, Deserialize_repr, Copy, Clone, Debug, Default, PartialEq, Eq)]
 #[repr(u8)]
 pub enum MessageReferenceType {
     #[default]
@@ -15,7 +15,7 @@ pub enum MessageReferenceType {
     Forward = 1,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, Builder)]
+#[derive(Serialize, Deserialize, Clone, Debug, Builder, PartialEq, Eq)]
 pub struct MessageReference {
     /// The ID of the channel containing the referenced message.
     pub channel_id: Option<Id<ChannelMarker>>,

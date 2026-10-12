@@ -4,7 +4,7 @@ use bon::Builder;
 use neptunium_model::{
     id::{Id, marker::ChannelMarker},
     user::settings::{
-        UserGuildSettings, UserGuildSettingsChannelOverride, UserGuildSettingsMuteConfig,
+        GuildMuteConfiguration, UserGuildSettings, UserGuildSettingsChannelOverride,
         UserNotificationSettings,
     },
 };
@@ -20,7 +20,7 @@ pub struct UpdateDmNotificationSettings {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub muted: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub mute_config: Option<UserGuildSettingsMuteConfig>,
+    pub mute_config: Option<GuildMuteConfiguration>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub mobile_push: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]

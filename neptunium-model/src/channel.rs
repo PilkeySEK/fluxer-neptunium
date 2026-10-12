@@ -17,6 +17,7 @@ use crate::{
 };
 
 pub mod message;
+pub mod thread;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum VoiceRegion {
@@ -65,7 +66,7 @@ pub enum PermissionOverwriteEntity {
     Member = 1,
 }
 
-#[derive(Serialize, Deserialize, Copy, Clone, Debug)]
+#[derive(Serialize, Deserialize, Copy, Clone, Debug, PartialEq, Eq)]
 pub struct PermissionOverwrite {
     pub allow: Permissions,
     pub deny: Permissions,
@@ -90,9 +91,10 @@ pub enum ChannelType {
     DmPersonalNotes = 999,
 }
 
+// TODO: flags
 // TODO: Make this an enum instead maybe.
 // Maybe find out why twilight does it in this way too (and not an enum)
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct Channel {
     /// The bitrate of the voice channel in bits per second.
     #[serde(skip_serializing_if = "Option::is_none")]

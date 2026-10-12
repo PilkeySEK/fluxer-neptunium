@@ -22,3 +22,4 @@ multiple_crate_versions = { level = "allow", priority = 1 }
 cargo_common_metadata = { level = "allow", priority = 2 }
 doc_paragraphs_missing_punctuation = { level = "warn", priority = 0 }
 redundant_clone = { level = "warn", priority = 0 }
+todo = { level = "warn", priority = 0 }

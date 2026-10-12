@@ -1,6 +1,6 @@
 use bon::Builder;
 use neptunium_model::{
-    channel::message::{Message, MessageFlags, embed::MessageEmbed},
+    channel::message::{Message, MessageFlags, embed::RichEmbed},
     id::{
         Id,
         marker::{ChannelMarker, MessageMarker},
@@ -26,7 +26,7 @@ pub struct EditMessageBody {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub content: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub embeds: Option<Vec<MessageEmbed>>,
+    pub embeds: Option<Vec<RichEmbed>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub attachments: Option<Vec<AttachmentRequest>>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -87,14 +87,14 @@ impl From<CreateMessageBody> for EditMessageBody {
     }
 }
 
-impl From<MessageEmbed> for EditMessageBody {
-    fn from(value: MessageEmbed) -> Self {
+impl From<RichEmbed> for EditMessageBody {
+    fn from(value: RichEmbed) -> Self {
         Self::from(vec![value])
     }
 }
 
-impl From<Vec<MessageEmbed>> for EditMessageBody {
-    fn from(value: Vec<MessageEmbed>) -> Self {
+impl From<Vec<RichEmbed>> for EditMessageBody {
+    fn from(value: Vec<RichEmbed>) -> Self {
         Self {
             content: None,
             embeds: Some(value),

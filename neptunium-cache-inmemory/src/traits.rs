@@ -7,6 +7,7 @@ use neptunium_http::{
     endpoints::{Endpoint, ExecuteEndpointRequestError},
 };
 use neptunium_model::{
+    channel::thread::ThreadChannel,
     gateway::payload::incoming::UserPrivateResponse,
     guild::{Guild, member::GuildMemberProfile},
     id::{
@@ -184,5 +185,14 @@ impl CacheValue<GuildMemberProfile> for (Id<UserMarker>, Id<GuildMarker>, GuildM
                 .insert((self.0, self.1), cached.clone());
             cached
         }
+    }
+}
+
+impl CacheValue<ThreadChannel> for ThreadChannel {
+    fn insert_and_return(self, cache: &Arc<Cache>) -> Cached<ThreadChannel> {
+        let id = self.id;
+        let cached = Cached::new(self);
+        cache.thread_channels.insert(id, cached.clone());
+        cached
     }
 }

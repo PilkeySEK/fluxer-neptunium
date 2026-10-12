@@ -8,23 +8,20 @@ use neptunium_cache_inmemory::CachedMessage;
 use neptunium_cache_inmemory::stats::CacheStats;
 use neptunium_cache_inmemory::{CachableEndpoint, Cached, CachedChannel, CachedGuildMember};
 #[cfg(feature = "user_api")]
-use neptunium_http::endpoints::{
-    channel::ScheduledMessageResponse,
-    users::{
-        AddPhoneNumberToAccount, CompletePasswordChange, DeleteWebauthnCredential, DisableTotpMfa,
-        EnableTotpMfa, GetDataHarvestDownloadUrlResponse, GetMfaBackupCodes,
-        GetSudoWebauthnAuthenticationOptionsResponse, GetWebauthnRegistrationOptionsResponse,
-        ListCurrentUserMentions, ListPushSubscriptionsResponseEntry,
-        ListSudoMfaAuthenticationMethodsResponse, ListWebauthnCredentialsResponseEntry,
-        MfaBackupCodesResponse, RegisterWebauthnCredential, RequestDataHarvestResponse,
-        RequestNewEmailAddress, RequestNewEmailAddressResponse, StartEmailChangeResponse,
-        StartPasswordChangeResponse, SubscribeToPushNotifications,
-        SubscribeToPushNotificationsResponse, UpdateCurrentUserProfile,
-        UpdateDmNotificationSettings, UpdateRelationship, UpdateUserSettings,
-        UpdateWebauthnCredential, VerifyNewEmailAddress, VerifyNewEmailAddressResponse,
-        VerifyOriginalEmailAddress, VerifyOriginalEmailAddressResponse, VerifyPasswordChangeCode,
-        VerifyPasswordChangeCodeResponse, VerifyPhoneCode, VerifyPhoneCodeResponse,
-    },
+use neptunium_http::endpoints::users::{
+    AddPhoneNumberToAccount, CompletePasswordChange, DeleteWebauthnCredential, DisableTotpMfa,
+    EnableTotpMfa, GetDataHarvestDownloadUrlResponse, GetMfaBackupCodes,
+    GetSudoWebauthnAuthenticationOptionsResponse, GetWebauthnRegistrationOptionsResponse,
+    ListCurrentUserMentions, ListPushSubscriptionsResponseEntry,
+    ListSudoMfaAuthenticationMethodsResponse, ListWebauthnCredentialsResponseEntry,
+    MfaBackupCodesResponse, RegisterWebauthnCredential, RequestDataHarvestResponse,
+    RequestNewEmailAddress, RequestNewEmailAddressResponse, StartEmailChangeResponse,
+    StartPasswordChangeResponse, SubscribeToPushNotifications,
+    SubscribeToPushNotificationsResponse, UpdateCurrentUserProfile, UpdateDmNotificationSettings,
+    UpdateRelationship, UpdateUserSettings, UpdateWebauthnCredential, VerifyNewEmailAddress,
+    VerifyNewEmailAddressResponse, VerifyOriginalEmailAddress, VerifyOriginalEmailAddressResponse,
+    VerifyPasswordChangeCode, VerifyPasswordChangeCodeResponse, VerifyPhoneCode,
+    VerifyPhoneCodeResponse,
 };
 use neptunium_http::{
     client::HttpClient,
@@ -1055,15 +1052,6 @@ impl Context {
             .http_client
             .execute(ListSavedMessages { limit })
             .await?)
-    }
-
-    #[cfg(feature = "user_api")]
-    pub async fn list_scheduled_message(
-        &self,
-    ) -> Result<Vec<ScheduledMessageResponse>, ClientError> {
-        use neptunium_http::endpoints::channel::ListScheduledMessages;
-
-        Ok(self.http_client.execute(ListScheduledMessages).await?)
     }
 
     #[cfg(feature = "user_api")]

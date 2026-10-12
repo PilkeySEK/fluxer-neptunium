@@ -2,7 +2,7 @@ use std::ops::{Deref, DerefMut};
 
 use bon::Builder;
 use neptunium_model::{
-    channel::message::attachment::MessageAttachmentFlags,
+    channel::message::attachment::AttachmentFlags,
     time::duration::{Duration, Seconds},
 };
 use serde::Serialize;
@@ -16,7 +16,7 @@ pub struct AttachmentBase {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
     #[builder(default)]
-    pub flags: MessageAttachmentFlags,
+    pub flags: AttachmentFlags,
     /// Duration of the audio file in seconds.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub duration: Option<Duration<Seconds>>,

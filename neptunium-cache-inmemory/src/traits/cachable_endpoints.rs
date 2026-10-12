@@ -29,8 +29,8 @@ use neptunium_http::{
             AddUserToGroupDm, BulkDeleteMessages, CreateMessage, CreatePrivateChannel,
             CrosspostMessage, DeleteChannel, DeleteMessage, DeleteMessageAttachment,
             DeletePermissionOverwrite, EditMessage, FetchMessage, GetChannel, ListChannelMessages,
-            ListPrivateChannels, RemoveUserFromGroupDm, SetPermissionOverwrite, UpdateCallRegion,
-            UpdateChannelSettings,
+            ListPrivateChannels, RemoveUserFromGroupDm, SetPermissionOverwrite,
+            StartThreadFromMessage, UpdateCallRegion, UpdateChannelSettings,
         },
         guild::{
             CreateGuildChannel, CreateGuildRole, DeleteGuildRole, GetCurrentUserGuildMember,
@@ -46,7 +46,7 @@ use neptunium_http::{
     },
 };
 use neptunium_model::{
-    channel::PermissionOverwrite,
+    channel::{PermissionOverwrite, thread::ThreadChannel},
     guild::{Guild, permissions::Permissions},
     invites::InviteWithMetadata,
 };
@@ -838,12 +838,10 @@ impl CachableEndpoint for DeleteMessageAttachment {
         let message_id = self.message_id;
         client.execute(self).await?;
         if let Some(cached_message) = cache.messages.get(&message_id) {
-            let _ = cached_message.try_modify(|message| {
-                let Some(attachments) = &mut message.attachments else {
-                    return Err(());
-                };
-                attachments.retain(|attachment| attachment.id != attachment_id);
-                Ok(())
+            cached_message.modify(|message| {
+                message
+                    .attachments
+                    .retain(|attachment| attachment.id != attachment_id);
             });
         }
         Ok(())
@@ -1029,5 +1027,18 @@ impl CachableEndpoint for CrosspostMessage {
     ) -> Result<<Self as CachableEndpoint>::Response, ExecuteEndpointRequestError> {
         let res = client.execute(self).await?;
         Ok(CachedMessage::from_message(res, cache).insert_and_return(cache))
+    }
+}
+
+#[async_trait]
+impl CachableEndpoint for StartThreadFromMessage {
+    type Response = Cached<ThreadChannel>;
+    async fn execute_cached(
+        self,
+        client: &Arc<HttpClient>,
+        cache: &Arc<Cache>,
+    ) -> Result<<Self as CachableEndpoint>::Response, ExecuteEndpointRequestError> {
+        let res = client.execute(self).await?;
+        Ok(res.insert_and_return(cache))
     }
 }

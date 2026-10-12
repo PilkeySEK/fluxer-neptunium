@@ -157,7 +157,7 @@ impl HttpClient {
 
             // TODO: Move this match logic to a new function
             let (result, should_retry) = match response.status() {
-                StatusCode::OK | StatusCode::NO_CONTENT => {
+                StatusCode::OK | StatusCode::NO_CONTENT | StatusCode::CREATED => {
                     let body = response.bytes().await?.to_vec();
                     tracing::trace!("API response body: {:?}", body);
                     (ResponseBody::deserialize(body), true)

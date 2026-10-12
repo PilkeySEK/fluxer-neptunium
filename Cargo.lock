@@ -401,6 +401,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "92773504d58c093f6de2459af4af33faa518c13451eb8f2b5698ed3d36e7c813"
 
 [[package]]
+name = "either"
+version = "1.19.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0e9c71c2167ca323c882b99918929403426e2373ea17242ff5653e0d5e1058be"
+dependencies = [
+ "serde",
+]
+
+[[package]]
 name = "errno"
 version = "0.3.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1128,6 +1137,7 @@ dependencies = [
  "reqwest",
  "serde",
  "serde-bool",
+ "serde-constant",
  "serde_json",
  "serde_path_to_error",
  "serde_repr",
@@ -1144,6 +1154,7 @@ dependencies = [
  "bitflags",
  "bon",
  "chrono",
+ "either",
  "language-tags",
  "serde",
  "serde-bool",
@@ -1733,6 +1744,15 @@ name = "serde-bool"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "034ca3364d3fb1aae01394836ebc846ec0469346c4e7a6271d16703c7bf5e3ff"
+dependencies = [
+ "serde",
+]
+
+[[package]]
+name = "serde-constant"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "301d0de95fe56444b1ea1ee62363452b756fe715fb4eab505be16b906599b47e"
 dependencies = [
  "serde",
 ]

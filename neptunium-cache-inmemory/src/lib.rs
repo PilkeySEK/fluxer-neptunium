@@ -7,6 +7,7 @@ use atomic_once_cell::AtomicOnceCell;
 use bon::Builder;
 use mini_moka::sync::Cache as MokaCache;
 use neptunium_model::{
+    channel::thread::ThreadChannel,
     gateway::payload::incoming::UserPrivateResponse,
     guild::{Guild, member::GuildMemberProfile},
     id::{
@@ -50,6 +51,7 @@ pub struct Cache {
     pub user_profiles:
         MokaCache<(Id<UserMarker>, Option<Id<GuildMarker>>), Cached<CachedUserProfileFullResponse>>,
     pub channels: MokaCache<Id<ChannelMarker>, Cached<CachedChannel>>,
+    pub thread_channels: MokaCache<Id<ChannelMarker>, Cached<ThreadChannel>>,
     pub messages: MokaCache<Id<MessageMarker>, Cached<CachedMessage>>,
     pub current_user: AtomicOnceCell<Cached<UserPrivateResponse>>,
     pub current_user_settings: AtomicOnceCell<Cached<UserSettings>>,
@@ -70,6 +72,8 @@ pub struct CacheConfig {
     pub user_profiles: u64,
     #[builder(default = u64::MAX)]
     pub channels: u64,
+    #[builder(default = u64::MAX)]
+    pub thread_channels: u64,
     #[builder(default = 4096)]
     pub messages: u64,
     #[builder(default = 4096)]
@@ -208,6 +212,7 @@ impl Cache {
             users: MokaCache::new(config.users),
             user_profiles: MokaCache::new(config.user_profiles),
             channels: MokaCache::new(config.channels),
+            thread_channels: MokaCache::new(config.thread_channels),
             messages: MokaCache::new(config.messages),
             current_user: AtomicOnceCell::new(),
             current_user_settings: AtomicOnceCell::new(),

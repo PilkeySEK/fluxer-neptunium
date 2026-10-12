@@ -26,7 +26,7 @@ pub enum JoinSourceType {
 }
 
 bitflags! {
-    #[derive(Copy, Clone, Debug)]
+    #[derive(Copy, Clone, Debug, PartialEq, Eq)]
     pub struct GuildMemberProfileFlags: u32 {
         const AVATAR_UNSET = 1 << 0;
         const BANNER_UNSET = 1 << 1;
@@ -36,7 +36,7 @@ bitflags! {
 serde_bitflags! {GuildMemberProfileFlags, u32}
 
 // TODO: Probably seperate `GuildMemberData` from `GuildMemberResponse` at this point...
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct GuildMember {
     pub user: PartialUser,
     #[serde(skip_serializing_if = "Option::is_none")]

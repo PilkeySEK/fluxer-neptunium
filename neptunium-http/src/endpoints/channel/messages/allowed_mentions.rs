@@ -5,17 +5,17 @@ use neptunium_model::id::{
 };
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Copy, Clone, Debug, Default)]
-#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+#[derive(Serialize, Deserialize, Copy, Clone, Debug, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
 pub enum AllowedMentionParseType {
     Users,
     Roles,
-    #[default]
     Everyone,
 }
 
-/// [Source](https://github.com/fluxerapp/fluxer/blob/03813bbe17db008452f0f1be3090a7d2970a5447/packages/schema/src/domains/message/SharedMessageSchemas.tsx#L34).
-#[derive(Serialize, Deserialize, Clone, Debug, Builder)]
+/// Sending this with every field as `None` resolves to an empty parse set, so no user mention,
+/// role mention, `@everyone` or `@here` becomes active.
+#[derive(Serialize, Deserialize, Clone, Debug, Builder, PartialEq, Eq)]
 pub struct AllowedMentions {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub parse: Option<Vec<AllowedMentionParseType>>,
@@ -26,6 +26,7 @@ pub struct AllowedMentions {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub roles: Option<Vec<Id<RoleMarker>>>,
     /// Whether to mention the author of the replied message.
-    #[builder(default = true)]
-    pub replied_user: bool,
+    /// Defaults to `true`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub replied_user: Option<bool>,
 }

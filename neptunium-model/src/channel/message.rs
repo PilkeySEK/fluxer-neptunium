@@ -1,11 +1,13 @@
-use std::ops::{Deref, DerefMut};
-
 use bitflags::bitflags;
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 
 use crate::{
-    channel::message::{attachment::MessageAttachment, embed::MessageEmbed, nonce::Nonce},
+    channel::{
+        ChannelType,
+        message::{attachment::MessageAttachment, embed::Embed, nonce::Nonce},
+        thread::ThreadChannel,
+    },
     id::{
         Id,
         marker::{
@@ -27,7 +29,7 @@ pub use call::*;
 pub use reference::*;
 pub use snapshot::*;
 
-#[derive(Serialize_repr, Deserialize_repr, Copy, Clone, Debug)]
+#[derive(Serialize_repr, Deserialize_repr, Copy, Clone, Debug, PartialEq, Eq)]
 #[repr(u8)]
 pub enum MessageType {
     Regular = 0,
@@ -40,7 +42,9 @@ pub enum MessageType {
     ChannelPinnedMessage = 6,
     UserJoin = 7,
     ChannelFollowAdd = 12,
+    ThreadCreated = 18,
     Reply = 19,
+    ThreadStarterMessage = 21,
 }
 
 impl MessageType {
@@ -62,12 +66,13 @@ impl MessageType {
                 | Self::UserJoin
                 | Self::ChannelFollowAdd
                 | Self::Reply
+                | Self::ThreadCreated
         )
     }
 }
 
 bitflags! {
-    #[derive(Copy, Clone, Debug)]
+    #[derive(Copy, Clone, Debug, PartialEq, Eq)]
     pub struct MessageFlags: u32 {
         /// Message was published to the channels that follow its announcement channel.
         const CROSSPOSTED = 1 << 0;
@@ -77,6 +82,10 @@ bitflags! {
         const SUPPRESS_EMBEDS = 1 << 2;
         /// The published message this copy came from was deleted.
         const SOURCE_MESSAGE_DELETED = 1 << 3;
+        /// A thread was started from this message.
+        const HAS_THREAD = 1 << 5;
+        /// Some members of a mentioned role were not added to the thread.
+        const FAILED_TO_MENTION_SOME_ROLES_IN_THREAD = 1 << 8;
         /// Do not generate ordinary mention notifications.
         const SUPPRESS_NOTIFICATIONS = 1 << 12;
         /// Message has one voice recording attachment.
@@ -92,29 +101,62 @@ impl Default for MessageFlags {
 
 serde_bitflags! {MessageFlags, u32}
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct Message {
-    #[serde(flatten)]
-    pub base: MessageBase,
-    /// The message that this message is replying to or forwarding.
+    pub id: Id<MessageMarker>,
+    pub channel_id: Id<ChannelMarker>,
+    pub author: PartialUser,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub referenced_message: Option<MessageBase>,
+    pub webhook_id: Option<Id<WebhookMarker>>,
+    #[serde(rename = "type")]
+    pub r#type: MessageType,
+    pub flags: MessageFlags,
+    pub content: String,
+    pub timestamp: Timestamp<Iso8601>,
+    pub edited_timestamp: Option<Timestamp<Iso8601>>,
+    pub pinned: bool,
+    /// Whether the message mentions everyone.
+    pub mention_everyone: bool,
+    /// Whether the message requested text-to-speech.
+    /// Echoed from the create request, so a message read through any other operation always reports false.
+    pub tts: bool,
+    pub mentions: Vec<PartialUser>,
+    pub mention_roles: Vec<Id<RoleMarker>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub mention_channels: Option<Vec<ChannelMention>>,
+    /// Users referenced by non-notifying content, embed and snapshot text.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub users: Option<Vec<PartialUser>>,
+    pub embeds: Vec<Embed>,
+    pub attachments: Vec<MessageAttachment>,
+    pub stickers: Vec<StickerItem>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub reactions: Option<Vec<MessageReaction>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub message_reference: Option<MessageReference>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub message_snapshots: Option<Vec<MessageSnapshot>>,
+    /// Echoed only in the create message response and its originating `MessageCreate` gateway dispatch event,
+    /// and never stored on the message.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub nonce: Option<Nonce>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub call: Option<MessageCall>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub referenced_message: Option<Box<Message>>,
+    /// The thread started from this message.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub thread: Option<ThreadChannel>,
 }
 
-impl Deref for Message {
-    type Target = MessageBase;
-    fn deref(&self) -> &Self::Target {
-        &self.base
-    }
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct StickerItem {
+    pub id: Id<StickerMarker>,
+    pub name: String,
+    pub animated: bool,
 }
 
-impl DerefMut for Message {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.base
-    }
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct MessageReactionEmoji {
     #[serde(default)]
     pub animated: bool,
@@ -125,7 +167,7 @@ pub struct MessageReactionEmoji {
     pub name: String,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct MessageReaction {
     pub count: u32,
     pub emoji: MessageReactionEmoji,
@@ -133,54 +175,10 @@ pub struct MessageReaction {
     pub me: bool,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct MessageSticker {
-    pub animated: bool,
-    pub id: Id<StickerMarker>,
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct ChannelMention {
+    pub id: Id<ChannelMarker>,
     pub name: String,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct MessageBase {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub attachments: Option<Vec<MessageAttachment>>,
-    pub author: PartialUser,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub call: Option<MessageCall>,
-    pub channel_id: Id<ChannelMarker>,
-    /// If no content is present on the message (which is rare, but it can happen),
-    /// then the content is set to `""`.
-    #[serde(default = "String::new")]
-    pub content: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub edited_timestamp: Option<Timestamp<Iso8601>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub embeds: Option<Vec<MessageEmbed>>,
-    pub flags: MessageFlags,
-    pub id: Id<MessageMarker>,
-    pub mention_everyone: bool,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub mention_roles: Option<Vec<Id<RoleMarker>>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub mentions: Option<Vec<PartialUser>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub message_reference: Option<MessageReference>,
-    /// Snapshots of forwarded messages.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub message_snapshots: Option<Vec<MessageSnapshot>>,
-    /// A client-provided value for message deduplication.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub nonce: Option<Nonce>,
-    pub pinned: bool,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub reactions: Option<Vec<MessageReaction>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub stickers: Option<Vec<MessageSticker>>,
-    pub timestamp: Timestamp<Iso8601>,
-    #[serde(default)]
-    pub tts: bool,
     #[serde(rename = "type")]
-    pub r#type: MessageType,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub webhook_id: Option<Id<WebhookMarker>>,
+    pub r#type: ChannelType,
 }

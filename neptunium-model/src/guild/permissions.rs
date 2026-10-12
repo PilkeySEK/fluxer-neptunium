@@ -31,6 +31,7 @@ bitflags! {
         /// Allows the user to go live.
         const STREAM = 1 << 9;
         /// Allows viewing a channel.
+        /// Fluxer also treats a category as visible when at least one channel inside it is visible.
         const VIEW_CHANNEL = 1 << 10;
         /// Allows sending messages in a channel.
         const SEND_MESSAGES = 1 << 11;
@@ -70,8 +71,17 @@ bitflags! {
         const MANAGE_WEBHOOKS = 1 << 29;
         /// Allows management of guild expressions.
         const MANAGE_EXPRESSIONS = 1 << 30;
+        /// Archive, lock, rename, and delete a thread,
+        /// view every private thread, and act in a locked thread.
+        const MANAGE_THREADS = 1 << 34;
+        /// Start a public thread or an announcement thread.
+        const CREATE_PUBLIC_THREADS = 1 << 35;
+        /// Start a private thread in a text channel.
+        const CREATE_PRIVATE_THREADS = 1 << 46;
         /// Allows using stickers from other guilds.
         const USE_EXTERNAL_STICKERS = 1 << 37;
+        /// Send a message in a thread, and add another member to a thread.
+        const SEND_MESSAGES_IN_THREADS = 1 << 38;
         /// Allows timing out users.
         const MODERATE_MEMBERS = 1 << 40;
         /// Allows creating guild expressions.

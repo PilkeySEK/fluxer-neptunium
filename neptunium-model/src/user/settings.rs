@@ -222,8 +222,8 @@ pub enum UserNotificationSettings {
     InheritFromParent = 3,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct UserGuildSettingsMuteConfig {
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct GuildMuteConfiguration {
     pub end_time: Option<Timestamp<Iso8601>>,
     pub selected_time_window: crate::time::duration::Duration<Seconds>,
 }
@@ -233,7 +233,7 @@ pub struct UserGuildSettingsChannelOverride {
     pub collapsed: bool,
     pub message_notifications: UserNotificationSettings,
     pub muted: bool,
-    pub mute_config: Option<UserGuildSettingsMuteConfig>,
+    pub mute_config: Option<GuildMuteConfiguration>,
 }
 
 #[expect(clippy::struct_excessive_bools)]
@@ -245,7 +245,7 @@ pub struct UserGuildSettings {
     pub message_notifications: UserNotificationSettings,
     /// Whether the guild is muted.
     pub muted: bool,
-    pub mute_config: Option<UserGuildSettingsMuteConfig>,
+    pub mute_config: Option<GuildMuteConfiguration>,
     /// Whether mobile push notifications are enabled.
     pub mobile_push: bool,
     /// Whether @everyone mentions are suppressed.

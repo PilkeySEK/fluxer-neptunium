@@ -3,9 +3,7 @@ use reqwest::Method;
 use serde::Serialize;
 
 use neptunium_model::{
-    channel::message::{
-        Message, MessageFlags, MessageReference, embed::MessageEmbed, nonce::Nonce,
-    },
+    channel::message::{Message, MessageFlags, MessageReference, embed::RichEmbed, nonce::Nonce},
     id::{
         Id,
         marker::{ChannelMarker, StickerMarker},
@@ -29,9 +27,9 @@ pub struct CreateMessageBody {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(into)]
     pub content: Option<String>,
-    #[builder(default = vec![])]
-    pub embeds: Vec<MessageEmbed>,
-    #[builder(default = vec![])]
+    #[builder(default = Vec::new())]
+    pub embeds: Vec<RichEmbed>,
+    #[builder(default = Vec::new())]
     pub attachments: Vec<AttachmentRequest>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub message_reference: Option<MessageReference>,
@@ -75,18 +73,18 @@ impl From<&str> for CreateMessageBody {
     }
 }
 
-impl From<MessageEmbed> for CreateMessageBody {
-    fn from(value: MessageEmbed) -> Self {
+impl From<RichEmbed> for CreateMessageBody {
+    fn from(value: RichEmbed) -> Self {
         Self::from(vec![value])
     }
 }
 
-impl From<Vec<MessageEmbed>> for CreateMessageBody {
-    fn from(value: Vec<MessageEmbed>) -> Self {
+impl From<Vec<RichEmbed>> for CreateMessageBody {
+    fn from(value: Vec<RichEmbed>) -> Self {
         Self {
             content: None,
             embeds: value,
-            attachments: vec![],
+            attachments: Vec::new(),
             message_reference: None,
             allowed_mentions: None,
             flags: MessageFlags::empty(),

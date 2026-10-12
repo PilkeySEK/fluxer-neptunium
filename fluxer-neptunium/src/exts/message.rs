@@ -2,12 +2,11 @@
 
 use async_trait::async_trait;
 use neptunium_cache_inmemory::{CachableEndpoint, Cached, CachedMessage};
-#[cfg(feature = "user_api")]
-use neptunium_http::endpoints::channel::ScheduledMessageResponse;
-#[cfg(feature = "user_api")]
-use neptunium_model::id::marker::ScheduledMessageMarker;
 use neptunium_model::{
-    channel::message::{Message, MessageReference},
+    channel::{
+        message::{Message, MessageReference},
+        thread::ThreadChannel,
+    },
     id::{
         Id,
         marker::{AttachmentMarker, ChannelMarker, MessageMarker, UserMarker},
@@ -23,7 +22,8 @@ use neptunium_http::endpoints::channel::{
     AddReaction, CreateMessage, CreateMessageBody, CrosspostMessage, CrosspostSource,
     DeleteAllReactions, DeleteAllReactionsOfEmoji, DeleteMessage, DeleteMessageAttachment,
     DeleteOwnReaction, DeleteReaction, EditMessage, EditMessageBody, FetchMessage,
-    GetMessageCrosspostSource, PinMessage, Reaction, UnpinMessage,
+    GetMessageCrosspostSource, PinMessage, Reaction, StartThreadFromMessage,
+    StartThreadFromMessageData, UnpinMessage,
 };
 
 // TODO: Many methods in MessageExt could be implemented for Id<MessageMarker> too:
@@ -119,6 +119,12 @@ pub trait MessageExt {
         self.crosspost(ctx).await
     }
     async fn get_crosspost_source(&self, ctx: &Context) -> Result<CrosspostSource, ClientError>;
+    /// Start a thread from this message.
+    async fn start_thread(
+        &self,
+        ctx: &Context,
+        data: StartThreadFromMessageData,
+    ) -> Result<Cached<ThreadChannel>, ClientError>;
 }
 
 #[async_trait]
@@ -379,6 +385,20 @@ impl MessageExt for Message {
                 channel_id: self.channel_id,
             })
             .await?)
+    }
+
+    async fn start_thread(
+        &self,
+        ctx: &Context,
+        data: StartThreadFromMessageData,
+    ) -> Result<Cached<ThreadChannel>, ClientError> {
+        Ok(StartThreadFromMessage {
+            channel_id: self.channel_id,
+            message_id: self.id,
+            data,
+        }
+        .execute_cached(ctx.get_http_client(), &ctx.cache)
+        .await?)
     }
 }
 
@@ -641,6 +661,20 @@ impl MessageExt for CachedMessage {
             })
             .await?)
     }
+
+    async fn start_thread(
+        &self,
+        ctx: &Context,
+        data: StartThreadFromMessageData,
+    ) -> Result<Cached<ThreadChannel>, ClientError> {
+        Ok(StartThreadFromMessage {
+            channel_id: self.channel_id,
+            message_id: self.id,
+            data,
+        }
+        .execute_cached(ctx.get_http_client(), &ctx.cache)
+        .await?)
+    }
 }
 
 #[async_trait]
@@ -695,45 +729,6 @@ impl MessageIdExt for Id<MessageMarker> {
         Ok(ctx
             .get_http_client()
             .execute(UnsaveMessage { message_id: *self })
-            .await?)
-    }
-}
-
-#[cfg(feature = "user_api")]
-#[async_trait]
-pub trait ScheduledMessageIdExt {
-    async fn get_scheduled_message(
-        &self,
-        ctx: &Context,
-    ) -> Result<ScheduledMessageResponse, ClientError>;
-    async fn cancel_scheduled_message(&self, ctx: &Context) -> Result<(), ClientError>;
-}
-
-#[cfg(feature = "user_api")]
-#[async_trait]
-impl ScheduledMessageIdExt for Id<ScheduledMessageMarker> {
-    async fn get_scheduled_message(
-        &self,
-        ctx: &Context,
-    ) -> Result<ScheduledMessageResponse, ClientError> {
-        use neptunium_http::endpoints::channel::GetScheduledMessage;
-
-        Ok(ctx
-            .get_http_client()
-            .execute(GetScheduledMessage {
-                scheduled_message_id: *self,
-            })
-            .await?)
-    }
-
-    async fn cancel_scheduled_message(&self, ctx: &Context) -> Result<(), ClientError> {
-        use neptunium_http::endpoints::channel::CancelScheduledMessage;
-
-        Ok(ctx
-            .get_http_client()
-            .execute(CancelScheduledMessage {
-                scheduled_message_id: *self,
-            })
             .await?)
     }
 }
