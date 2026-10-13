@@ -22,7 +22,7 @@ pub enum WebauthnAuthenticatorAttachment {
     Platform,
 }
 
-#[derive(Serialize, Builder, Clone, Debug)]
+#[derive(Serialize, Builder, Clone, Debug, PartialEq, Eq)]
 pub struct WebauthnCredentialsPropertiesOutput {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub rk: Option<bool>,
