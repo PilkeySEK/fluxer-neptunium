@@ -7,8 +7,9 @@ use neptunium_http::endpoints::{
         AddUserToGroupDm, BulkDeleteMessages, CallEligibilityStatus, ChannelSettingsUpdates,
         ChannelSlowmodeInformation, CreateAttachmentsInChannel,
         CreateAttachmentsInChannelAttachment, CreateAttachmentsInChannelResponse, CreateMessage,
-        CreateMessageBody, DeleteChannel, DeletePermissionOverwrite, GetCallEligibilityStatus,
-        GetChannel, GetChannelSlowmodeInformation, IndicateTyping, ListChannelMessages,
+        CreateMessageBody, DeleteOrLeaveChannel, DeleteOrLeaveChannelParams,
+        DeletePermissionOverwrite, GetCallEligibilityStatus, GetChannel,
+        GetChannelSlowmodeInformation, IndicateTyping, ListChannelMessages,
         ListChannelMessagesParams, ListRtcRegions, ListRtcRegionsResponseEntry,
         PermissionOverwriteUpdate, PinDirectMessageChannel, RemoveUserFromGroupDm,
         RingCallRecipients, SetPermissionOverwrite, StopRingingCallRecipients,
@@ -34,6 +35,7 @@ use crate::{
     internal::traits::channel::ChannelTrait,
 };
 
+// TODO: modify and modify_thread
 #[async_trait]
 pub trait ChannelExt {
     async fn delete(&self, ctx: &Context) -> Result<(), ClientError>;
@@ -199,18 +201,28 @@ impl ChannelDataExt for CachedChannel {
 #[async_trait]
 impl<T: ChannelTrait> ChannelExt for T {
     async fn delete(&self, ctx: &Context) -> Result<(), ClientError> {
-        Ok(DeleteChannel {
+        Ok(DeleteOrLeaveChannel {
             channel_id: self.get_channel_id(),
-            silent: None,
+            params: DeleteOrLeaveChannelParams {
+                silent: None,
+                delete_messages: None,
+            },
+            body: None,
+            sudo_mode_jwt: None,
         }
         .execute_cached(ctx.get_http_client(), &ctx.cache)
         .await?)
     }
 
     async fn delete_silent(&self, ctx: &Context) -> Result<(), ClientError> {
-        Ok(DeleteChannel {
+        Ok(DeleteOrLeaveChannel {
             channel_id: self.get_channel_id(),
-            silent: Some(true),
+            params: DeleteOrLeaveChannelParams {
+                silent: Some(true),
+                delete_messages: None,
+            },
+            body: None,
+            sudo_mode_jwt: None,
         }
         .execute_cached(ctx.get_http_client(), &ctx.cache)
         .await?)

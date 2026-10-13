@@ -2,7 +2,7 @@ use bon::Builder;
 use serde::Serialize;
 use zeroize::Zeroizing;
 
-#[derive(Serialize, Builder, Clone, Debug)]
+#[derive(Serialize, Builder, Clone, Debug, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct WebauthnAuthenticatorAssertionResponse {
     #[serde(rename = "clientDataJSON")]
@@ -28,7 +28,7 @@ pub struct WebauthnCredentialsPropertiesOutput {
     pub rk: Option<bool>,
 }
 
-#[derive(Serialize, Builder, Clone, Debug)]
+#[derive(Serialize, Builder, Clone, Debug, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct WebauthnAuthenticationExtensionsClientOutputs {
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -46,10 +46,10 @@ pub enum WebauthnPublicKeyCredentialType {
     PublicKey,
 }
 
-/// [Source](https://github.com/MasterKale/SimpleWebAuthn/blob/8b7622948c87c4c26e74b24f218e80b2e72adf70/packages/types/src/index.ts#L133).
-#[derive(Serialize, Builder, Clone, Debug)]
+// TODO: check this schema
+#[derive(Serialize, Builder, Clone, Debug, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
-pub struct WebauthnAuthenticationResponse {
+pub struct WebAuthnAssertion {
     #[builder(into)]
     pub id: String,
     #[builder(into)]

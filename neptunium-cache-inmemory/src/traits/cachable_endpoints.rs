@@ -27,7 +27,7 @@ use neptunium_http::{
         Endpoint, ExecuteEndpointRequestError,
         channel::{
             AddUserToGroupDm, BulkDeleteMessages, CreateMessage, CreatePrivateChannel,
-            CrosspostMessage, DeleteChannel, DeleteMessage, DeleteMessageAttachment,
+            CrosspostMessage, DeleteMessage, DeleteMessageAttachment, DeleteOrLeaveChannel,
             DeletePermissionOverwrite, EditMessage, FetchMessage, GetChannel, ListChannelMessages,
             ListPrivateChannels, RemoveUserFromGroupDm, SetPermissionOverwrite,
             StartThreadFromMessage, UpdateCallRegion, UpdateChannelSettings,
@@ -136,7 +136,7 @@ impl CachableEndpoint for GetUserProfile {
 }
 
 #[async_trait]
-impl CachableEndpoint for DeleteChannel {
+impl CachableEndpoint for DeleteOrLeaveChannel {
     type Response = <Self as Endpoint>::Response;
     async fn execute_cached(
         self,
