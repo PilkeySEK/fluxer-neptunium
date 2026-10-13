@@ -1,20 +1,29 @@
 use neptunium_model::{
     channel::{
         message::{MessageFlags, attachment::PreUploadedAttachment, embed::RichEmbed},
-        thread::{ThreadAutoArchiveDuration, ThreadType},
+        thread::{ForumPost, ThreadAutoArchiveDuration, ThreadChannel, ThreadType},
     },
     id::{
         Id,
         marker::{ChannelMarker, ForumTagMarker, StickerMarker},
     },
 };
+use reqwest::Method;
+use serde::Serialize;
 use serde_constant::ConstU8;
 
-use crate::{endpoints::channel::AllowedMentions, private::Sealed};
+use crate::{
+    endpoints::{Endpoint, ResponseBody, channel::AllowedMentions},
+    private::Sealed,
+    request::Request,
+};
 
-pub trait StartThreadBody: Sealed {}
+pub trait StartThreadBody: Sealed + Serialize + std::fmt::Debug + PartialEq + Eq + Clone {
+    type Response: ResponseBody;
+}
 
 /// Starts a thread with no source message, or creates a post in a forum or media channel.
+#[derive(Debug, Clone, PartialEq, Eq, bon::Builder)]
 pub struct StartThread<B: StartThreadBody> {
     pub channel_id: Id<ChannelMarker>,
     pub body: B,
@@ -23,7 +32,7 @@ pub struct StartThread<B: StartThreadBody> {
 /// The body for [`StartThread`] in a text or announcement channel.
 ///
 /// [`StartThread`]: StartThread
-#[derive(serde::Serialize, serde::Deserialize, Clone, Debug, PartialEq, Eq)]
+#[derive(serde::Serialize, serde::Deserialize, Clone, Debug, PartialEq, Eq, bon::Builder)]
 pub struct StartThreadTextChannelBody {
     pub name: String,
     #[serde(rename = "type")]
@@ -43,7 +52,7 @@ pub struct StartThreadTextChannelBody {
 /// The body for [`StartThread`] in a forum or media channel.
 ///
 /// [`StartThread`]: StartThread
-#[derive(serde::Serialize, serde::Deserialize, Clone, Debug, PartialEq, Eq)]
+#[derive(serde::Serialize, serde::Deserialize, Clone, Debug, PartialEq, Eq, bon::Builder)]
 pub struct StartThreadForumChannelBody {
     pub name: String,
     pub message: ForumChannelFirstMessage,
@@ -58,7 +67,7 @@ pub struct StartThreadForumChannelBody {
     pub r#type: Option<ConstU8<11>>,
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Clone, Debug, PartialEq, Eq)]
+#[derive(serde::Serialize, serde::Deserialize, Clone, Debug, PartialEq, Eq, bon::Builder)]
 pub struct ForumChannelFirstMessage {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub content: Option<String>,
@@ -72,4 +81,27 @@ pub struct ForumChannelFirstMessage {
     pub flags: Option<MessageFlags>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub sticker_ids: Option<Vec<Id<StickerMarker>>>,
+}
+
+impl crate::private::Sealed for StartThreadTextChannelBody {}
+impl crate::private::Sealed for StartThreadForumChannelBody {}
+
+impl StartThreadBody for StartThreadTextChannelBody {
+    type Response = ThreadChannel;
+}
+
+impl StartThreadBody for StartThreadForumChannelBody {
+    type Response = ForumPost;
+}
+
+impl<B: StartThreadBody> Endpoint for StartThread<B> {
+    type Response = B::Response;
+
+    fn into_request(self) -> crate::request::Request {
+        Request::builder()
+            .method(Method::POST)
+            .body(serde_json::to_string(&self.body).unwrap())
+            .path(format!("/channels/{}/threads", self.channel_id))
+            .build()
+    }
 }

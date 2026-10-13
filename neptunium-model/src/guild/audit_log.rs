@@ -46,9 +46,7 @@ pub struct AuditLogEntry {
     pub reason: Option<String>,
     /// ID of the target entity.
     pub target_id: Option<Id<GenericMarker>>,
-    /// ID of the [user] that performed the action.
-    ///
-    /// [user]: crate::user::User
+    /// ID of the user that performed the action.
     pub user_id: Option<Id<UserMarker>>,
 }
 

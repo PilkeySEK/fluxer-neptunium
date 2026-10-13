@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 
 use crate::{
+    channel::message::Message,
     guild::member::GuildMember,
     id::{
         Id,
@@ -144,3 +145,15 @@ bitflags! {
 }
 
 serde_bitflags!(ThreadMemberFlags, u32);
+
+/// A forum post is a [`ThreadChannel`] with its first message.
+///
+/// [`ThreadChannel`]: ThreadChannel
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct ForumPost {
+    /// The associated thread channel.
+    #[serde(flatten)]
+    pub thread: ThreadChannel,
+    /// The first message of the forum post.
+    pub message: Message,
+}
