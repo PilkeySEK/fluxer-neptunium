@@ -3,7 +3,10 @@ use neptunium_model::{
     id::{Id, marker::ChannelMarker},
     user::auth::SudoVerification,
 };
-use reqwest::{Method, header::HeaderMap};
+use reqwest::{
+    Method,
+    header::{HeaderMap, HeaderValue},
+};
 
 use crate::{endpoints::Endpoint, request::Request};
 
@@ -22,7 +25,7 @@ pub struct DeleteOrLeaveChannelParams {
 /// - Setting delete_messages also requires sudo mode for a user session,
 /// satisfied by a valid sudo proof or by the verification fields in the body.
 /// A bot token always satisfies it.
-#[derive(Builder, Copy, Clone, Debug, PartialEq, Eq)]
+#[derive(Builder, Clone, Debug, PartialEq, Eq)]
 pub struct DeleteOrLeaveChannel {
     pub channel_id: Id<ChannelMarker>,
     pub params: DeleteOrLeaveChannelParams,
@@ -41,7 +44,10 @@ impl Endpoint for DeleteOrLeaveChannel {
             .maybe_body(self.body.map(|body| serde_json::to_string(&body).unwrap()))
             .maybe_headers(self.sudo_mode_jwt.map(|value| {
                 let mut headers = HeaderMap::new();
-                headers.push("X-Fluxer-Sudo-Mode-JWT".to_owned(), value);
+                headers.insert(
+                    "X-Fluxer-Sudo-Mode-JWT",
+                    HeaderValue::from_str(&value).unwrap(),
+                );
                 headers
             }))
             .path(format!("/channels/{}?{}", self.channel_id, params))
