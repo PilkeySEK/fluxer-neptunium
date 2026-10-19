@@ -465,6 +465,62 @@ pub trait EventHandler: Send {
     ) -> Result<(), EventError> {
         Ok(())
     }
+    async fn on_thread_create(
+        &self,
+        ctx: Context,
+        data: Arc<std::collections::HashMap<String, serde_json::Value>>,
+    ) -> Result<(), EventError> {
+        Ok(())
+    }
+    async fn on_thread_update(
+        &self,
+        ctx: Context,
+        data: Arc<std::collections::HashMap<String, serde_json::Value>>,
+    ) -> Result<(), EventError> {
+        Ok(())
+    }
+    async fn on_thread_delete(
+        &self,
+        ctx: Context,
+        data: Arc<std::collections::HashMap<String, serde_json::Value>>,
+    ) -> Result<(), EventError> {
+        Ok(())
+    }
+    async fn on_thread_list_sync(
+        &self,
+        ctx: Context,
+        data: Arc<std::collections::HashMap<String, serde_json::Value>>,
+    ) -> Result<(), EventError> {
+        Ok(())
+    }
+    async fn on_thread_member_update(
+        &self,
+        ctx: Context,
+        data: Arc<std::collections::HashMap<String, serde_json::Value>>,
+    ) -> Result<(), EventError> {
+        Ok(())
+    }
+    async fn on_thread_members_update(
+        &self,
+        ctx: Context,
+        data: Arc<std::collections::HashMap<String, serde_json::Value>>,
+    ) -> Result<(), EventError> {
+        Ok(())
+    }
+    async fn on_thread_member_list_update(
+        &self,
+        ctx: Context,
+        data: Arc<std::collections::HashMap<String, serde_json::Value>>,
+    ) -> Result<(), EventError> {
+        Ok(())
+    }
+    async fn on_forum_unreads(
+        &self,
+        ctx: Context,
+        data: Arc<std::collections::HashMap<String, serde_json::Value>>,
+    ) -> Result<(), EventError> {
+        Ok(())
+    }
 }
 
 /// An error returned by an event handler.

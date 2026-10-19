@@ -291,6 +291,30 @@ impl super::Client {
                     call_event_handlers!(self.event_handlers, self.context, data => on_guild_counts_update);
                 }
             }
+            CachedDispatchEvent::ThreadCreate(data) => {
+                call_event_handlers!(self.event_handlers, self.context, data => on_thread_create);
+            }
+            CachedDispatchEvent::ThreadUpdate(data) => {
+                call_event_handlers!(self.event_handlers, self.context, data => on_thread_update);
+            }
+            CachedDispatchEvent::ThreadDelete(data) => {
+                call_event_handlers!(self.event_handlers, self.context, data => on_thread_delete);
+            }
+            CachedDispatchEvent::ThreadListSync(data) => {
+                call_event_handlers!(self.event_handlers, self.context, data => on_thread_list_sync);
+            }
+            CachedDispatchEvent::ThreadMemberUpdate(data) => {
+                call_event_handlers!(self.event_handlers, self.context, data => on_thread_member_update);
+            }
+            CachedDispatchEvent::ThreadMembersUpdate(data) => {
+                call_event_handlers!(self.event_handlers, self.context, data => on_thread_members_update);
+            }
+            CachedDispatchEvent::ThreadMemberListUpdate(data) => {
+                call_event_handlers!(self.event_handlers, self.context, data => on_thread_member_list_update);
+            }
+            CachedDispatchEvent::ForumUnreads(data) => {
+                call_event_handlers!(self.event_handlers, self.context, data => on_forum_unreads);
+            }
         }
     }
 }

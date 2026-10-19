@@ -110,6 +110,15 @@ pub enum DispatchEvent {
     GuildMembersChunk(GuildMembersChunk),
     GuildMemberListUpdate(GuildMemberListUpdate),
     GuildCountsUpdate(GuildCountsUpdate),
+    // All TODO:
+    ThreadCreate(std::collections::HashMap<String, serde_json::Value>),
+    ThreadUpdate(std::collections::HashMap<String, serde_json::Value>),
+    ThreadDelete(std::collections::HashMap<String, serde_json::Value>),
+    ThreadListSync(std::collections::HashMap<String, serde_json::Value>),
+    ThreadMemberUpdate(std::collections::HashMap<String, serde_json::Value>),
+    ThreadMembersUpdate(std::collections::HashMap<String, serde_json::Value>),
+    ThreadMemberListUpdate(std::collections::HashMap<String, serde_json::Value>),
+    ForumUnreads(std::collections::HashMap<String, serde_json::Value>),
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]

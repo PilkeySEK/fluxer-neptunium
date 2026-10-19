@@ -237,6 +237,20 @@ impl CachedDispatchEvent {
             DispatchEvent::GuildCountsUpdate(payload) => {
                 CachedDispatchEvent::GuildCountsUpdate(payload)
             }
+            DispatchEvent::ThreadCreate(payload) => CachedDispatchEvent::ThreadCreate(payload),
+            DispatchEvent::ThreadUpdate(payload) => CachedDispatchEvent::ThreadUpdate(payload),
+            DispatchEvent::ThreadDelete(payload) => CachedDispatchEvent::ThreadDelete(payload),
+            DispatchEvent::ThreadListSync(payload) => CachedDispatchEvent::ThreadListSync(payload),
+            DispatchEvent::ThreadMemberUpdate(payload) => {
+                CachedDispatchEvent::ThreadMemberUpdate(payload)
+            }
+            DispatchEvent::ThreadMembersUpdate(payload) => {
+                CachedDispatchEvent::ThreadMembersUpdate(payload)
+            }
+            DispatchEvent::ThreadMemberListUpdate(payload) => {
+                CachedDispatchEvent::ThreadMemberListUpdate(payload)
+            }
+            DispatchEvent::ForumUnreads(payload) => CachedDispatchEvent::ForumUnreads(payload),
         }
     }
 }
@@ -323,4 +337,13 @@ pub enum CachedDispatchEvent {
     GuildMembersChunk(CachedGuildMembersChunk),
     GuildMemberListUpdate(CachedGuildMemberListUpdate),
     GuildCountsUpdate(GuildCountsUpdate),
+    // All TODO:
+    ThreadCreate(std::collections::HashMap<String, serde_json::Value>),
+    ThreadUpdate(std::collections::HashMap<String, serde_json::Value>),
+    ThreadDelete(std::collections::HashMap<String, serde_json::Value>),
+    ThreadListSync(std::collections::HashMap<String, serde_json::Value>),
+    ThreadMemberUpdate(std::collections::HashMap<String, serde_json::Value>),
+    ThreadMembersUpdate(std::collections::HashMap<String, serde_json::Value>),
+    ThreadMemberListUpdate(std::collections::HashMap<String, serde_json::Value>),
+    ForumUnreads(std::collections::HashMap<String, serde_json::Value>),
 }
