@@ -129,6 +129,9 @@ pub struct Message {
     pub users: Option<Vec<PartialUser>>,
     pub embeds: Vec<Embed>,
     pub attachments: Vec<MessageAttachment>,
+    // The serde docs say that this is not optional but it seems like it is not sent sometimes?
+    // https://web.fluxer.app/channels/1484905952721252427/1484905952721252430/1561760563929808896
+    #[serde(default = "Vec::new")]
     pub stickers: Vec<StickerItem>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub reactions: Option<Vec<MessageReaction>>,
