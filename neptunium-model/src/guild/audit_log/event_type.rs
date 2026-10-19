@@ -41,4 +41,7 @@ pub enum AuditLogActionType {
     StickerCreate = 90,
     StickerUpdate = 91,
     StickerDelete = 92,
+    ThreadCreate = 110,
+    ThreadUpdate = 111,
+    ThreadDelete = 112,
 }
