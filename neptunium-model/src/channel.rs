@@ -87,6 +87,11 @@ pub enum ChannelType {
     GroupDm = 3,
     GuildCategory = 4,
     GuildAnnouncement = 5,
+    AnnouncementThread = 10,
+    PublicThread = 11,
+    PrivateThread = 12,
+    GuildForum = 15,
+    GuildMedia = 16,
     GuildLink = 998,
     DmPersonalNotes = 999,
 }
