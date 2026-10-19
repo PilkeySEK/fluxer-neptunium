@@ -214,7 +214,7 @@ impl Session {
                     }
                 }
                 // TODO: Technically cancel-unsafe
-                event_result = self.next_event_with_timeout_and_heartbeats_and_identifying_or_resuming() => {
+                event_result = self.next_event() => {
                     let event = event_result.map_err(SessionError::ClosedUnrecoverable)?;
                     tracing::trace!(?event, "Received event");
                     if let Err(e) = self.handle_event(event, &mut event_handler).await {
@@ -297,7 +297,7 @@ impl Session {
         Ok(())
     }
 
-    async fn next_event_with_timeout_and_heartbeats_and_identifying_or_resuming(
+    async fn next_event(
         &mut self,
     ) -> Result<GatewayEventIncoming, CloseFrame> {
         loop {
