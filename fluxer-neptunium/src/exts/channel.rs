@@ -207,6 +207,7 @@ impl<T: ChannelTrait> ChannelExt for T {
                 silent: None,
                 delete_messages: None,
             },
+            #[cfg(feature = "user_api")]
             body: None,
             sudo_mode_jwt: None,
         }
@@ -221,6 +222,7 @@ impl<T: ChannelTrait> ChannelExt for T {
                 silent: Some(true),
                 delete_messages: None,
             },
+            #[cfg(feature = "user_api")]
             body: None,
             sudo_mode_jwt: None,
         }
