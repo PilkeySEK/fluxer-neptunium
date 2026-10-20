@@ -1,8 +1,7 @@
 use bon::Builder;
-use neptunium_model::{
-    id::{Id, marker::ChannelMarker},
-    user::auth::SudoVerification,
-};
+use neptunium_model::id::{Id, marker::ChannelMarker};
+#[cfg(feature = "user_api")]
+use neptunium_model::user::auth::SudoVerification;
 use reqwest::{
     Method,
     header::{HeaderMap, HeaderValue},
@@ -29,6 +28,7 @@ pub struct DeleteOrLeaveChannelParams {
 pub struct DeleteOrLeaveChannel {
     pub channel_id: Id<ChannelMarker>,
     pub params: DeleteOrLeaveChannelParams,
+    #[cfg(feature = "user_api")]
     pub body: Option<SudoVerification>,
     pub sudo_mode_jwt: Option<String>,
 }
