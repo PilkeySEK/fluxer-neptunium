@@ -41,7 +41,12 @@ impl Endpoint for DeleteOrLeaveChannel {
 
         Request::builder()
             .method(Method::DELETE)
-            .maybe_body(self.body.map(|body| serde_json::to_string(&body).unwrap()))
+            .maybe_body('blk: {
+                #[cfg(feature = "user_api")]
+                break 'blk self.body.map(|body| serde_json::to_string(&body).unwrap());
+                #[cfg(not(feature = "user_api"))]
+                break 'blk None;
+            })
             .maybe_headers(self.sudo_mode_jwt.map(|value| {
                 let mut headers = HeaderMap::new();
                 headers.insert(
