@@ -39,6 +39,17 @@ pub struct Cached<T> {
     last_value: Arc<T>,
 }
 
+impl<T: PartialEq<T>> PartialEq for Cached<T> {
+    fn eq(&self, other: &Self) -> bool {
+        (**self).eq(&**other)
+    }
+    fn ne(&self, other: &Self) -> bool {
+        (**self).ne(&**other)
+    }
+}
+
+impl<T: Eq> Eq for Cached<T> {}
+
 // TODO: More things to cache: guild channels (guild id->channels), relationships,
 // guild invites (guild id->invites)
 #[expect(clippy::type_complexity)]

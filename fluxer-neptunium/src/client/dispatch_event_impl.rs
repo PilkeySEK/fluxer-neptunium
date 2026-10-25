@@ -295,7 +295,7 @@ impl super::Client {
                 call_event_handlers!(self.event_handlers, self.context, data => on_thread_create);
             }
             CachedDispatchEvent::ThreadUpdate(data) => {
-                call_event_handlers!(self.event_handlers, self.context, data => on_thread_update);
+                call_event_handlers_noarc!(self.event_handlers, self.context, data => on_thread_update);
             }
             CachedDispatchEvent::ThreadDelete(data) => {
                 call_event_handlers!(self.event_handlers, self.context, data => on_thread_delete);

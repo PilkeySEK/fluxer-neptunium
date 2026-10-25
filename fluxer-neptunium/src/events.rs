@@ -3,7 +3,9 @@ use std::sync::Arc;
 use async_trait::async_trait;
 use bon::Builder;
 use neptunium_cache_inmemory::{
-    Cached, CachedChannel, CachedGuildMember, CachedGuildRole, CachedMessage,
+    Cached, CachedChannel, CachedGuildMember, CachedGuildRole, CachedMessage, CachedThreadCreate,
+    CachedThreadListSync, CachedThreadMemberListUpdate, CachedThreadMemberUpdate,
+    CachedThreadMembersUpdate,
     gateway::cached_payload::{
         CachedGuildCreate, CachedGuildMemberListUpdate, CachedGuildMembersChunk,
         CachedGuildRoleUpdateBulk, CachedMessageCreate, CachedMessageReactionAdd,
@@ -11,15 +13,16 @@ use neptunium_cache_inmemory::{
     },
 };
 use neptunium_model::{
+    channel::thread::ThreadChannel,
     gateway::payload::incoming::{
         AuthSessionChange, CallCreate, CallDelete, CallUpdate, ChannelPinsAck, ChannelPinsUpdate,
-        ChannelRecipientAdd, ChannelRecipientRemove, ChannelUpdateBulk, GuildAuditLogEntryCreate,
-        GuildBanAdd, GuildBanRemove, GuildCountsUpdate, GuildDelete, GuildEmojisUpdate,
-        GuildMemberRemove, GuildRoleDelete, GuildStickersUpdate, InviteDelete, MessageAck,
-        MessageDelete, MessageDeleteBulk, MessageReactionRemoveAll, MessageReactionRemoveEmoji,
-        PresenceUpdateIncoming, RecentMentionDelete, RelationshipRemove, Resumed, SavedMediaDelete,
-        SavedMessageDelete, UserNoteUpdate, UserPrivateResponse, VoiceServerUpdate,
-        VoiceStateUpdate, WebhooksUpdate,
+        ChannelRecipientAdd, ChannelRecipientRemove, ChannelUpdateBulk, ForumUnreads,
+        GuildAuditLogEntryCreate, GuildBanAdd, GuildBanRemove, GuildCountsUpdate, GuildDelete,
+        GuildEmojisUpdate, GuildMemberRemove, GuildRoleDelete, GuildStickersUpdate, InviteDelete,
+        MessageAck, MessageDelete, MessageDeleteBulk, MessageReactionRemoveAll,
+        MessageReactionRemoveEmoji, PresenceUpdateIncoming, RecentMentionDelete,
+        RelationshipRemove, Resumed, SavedMediaDelete, SavedMessageDelete, ThreadDelete,
+        UserNoteUpdate, UserPrivateResponse, VoiceServerUpdate, VoiceStateUpdate, WebhooksUpdate,
     },
     guild::Guild,
     id::{Id, marker::ChannelMarker},
@@ -468,56 +471,56 @@ pub trait EventHandler: Send {
     async fn on_thread_create(
         &self,
         ctx: Context,
-        data: Arc<std::collections::HashMap<String, serde_json::Value>>,
+        data: Arc<CachedThreadCreate>,
     ) -> Result<(), EventError> {
         Ok(())
     }
     async fn on_thread_update(
         &self,
         ctx: Context,
-        data: Arc<std::collections::HashMap<String, serde_json::Value>>,
+        data: Cached<ThreadChannel>,
     ) -> Result<(), EventError> {
         Ok(())
     }
     async fn on_thread_delete(
         &self,
         ctx: Context,
-        data: Arc<std::collections::HashMap<String, serde_json::Value>>,
+        data: Arc<ThreadDelete>,
     ) -> Result<(), EventError> {
         Ok(())
     }
     async fn on_thread_list_sync(
         &self,
         ctx: Context,
-        data: Arc<std::collections::HashMap<String, serde_json::Value>>,
+        data: Arc<CachedThreadListSync>,
     ) -> Result<(), EventError> {
         Ok(())
     }
     async fn on_thread_member_update(
         &self,
         ctx: Context,
-        data: Arc<std::collections::HashMap<String, serde_json::Value>>,
+        data: Arc<CachedThreadMemberUpdate>,
     ) -> Result<(), EventError> {
         Ok(())
     }
     async fn on_thread_members_update(
         &self,
         ctx: Context,
-        data: Arc<std::collections::HashMap<String, serde_json::Value>>,
+        data: Arc<CachedThreadMembersUpdate>,
     ) -> Result<(), EventError> {
         Ok(())
     }
     async fn on_thread_member_list_update(
         &self,
         ctx: Context,
-        data: Arc<std::collections::HashMap<String, serde_json::Value>>,
+        data: Arc<CachedThreadMemberListUpdate>,
     ) -> Result<(), EventError> {
         Ok(())
     }
     async fn on_forum_unreads(
         &self,
         ctx: Context,
-        data: Arc<std::collections::HashMap<String, serde_json::Value>>,
+        data: Arc<ForumUnreads>,
     ) -> Result<(), EventError> {
         Ok(())
     }

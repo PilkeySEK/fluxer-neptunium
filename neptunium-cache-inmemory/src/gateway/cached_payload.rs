@@ -18,6 +18,7 @@ pub use typing_start::*;
 
 use crate::Cache;
 
+// TODO: Is this trait really necessary?
 pub(crate) trait CachedPayload {
     type NonCached;
     fn cache_payload(non_cached: Self::NonCached, cache: &Arc<Cache>) -> Self;

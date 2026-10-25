@@ -1,17 +1,18 @@
 use std::sync::Arc;
 
 use neptunium_model::{
+    channel::thread::ThreadChannel,
     gateway::{
         event::dispatch::DispatchEvent,
         payload::incoming::{
             AuthSessionChange, CallCreate, CallDelete, CallUpdate, ChannelPinsAck,
             ChannelPinsUpdate, ChannelRecipientAdd, ChannelRecipientRemove, ChannelUpdateBulk,
-            GuildAuditLogEntryCreate, GuildBanAdd, GuildBanRemove, GuildCountsUpdate, GuildDelete,
-            GuildEmojisUpdate, GuildMemberRemove, GuildRoleCreate, GuildRoleDelete,
+            ForumUnreads, GuildAuditLogEntryCreate, GuildBanAdd, GuildBanRemove, GuildCountsUpdate,
+            GuildDelete, GuildEmojisUpdate, GuildMemberRemove, GuildRoleCreate, GuildRoleDelete,
             GuildStickersUpdate, InviteDelete, MessageAck, MessageDelete, MessageDeleteBulk,
             MessageReactionRemoveAll, MessageReactionRemoveEmoji, PresenceUpdateIncoming,
             RecentMentionDelete, RelationshipRemove, Resumed, SavedMediaDelete, SavedMessageDelete,
-            UserNoteUpdate, UserPrivateResponse, VoiceServerUpdate, VoiceStateUpdate,
+            ThreadDelete, UserNoteUpdate, UserPrivateResponse, VoiceServerUpdate, VoiceStateUpdate,
             WebhooksUpdate,
         },
     },
@@ -26,6 +27,8 @@ use neptunium_model::{
 
 use crate::{
     Cache, CacheValue, Cached, CachedChannel, CachedGuildMember, CachedGuildRole, CachedMessage,
+    CachedThreadCreate, CachedThreadListSync, CachedThreadMemberListUpdate,
+    CachedThreadMemberUpdate, CachedThreadMembersUpdate,
     gateway::cached_payload::{
         CachedGuildCreate, CachedGuildMemberListUpdate, CachedGuildMembersChunk,
         CachedGuildRoleUpdateBulk, CachedMessageCreate, CachedMessageReactionAdd,
@@ -237,18 +240,24 @@ impl CachedDispatchEvent {
             DispatchEvent::GuildCountsUpdate(payload) => {
                 CachedDispatchEvent::GuildCountsUpdate(payload)
             }
-            DispatchEvent::ThreadCreate(payload) => CachedDispatchEvent::ThreadCreate(payload),
-            DispatchEvent::ThreadUpdate(payload) => CachedDispatchEvent::ThreadUpdate(payload),
+            DispatchEvent::ThreadCreate(payload) => {
+                CachedDispatchEvent::ThreadCreate((payload, cache).into())
+            }
+            DispatchEvent::ThreadUpdate(payload) => {
+                CachedDispatchEvent::ThreadUpdate(payload.insert_and_return(cache))
+            }
             DispatchEvent::ThreadDelete(payload) => CachedDispatchEvent::ThreadDelete(payload),
-            DispatchEvent::ThreadListSync(payload) => CachedDispatchEvent::ThreadListSync(payload),
+            DispatchEvent::ThreadListSync(payload) => {
+                CachedDispatchEvent::ThreadListSync((payload, cache).into())
+            }
             DispatchEvent::ThreadMemberUpdate(payload) => {
-                CachedDispatchEvent::ThreadMemberUpdate(payload)
+                CachedDispatchEvent::ThreadMemberUpdate((payload, cache).into())
             }
             DispatchEvent::ThreadMembersUpdate(payload) => {
-                CachedDispatchEvent::ThreadMembersUpdate(payload)
+                CachedDispatchEvent::ThreadMembersUpdate((payload, cache).into())
             }
             DispatchEvent::ThreadMemberListUpdate(payload) => {
-                CachedDispatchEvent::ThreadMemberListUpdate(payload)
+                CachedDispatchEvent::ThreadMemberListUpdate((payload, cache).into())
             }
             DispatchEvent::ForumUnreads(payload) => CachedDispatchEvent::ForumUnreads(payload),
         }
@@ -338,12 +347,12 @@ pub enum CachedDispatchEvent {
     GuildMemberListUpdate(CachedGuildMemberListUpdate),
     GuildCountsUpdate(GuildCountsUpdate),
     // All TODO:
-    ThreadCreate(std::collections::HashMap<String, serde_json::Value>),
-    ThreadUpdate(std::collections::HashMap<String, serde_json::Value>),
-    ThreadDelete(std::collections::HashMap<String, serde_json::Value>),
-    ThreadListSync(std::collections::HashMap<String, serde_json::Value>),
-    ThreadMemberUpdate(std::collections::HashMap<String, serde_json::Value>),
-    ThreadMembersUpdate(std::collections::HashMap<String, serde_json::Value>),
-    ThreadMemberListUpdate(std::collections::HashMap<String, serde_json::Value>),
-    ForumUnreads(std::collections::HashMap<String, serde_json::Value>),
+    ThreadCreate(CachedThreadCreate),
+    ThreadUpdate(Cached<ThreadChannel>),
+    ThreadDelete(ThreadDelete),
+    ThreadListSync(CachedThreadListSync),
+    ThreadMemberUpdate(CachedThreadMemberUpdate),
+    ThreadMembersUpdate(CachedThreadMembersUpdate),
+    ThreadMemberListUpdate(CachedThreadMemberListUpdate),
+    ForumUnreads(ForumUnreads),
 }

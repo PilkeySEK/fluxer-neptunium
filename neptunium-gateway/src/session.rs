@@ -297,9 +297,7 @@ impl Session {
         Ok(())
     }
 
-    async fn next_event(
-        &mut self,
-    ) -> Result<GatewayEventIncoming, CloseFrame> {
+    async fn next_event(&mut self) -> Result<GatewayEventIncoming, CloseFrame> {
         loop {
             let heartbeat_ack_timeout_at =
                 self.conn.last_heartbeat_ack_at + (self.conn.heartbeat_interval * 2);

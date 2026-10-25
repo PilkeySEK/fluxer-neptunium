@@ -24,7 +24,7 @@ pub enum PresenceStatus {
     Offline,
 }
 
-#[derive(Builder, Serialize, Deserialize, Clone, Debug)]
+#[derive(Builder, Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct CustomStatus {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(into)]

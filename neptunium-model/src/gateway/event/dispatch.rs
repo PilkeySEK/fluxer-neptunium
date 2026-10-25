@@ -1,19 +1,20 @@
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    channel::{Channel, message::Message},
+    channel::{Channel, message::Message, thread::ThreadChannel},
     gateway::payload::incoming::{
         AuthSessionChange, CallCreate, CallDelete, CallUpdate, ChannelPinsAck, ChannelPinsUpdate,
-        ChannelRecipientAdd, ChannelRecipientRemove, ChannelUpdateBulk, GuildAuditLogEntryCreate,
-        GuildBanAdd, GuildBanRemove, GuildCountsUpdate, GuildCreate, GuildDelete,
-        GuildEmojisUpdate, GuildMemberAdd, GuildMemberListUpdate, GuildMemberRemove,
+        ChannelRecipientAdd, ChannelRecipientRemove, ChannelUpdateBulk, ForumUnreads,
+        GuildAuditLogEntryCreate, GuildBanAdd, GuildBanRemove, GuildCountsUpdate, GuildCreate,
+        GuildDelete, GuildEmojisUpdate, GuildMemberAdd, GuildMemberListUpdate, GuildMemberRemove,
         GuildMemberUpdate, GuildMembersChunk, GuildRoleCreate, GuildRoleDelete, GuildRoleUpdate,
         GuildRoleUpdateBulk, GuildStickersUpdate, InviteDelete, MessageAck, MessageCreate,
         MessageDelete, MessageDeleteBulk, MessageReactionAdd, MessageReactionRemove,
         MessageReactionRemoveAll, MessageReactionRemoveEmoji, PresenceUpdateIncoming, Ready,
         RecentMentionDelete, RelationshipRemove, Resumed, SavedMediaDelete, SavedMessageDelete,
-        TypingStart, UserNoteUpdate, UserPrivateResponse, VoiceServerUpdate, VoiceStateUpdate,
-        WebhooksUpdate,
+        ThreadCreate, ThreadDelete, ThreadListSync, ThreadMemberListUpdate, ThreadMemberUpdate,
+        ThreadMembersUpdate, TypingStart, UserNoteUpdate, UserPrivateResponse, VoiceServerUpdate,
+        VoiceStateUpdate, WebhooksUpdate,
     },
     guild::Guild,
     id::{Id, marker::ChannelMarker},
@@ -111,14 +112,27 @@ pub enum DispatchEvent {
     GuildMemberListUpdate(GuildMemberListUpdate),
     GuildCountsUpdate(GuildCountsUpdate),
     // All TODO:
-    ThreadCreate(std::collections::HashMap<String, serde_json::Value>),
-    ThreadUpdate(std::collections::HashMap<String, serde_json::Value>),
-    ThreadDelete(std::collections::HashMap<String, serde_json::Value>),
-    ThreadListSync(std::collections::HashMap<String, serde_json::Value>),
-    ThreadMemberUpdate(std::collections::HashMap<String, serde_json::Value>),
-    ThreadMembersUpdate(std::collections::HashMap<String, serde_json::Value>),
-    ThreadMemberListUpdate(std::collections::HashMap<String, serde_json::Value>),
-    ForumUnreads(std::collections::HashMap<String, serde_json::Value>),
+    /// A passive session only receives this event when its user is a member of the thread.
+    ThreadCreate(ThreadCreate),
+    /// A passive session only receives this event when its user is a member of the thread.
+    ThreadUpdate(ThreadChannel),
+    /// A passive session only receives this event when its user is a member of the thread.
+    ThreadDelete(ThreadDelete),
+    /// The session’s active threads are replaced for a guild or for some of its channels.
+    ///
+    /// `Resume` does not replay this event.
+    ThreadListSync(ThreadListSync),
+    /// The session’s own membership in a thread changes.
+    /// Every session of the user that can view the thread receives this event.
+    ThreadMemberUpdate(ThreadMemberUpdate),
+    /// Users join or leave a thread.
+    ThreadMembersUpdate(ThreadMembersUpdate),
+    /// The full member list of a thread the session subscribed to with `thread_member_lists`.
+    ///
+    /// `Resume` does not replay this event.
+    ThreadMemberListUpdate(ThreadMemberListUpdate),
+    /// The answer to `RequestForumUnreads`.
+    ForumUnreads(ForumUnreads),
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]

@@ -10,9 +10,12 @@ use neptunium_model::{
             MessageSnapshot, MessageType, StickerItem, attachment::MessageAttachment, embed::Embed,
             nonce::Nonce,
         },
-        thread::ThreadChannel,
+        thread::{ThreadChannel, ThreadMember, ThreadMemberFlags},
     },
-    gateway::payload::incoming::UserPremiumType,
+    gateway::payload::incoming::{
+        ThreadCreate, ThreadListSync, ThreadMemberListItem, ThreadMemberListItemPresence,
+        ThreadMemberListUpdate, ThreadMemberUpdate, ThreadMembersUpdate, UserPremiumType,
+    },
     guild::{
         member::{GuildMember, GuildMemberProfile, GuildMemberProfileFlags},
         permissions::{GuildRole, Permissions},
@@ -25,7 +28,10 @@ use neptunium_model::{
     },
     misc::HexColor,
     time::timestamp::{Timestamp, representations::Iso8601},
-    user::{PartialUser, UserExternalAccountConnection, UserProfileData},
+    user::{
+        PartialUser, UserExternalAccountConnection, UserProfileData,
+        settings::GuildMuteConfiguration,
+    },
 };
 
 use crate::{
@@ -272,6 +278,7 @@ impl From<CachedMessage> for Message {
     }
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CachedGuildMember {
     pub accent_color: Option<HexColor>,
     pub avatar: Option<String>,
@@ -426,6 +433,242 @@ impl CachedGuildRole {
             hoist_position: value.hoist_position,
             mentionable: value.mentionable,
             guild_id,
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct CachedThreadMember {
+    /// The ID of the thread.
+    /// Omitted on the member of a thread in `Ready`, `GuildCreate`, and `GuildSync`.
+    pub thread_id: Option<Id<ChannelMarker>>,
+    /// Omitted on the member of a thread in `Ready`, `GuildCreate`, and `GuildSync`.
+    pub user_id: Option<Id<UserMarker>>,
+    /// The time the user last joined the thread.
+    pub join_timestamp: Timestamp<Iso8601>,
+    pub flags: ThreadMemberFlags,
+    /// Whether the user muted the thread.
+    /// Present only on the caller's own membership.
+    pub muted: Option<bool>,
+    ///  In an HTTP response, present only when the request sets `with_member` and the user is still a guild member.
+    /// `ThreadMembersUpdate` defines it on each `added_members` entry.
+    pub mute_config: Option<GuildMuteConfiguration>,
+    ///  In an HTTP response, present only when the request sets `with_member` and the user is still a guild member.
+    /// `ThreadMembersUpdate` defines it on each `added_members` entry.
+    pub guild_member: Option<Cached<CachedGuildMember>>,
+}
+
+impl From<(ThreadMember, Id<GuildMarker>, &Arc<Cache>)> for CachedThreadMember {
+    fn from((member, guild_id, cache): (ThreadMember, Id<GuildMarker>, &Arc<Cache>)) -> Self {
+        Self {
+            thread_id: member.thread_id,
+            user_id: member.user_id,
+            join_timestamp: member.join_timestamp,
+            flags: member.flags,
+            muted: member.muted,
+            mute_config: member.mute_config,
+            guild_member: member.guild_member.map(|member| {
+                CachedGuildMember::from_guild_member(member, guild_id, cache)
+                    .insert_and_return(cache)
+            }),
+        }
+    }
+}
+
+impl From<CachedThreadMember> for ThreadMember {
+    fn from(value: CachedThreadMember) -> Self {
+        Self {
+            thread_id: value.thread_id,
+            user_id: value.user_id,
+            join_timestamp: value.join_timestamp,
+            flags: value.flags,
+            muted: value.muted,
+            mute_config: value.mute_config,
+            guild_member: value.guild_member.map(|member| member.clone_inner().into()),
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct CachedThreadCreate {
+    pub thread: Cached<ThreadChannel>,
+    /// `Some(true)` when the thread was just created, `None` when the session was added to an existing thread.
+    pub newly_created: Option<bool>,
+    /// The session's own membership.
+    pub member: Option<CachedThreadMember>,
+}
+
+impl From<(ThreadCreate, &Arc<Cache>)> for CachedThreadCreate {
+    fn from((event, cache): (ThreadCreate, &Arc<Cache>)) -> Self {
+        Self {
+            member: event
+                .member
+                .map(|member| (member, event.thread.guild_id, cache).into()),
+            thread: event.thread.insert_and_return(cache),
+            newly_created: event.newly_created,
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct CachedThreadListSync {
+    pub guild_id: Id<GuildMarker>,
+    /// `None` for the whole guild.
+    pub channel_ids: Option<Vec<Id<ChannelMarker>>>,
+    pub threads: Vec<Cached<ThreadChannel>>,
+    pub members: Vec<CachedThreadMember>,
+}
+
+impl From<(ThreadListSync, &Arc<Cache>)> for CachedThreadListSync {
+    fn from((event, cache): (ThreadListSync, &Arc<Cache>)) -> Self {
+        Self {
+            guild_id: event.guild_id,
+            channel_ids: event.channel_ids,
+            threads: event
+                .threads
+                .into_iter()
+                .map(|thread| thread.insert_and_return(cache))
+                .collect(),
+            members: event
+                .members
+                .into_iter()
+                .map(|member| (member, event.guild_id, cache).into())
+                .collect(),
+        }
+    }
+}
+
+impl From<CachedThreadListSync> for ThreadListSync {
+    fn from(value: CachedThreadListSync) -> Self {
+        Self {
+            guild_id: value.guild_id,
+            channel_ids: value.channel_ids,
+            threads: value
+                .threads
+                .into_iter()
+                .map(|thread| thread.clone_inner())
+                .collect(),
+            members: value
+                .members
+                .into_iter()
+                .map(|member| member.into())
+                .collect(),
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct CachedThreadMemberUpdate {
+    pub thread_member: CachedThreadMember,
+    pub guild_id: Id<GuildMarker>,
+}
+
+impl From<(ThreadMemberUpdate, &Arc<Cache>)> for CachedThreadMemberUpdate {
+    fn from((event, cache): (ThreadMemberUpdate, &Arc<Cache>)) -> Self {
+        Self {
+            thread_member: (event.thread_member, event.guild_id, cache).into(),
+            guild_id: event.guild_id,
+        }
+    }
+}
+
+impl From<CachedThreadMemberUpdate> for ThreadMemberUpdate {
+    fn from(value: CachedThreadMemberUpdate) -> Self {
+        Self {
+            thread_member: value.thread_member.into(),
+            guild_id: value.guild_id,
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct CachedThreadMembersUpdate {
+    /// The thread ID.
+    pub id: Id<ChannelMarker>,
+    pub guild_id: Id<GuildMarker>,
+    /// The number of thread members, max. `50`.
+    pub member_count: usize,
+    // TODO: https://web.fluxer.app/channels/1484905952721252427/1484905952721252430/1563642795653070848
+    pub added_members: Option<Vec<CachedThreadMember>>,
+    pub removed_member_ids: Option<Vec<Id<UserMarker>>>,
+}
+
+impl From<(ThreadMembersUpdate, &Arc<Cache>)> for CachedThreadMembersUpdate {
+    fn from((event, cache): (ThreadMembersUpdate, &Arc<Cache>)) -> Self {
+        Self {
+            id: event.id,
+            guild_id: event.guild_id,
+            member_count: event.member_count,
+            added_members: event.added_members.map(|added_members| {
+                added_members
+                    .into_iter()
+                    .map(|member| (member, event.guild_id, cache).into())
+                    .collect()
+            }),
+            removed_member_ids: event.removed_member_ids,
+        }
+    }
+}
+
+impl From<CachedThreadMembersUpdate> for ThreadMembersUpdate {
+    fn from(value: CachedThreadMembersUpdate) -> Self {
+        Self {
+            id: value.id,
+            guild_id: value.guild_id,
+            member_count: value.member_count,
+            added_members: value.added_members.map(|added_members| {
+                added_members
+                    .into_iter()
+                    .map(|member| member.into())
+                    .collect()
+            }),
+            removed_member_ids: value.removed_member_ids,
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct CachedThreadMemberListUpdate {
+    pub guild_id: Id<GuildMarker>,
+    pub thread_id: Id<ChannelMarker>,
+    pub members: Vec<CachedThreadMemberListItem>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct CachedThreadMemberListItem {
+    pub user_id: Id<UserMarker>,
+    pub join_timestamp: Option<Timestamp<Iso8601>>,
+    /// Undocumented (?)
+    pub flags: u64,
+    pub member: Option<Cached<CachedGuildMember>>,
+    pub presence: Option<ThreadMemberListItemPresence>,
+}
+
+impl From<(ThreadMemberListUpdate, &Arc<Cache>)> for CachedThreadMemberListUpdate {
+    fn from((event, cache): (ThreadMemberListUpdate, &Arc<Cache>)) -> Self {
+        Self {
+            guild_id: event.guild_id,
+            thread_id: event.thread_id,
+            members: event
+                .members
+                .into_iter()
+                .map(|item| (item, event.guild_id, cache).into())
+                .collect(),
+        }
+    }
+}
+
+impl From<(ThreadMemberListItem, Id<GuildMarker>, &Arc<Cache>)> for CachedThreadMemberListItem {
+    fn from((item, guild_id, cache): (ThreadMemberListItem, Id<GuildMarker>, &Arc<Cache>)) -> Self {
+        Self {
+            user_id: item.user_id,
+            join_timestamp: item.join_timestamp,
+            flags: item.flags,
+            member: item.member.map(|member| {
+                CachedGuildMember::from_guild_member(member, guild_id, cache)
+                    .insert_and_return(cache)
+            }),
+            presence: item.presence,
         }
     }
 }
