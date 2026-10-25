@@ -23,6 +23,7 @@ mod user_content_events;
 mod user_events;
 mod voice_events;
 mod webhooks_events;
+mod thread_events;
 
 pub use audit_log_events::*;
 pub use authentication_events::*;
@@ -49,3 +50,4 @@ pub use user_content_events::*;
 pub use user_events::*;
 pub use voice_events::*;
 pub use webhooks_events::*;
+pub use thread_events::*;
