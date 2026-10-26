@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize, ser::SerializeStruct};
 
-use crate::gateway::event::op_code::OpCode;
+use crate::gateway::event::op_code::OutgoingOpCode;
 
 mod heartbeat;
 mod identify;
@@ -38,13 +38,13 @@ impl Serialize for OutgoingGatewayMessage {
         let mut s = serializer.serialize_struct("OutgoingGatewayMessage", 2)?;
 
         let op = match self {
-            Self::Identify(_) => OpCode::Identify,
-            Self::Heartbeat(_) => OpCode::Heartbeat,
-            Self::PresenceUpdate(_) => OpCode::PresenceUpdate,
-            Self::Resume(_) => OpCode::Resume,
-            Self::LazyRequest(_) => OpCode::LazyRequest,
-            Self::RequestGuildMembers(_) => OpCode::RequestGuildMembers,
-            Self::RequestGuildCounts(_) => OpCode::RequestGuildCounts,
+            Self::Identify(_) => OutgoingOpCode::Identify,
+            Self::Heartbeat(_) => OutgoingOpCode::Heartbeat,
+            Self::PresenceUpdate(_) => OutgoingOpCode::PresenceUpdate,
+            Self::Resume(_) => OutgoingOpCode::Resume,
+            Self::LazyRequest(_) => OutgoingOpCode::LazyRequest,
+            Self::RequestGuildMembers(_) => OutgoingOpCode::RequestGuildMembers,
+            Self::RequestGuildCounts(_) => OutgoingOpCode::RequestGuildCounts,
         } as u8;
         s.serialize_field("op", &op)?;
         match self {
@@ -73,29 +73,29 @@ impl<'de> Deserialize<'de> for OutgoingGatewayMessage {
         }
 
         let schema = Schema::deserialize(deserializer)?;
-        let Some(op_code) = OpCode::from(schema.op) else {
+        let Ok(op_code) = OutgoingOpCode::try_from(schema.op) else {
             return Err(serde::de::Error::custom("unknown opcode"));
         };
         Ok(match op_code {
-            OpCode::Identify => {
+            OutgoingOpCode::Identify => {
                 Self::Identify(serde_json::from_value(schema.d).map_err(serde::de::Error::custom)?)
             }
-            OpCode::Heartbeat => {
+            OutgoingOpCode::Heartbeat => {
                 Self::Heartbeat(serde_json::from_value(schema.d).map_err(serde::de::Error::custom)?)
             }
-            OpCode::PresenceUpdate => Self::PresenceUpdate(
+            OutgoingOpCode::PresenceUpdate => Self::PresenceUpdate(
                 serde_json::from_value(schema.d).map_err(serde::de::Error::custom)?,
             ),
-            OpCode::Resume => {
+            OutgoingOpCode::Resume => {
                 Self::Resume(serde_json::from_value(schema.d).map_err(serde::de::Error::custom)?)
             }
-            OpCode::LazyRequest => Self::LazyRequest(
+            OutgoingOpCode::LazyRequest => Self::LazyRequest(
                 serde_json::from_value(schema.d).map_err(serde::de::Error::custom)?,
             ),
-            OpCode::RequestGuildMembers => Self::RequestGuildMembers(
+            OutgoingOpCode::RequestGuildMembers => Self::RequestGuildMembers(
                 serde_json::from_value(schema.d).map_err(serde::de::Error::custom)?,
             ),
-            OpCode::RequestGuildCounts => Self::RequestGuildCounts(
+            OutgoingOpCode::RequestGuildCounts => Self::RequestGuildCounts(
                 serde_json::from_value(schema.d).map_err(serde::de::Error::custom)?,
             ),
             _ => todo!(),

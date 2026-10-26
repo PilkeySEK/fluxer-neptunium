@@ -293,6 +293,9 @@ impl Session {
                     event => event_handler(event),
                 }
             }
+            GatewayEventIncoming::Ignored(op) => {
+                tracing::debug!(op, "Ignoring event with unknown op");
+            }
         }
         Ok(())
     }

@@ -1,12 +1,13 @@
 use serde::{
     Deserialize, Serialize,
-    de::{self, Error, Unexpected},
+    de::{self, Error},
 };
 use serde_json::{Value, json};
 
 use crate::gateway::{
     event::{
-        dispatch::DispatchEventPayload, invalid_session::InvalidSessionEvent, op_code::OpCode,
+        dispatch::DispatchEventPayload, invalid_session::InvalidSessionEvent,
+        op_code::IncomingOpCode,
     },
     payload::incoming::{GatewayError, Hello},
 };
@@ -21,6 +22,9 @@ pub enum GatewayEventIncoming {
     InvalidSession(InvalidSessionEvent),
     Reconnect,
     GatewayError(GatewayError),
+    /// The fluxer docs say that the client should ignore a server
+    /// opcode that is not documented.
+    Ignored(u64),
 }
 
 impl<'de> Deserialize<'de> for GatewayEventIncoming {
@@ -35,22 +39,25 @@ impl<'de> Deserialize<'de> for GatewayEventIncoming {
             .and_then(Value::as_u64)
             .ok_or_else(|| de::Error::missing_field("op"))?;
         #[expect(clippy::cast_possible_truncation)]
-        let op = OpCode::from(op as u8)
-            .ok_or_else(|| de::Error::invalid_value(Unexpected::Unsigned(op), &"a valid opcode"))?;
+        let Ok(op) = IncomingOpCode::try_from(op as u8) else {
+            return Ok(Self::Ignored(op));
+        };
 
         let d = raw["d"].clone();
 
         Ok(match op {
-            OpCode::Dispatch => {
+            IncomingOpCode::Dispatch => {
                 Self::Dispatch(serde_json::from_value(raw).map_err(de::Error::custom)?)
             }
-            OpCode::Hello => Self::Hello(serde_json::from_value(d).map_err(de::Error::custom)?),
-            OpCode::Heartbeat => Self::Heartbeat,
-            OpCode::HeartbeatAck => Self::HeartbeatAck,
-            OpCode::InvalidSession => {
+            IncomingOpCode::Hello => {
+                Self::Hello(serde_json::from_value(d).map_err(de::Error::custom)?)
+            }
+            IncomingOpCode::Heartbeat => Self::Heartbeat,
+            IncomingOpCode::HeartbeatAck => Self::HeartbeatAck,
+            IncomingOpCode::InvalidSession => {
                 Self::InvalidSession(serde_json::from_value(d).map_err(de::Error::custom)?)
             }
-            OpCode::Reconnect => Self::Reconnect,
+            IncomingOpCode::Reconnect => Self::Reconnect,
             opcode => {
                 return Err(D::Error::custom(format!(
                     "Not yet supported opcode: {opcode:?}"
@@ -71,45 +78,48 @@ impl Serialize for GatewayEventIncoming {
                 struct Wrapper<'a> {
                     #[serde(flatten)]
                     data: &'a DispatchEventPayload,
-                    op: OpCode,
+                    op: IncomingOpCode,
                 }
 
                 Wrapper {
                     data,
-                    op: OpCode::Dispatch,
+                    op: IncomingOpCode::Dispatch,
                 }
                 .serialize(serializer)
             }
             Self::GatewayError(data) => json!({
-                "op": OpCode::GatewayError,
+                "op": IncomingOpCode::GatewayError,
                 "d": data,
             })
             .serialize(serializer),
             Self::Heartbeat => json!({
-                "op": OpCode::Heartbeat,
+                "op": IncomingOpCode::Heartbeat,
                 "d": serde_json::Value::Null,
             })
             .serialize(serializer),
             Self::HeartbeatAck => json!({
-                "op": OpCode::HeartbeatAck,
+                "op": IncomingOpCode::HeartbeatAck,
                 "d": serde_json::Value::Null,
             })
             .serialize(serializer),
             Self::Hello(data) => json!({
-                "op": OpCode::Hello,
+                "op": IncomingOpCode::Hello,
                 "d": data,
             })
             .serialize(serializer),
             Self::InvalidSession(InvalidSessionEvent { resumable }) => json!({
-                "op": OpCode::InvalidSession,
+                "op": IncomingOpCode::InvalidSession,
                 "d": resumable,
             })
             .serialize(serializer),
             Self::Reconnect => json!({
-                "op": OpCode::Reconnect,
+                "op": IncomingOpCode::Reconnect,
                 "d": serde_json::Value::Null,
             })
             .serialize(serializer),
+            Self::Ignored(_) => Err(serde::ser::Error::custom(
+                "cannot serializer Ignored variant",
+            )),
         }
     }
 }
