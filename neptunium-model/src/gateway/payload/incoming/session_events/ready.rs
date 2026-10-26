@@ -7,7 +7,7 @@ use zeroize::Zeroizing;
 
 use crate::{
     channel::Channel,
-    gateway::presence::Presence,
+    gateway::{payload::incoming::SessionPresence, presence::Presence},
     id::{
         Id,
         marker::{ChannelMarker, GuildMarker, RelationshipMarker, UserMarker},
@@ -168,9 +168,7 @@ pub struct Ready {
     pub users: Option<Vec<PartialUser>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub presences: Option<Vec<Presence>>,
-    // TODO
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub sessions: Option<Vec<Value>>,
+    pub sessions: Vec<SessionPresence>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub user_settings: Option<UserSettings>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -189,7 +187,6 @@ pub struct Ready {
     pub auth_session_id_hash: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub rtc_regions: Option<Vec<RtcRegion>>,
-    // TODO: Check whether latitude and longitude are actually optional
     #[cfg(feature = "user_api")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub latitude: Option<String>,

@@ -2,7 +2,10 @@ use bon::Builder;
 use serde::{Deserialize, Serialize};
 use zeroize::Zeroizing;
 
-use crate::user::auth::webauthn::WebAuthnAssertion;
+use crate::{
+    time::timestamp::{Timestamp, representations::Iso8601},
+    user::auth::webauthn::WebAuthnAssertion,
+};
 
 pub mod handoff;
 pub mod webauthn;
@@ -44,4 +47,14 @@ pub struct MfaBackupCode {
     pub code: String,
     /// Whether the code has been used.
     pub consumed: bool,
+}
+
+#[derive(Deserialize, Serialize, Clone, Debug, PartialEq, Eq)]
+pub struct WebAuthnCredential {
+    pub id: String,
+    pub name: String,
+    pub created_at: Timestamp<Iso8601>,
+    pub last_used_at: Option<Timestamp<Iso8601>>,
+    /// The domain the passkey was created for.
+    pub rp_id: String,
 }

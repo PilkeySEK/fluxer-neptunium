@@ -9,7 +9,7 @@ use neptunium_model::{
         marker::{GuildMarker, UserMarker},
     },
     time::timestamp::{Timestamp, representations::Iso8601},
-    user::{PartialUser, UserExternalAccountConnection, UserProfileData},
+    user::{PartialUser, UserConnection, UserProfileData},
 };
 use reqwest::Method;
 use serde::{Deserialize, Serialize};
@@ -57,7 +57,7 @@ pub struct UserProfileFullResponse {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub mutual_guilds: Option<Vec<MutualGuild>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub connected_accounts: Option<Vec<UserExternalAccountConnection>>,
+    pub connected_accounts: Option<Vec<UserConnection>>,
 }
 
 impl Endpoint for GetUserProfile {

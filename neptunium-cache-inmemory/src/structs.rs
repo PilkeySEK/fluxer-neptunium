@@ -28,10 +28,7 @@ use neptunium_model::{
     },
     misc::HexColor,
     time::timestamp::{Timestamp, representations::Iso8601},
-    user::{
-        PartialUser, UserExternalAccountConnection, UserProfileData,
-        settings::GuildMuteConfiguration,
-    },
+    user::{PartialUser, UserConnection, UserProfileData, settings::GuildMuteConfiguration},
 };
 
 use crate::{
@@ -352,7 +349,7 @@ pub struct CachedUserProfileFullResponse {
     pub premium_lifetime_seqence: Option<u32>,
     pub mutual_friends: Option<Vec<Cached<PartialUser>>>,
     pub mutual_guilds: Option<Vec<MutualGuild>>,
-    pub connected_accounts: Option<Vec<UserExternalAccountConnection>>,
+    pub connected_accounts: Option<Vec<UserConnection>>,
 }
 
 impl CachedUserProfileFullResponse {

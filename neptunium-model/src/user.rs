@@ -54,36 +54,36 @@ pub struct UserProfileData {
     pub banner_color: Option<HexColor>,
 }
 
-#[derive(Deserialize, Copy, Clone, Debug, Serialize)]
+#[derive(Deserialize, Copy, Clone, Debug, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
-pub enum UserExternalAccountConnectionType {
+pub enum UserConnectionType {
     #[serde(rename = "bsky")]
     Bluesky,
     Domain,
 }
 
 bitflags! {
-    #[derive(Copy, Clone, Debug)]
-    pub struct UserExternalAccountConnectionVisibilityFlags: u32 {
+    #[derive(Copy, Clone, Debug, PartialEq, Eq)]
+    pub struct UserConnectionVisibilityFlags: u32 {
         const EVERYONE = 1 << 0;
         const FRIENDS = 1 << 1;
         const MUTUAL_GUILDS = 1 << 2;
     }
 }
 
-serde_bitflags!(UserExternalAccountConnectionVisibilityFlags, u32);
+serde_bitflags!(UserConnectionVisibilityFlags, u32);
 
-#[derive(Deserialize, Clone, Debug, Serialize)]
-pub struct UserExternalAccountConnection {
-    // TODO: Is this a snowflake?
+#[derive(Deserialize, Clone, Debug, Serialize, PartialEq, Eq)]
+pub struct UserConnection {
+    /// The unique identifier for this connection.
     pub id: String,
     #[serde(rename = "type")]
-    pub r#type: UserExternalAccountConnectionType,
+    pub r#type: UserConnectionType,
     /// The display name of the connection (handle or domain).
     pub name: String,
     /// Whether the connection has been verified.
     pub verified: bool,
-    pub visibility_flags: UserExternalAccountConnectionVisibilityFlags,
+    pub visibility_flags: UserConnectionVisibilityFlags,
     pub sort_order: u32,
 }
 

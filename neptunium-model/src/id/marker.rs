@@ -27,6 +27,7 @@ marker! {
     AttachmentMarker,
     SavedMessageMarker,
     ForumTagMarker,
+    SoundMarker,
 }
 
 pub trait IdMarker: Copy + Clone + std::hash::Hash + PartialEq + Eq + std::fmt::Debug {}

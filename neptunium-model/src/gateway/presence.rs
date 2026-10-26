@@ -41,7 +41,7 @@ pub struct CustomStatus {
 }
 
 /// Represents a user's presence (online status and activity).
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct Presence {
     pub user: PartialUser,
     pub status: PresenceStatus,
@@ -49,7 +49,6 @@ pub struct Presence {
     pub mobile: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub afk: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub custom_status: Option<CustomStatus>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub guild_id: Option<Id<GuildMarker>>,
