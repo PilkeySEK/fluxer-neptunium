@@ -130,7 +130,6 @@ pub enum DispatchEvent {
     /// The current user's read state advances for a channel.
     MessageAck(MessageAck),
     MessageReactionAdd(MessageReactionAdd),
-    // TODO: Cache this
     MessageReactionAddMany(MessageReactionAddMany),
     MessageReactionRemove(MessageReactionRemove),
     MessageReactionRemoveAll(MessageReactionRemoveAll),

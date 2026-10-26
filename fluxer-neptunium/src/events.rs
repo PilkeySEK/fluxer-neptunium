@@ -9,25 +9,28 @@ use neptunium_cache_inmemory::{
     gateway::cached_payload::{
         CachedGuildCreate, CachedGuildMemberListUpdate, CachedGuildMembersChunk,
         CachedGuildRoleUpdateBulk, CachedMessageCreate, CachedMessageReactionAdd,
-        CachedMessageReactionRemove, CachedReady, CachedTypingStart,
+        CachedMessageReactionAddMany, CachedMessageReactionRemove, CachedReady, CachedTypingStart,
     },
 };
 use neptunium_model::{
     channel::thread::ThreadChannel,
     gateway::payload::incoming::{
-        AuthSessionChange, CallCreate, CallDelete, CallUpdate, ChannelPinsAck, ChannelPinsUpdate,
-        ChannelRecipientAdd, ChannelRecipientRemove, ChannelUpdateBulk, ForumUnreads,
-        GuildAuditLogEntryCreate, GuildBanAdd, GuildBanRemove, GuildCountsUpdate, GuildDelete,
-        GuildEmojisUpdate, GuildMemberRemove, GuildRoleDelete, GuildStickersUpdate, InviteDelete,
-        MessageAck, MessageDelete, MessageDeleteBulk, MessageReactionRemoveAll,
-        MessageReactionRemoveEmoji, PresenceUpdateIncoming, RecentMentionDelete,
-        RelationshipRemove, Resumed, SavedMediaDelete, SavedMessageDelete, ThreadDelete,
-        UserNoteUpdate, UserPrivateResponse, VoiceServerUpdate, VoiceStateUpdate, WebhooksUpdate,
+        AuthSessionChange, CallCreate, CallDelete, CallUpdate, ChannelMemberCountsUpdate,
+        ChannelPinsAck, ChannelPinsUpdate, ChannelRecipientAdd, ChannelRecipientRemove,
+        ChannelUpdateBulk, EntranceSoundPlay, ForumUnreads, GuildAuditLogEntryCreate, GuildBanAdd,
+        GuildBanRemove, GuildCountsUpdate, GuildDelete, GuildEmojisUpdate, GuildMemberRemove,
+        GuildRoleDelete, GuildStickersUpdate, InviteDelete, MessageAck, MessageDelete,
+        MessageDeleteBulk, MessageReactionRemoveAll, MessageReactionRemoveEmoji,
+        PresenceUpdateBulk, PresenceUpdateIncoming, RateLimited, RecentMentionDelete,
+        RelationshipRemove, Resumed, SavedMediaDelete, SavedMessageDelete, SessionPresence,
+        ThreadDelete, UserConnectionsUpdate, UserNoteUpdate, UserPrivateResponse,
+        VoiceServerUpdate, VoiceSignal, VoiceStateUpdate, WebhooksUpdate,
     },
     guild::Guild,
     id::{Id, marker::ChannelMarker},
     invites::InviteWithMetadata,
     user::{
+        auth::WebAuthnCredential,
         relationship::Relationship,
         settings::{SavedMedia, UserGuildSettings, UserSettings},
     },
@@ -49,7 +52,7 @@ pub trait EventHandler: Send {
     async fn on_sessions_replace(
         &self,
         ctx: Context,
-        data: Arc<Vec<serde_json::Value>>,
+        data: Arc<Vec<SessionPresence>>,
     ) -> Result<(), EventError> {
         Ok(())
     }
@@ -521,6 +524,62 @@ pub trait EventHandler: Send {
         &self,
         ctx: Context,
         data: Arc<ForumUnreads>,
+    ) -> Result<(), EventError> {
+        Ok(())
+    }
+    async fn on_rate_limited(
+        &self,
+        ctx: Context,
+        data: Arc<RateLimited>,
+    ) -> Result<(), EventError> {
+        Ok(())
+    }
+    async fn on_user_connections_update(
+        &self,
+        ctx: Context,
+        data: Arc<UserConnectionsUpdate>,
+    ) -> Result<(), EventError> {
+        Ok(())
+    }
+    async fn on_webauthn_credentials_update(
+        &self,
+        ctx: Context,
+        data: Arc<Vec<WebAuthnCredential>>,
+    ) -> Result<(), EventError> {
+        Ok(())
+    }
+    async fn on_presence_update_bulk(
+        &self,
+        ctx: Context,
+        data: Arc<PresenceUpdateBulk>,
+    ) -> Result<(), EventError> {
+        Ok(())
+    }
+    async fn on_message_reaction_add_many(
+        &self,
+        ctx: Context,
+        data: Arc<CachedMessageReactionAddMany>,
+    ) -> Result<(), EventError> {
+        Ok(())
+    }
+    async fn on_voice_signal(
+        &self,
+        ctx: Context,
+        data: Arc<VoiceSignal>,
+    ) -> Result<(), EventError> {
+        Ok(())
+    }
+    async fn on_entrance_sound_play(
+        &self,
+        ctx: Context,
+        data: Arc<EntranceSoundPlay>,
+    ) -> Result<(), EventError> {
+        Ok(())
+    }
+    async fn on_channel_member_counts_update(
+        &self,
+        ctx: Context,
+        data: Arc<ChannelMemberCountsUpdate>,
     ) -> Result<(), EventError> {
         Ok(())
     }

@@ -315,6 +315,30 @@ impl super::Client {
             CachedDispatchEvent::ForumUnreads(data) => {
                 call_event_handlers!(self.event_handlers, self.context, data => on_forum_unreads);
             }
+            CachedDispatchEvent::RateLimited(data) => {
+                call_event_handlers!(self.event_handlers, self.context, data => on_rate_limited);
+            }
+            CachedDispatchEvent::UserConnectionsUpdate(data) => {
+                call_event_handlers!(self.event_handlers, self.context, data => on_user_connections_update);
+            }
+            CachedDispatchEvent::WebAuthnCredentialsUpdate(data) => {
+                call_event_handlers!(self.event_handlers, self.context, data => on_webauthn_credentials_update);
+            }
+            CachedDispatchEvent::PresenceUpdateBulk(data) => {
+                call_event_handlers!(self.event_handlers, self.context, data => on_presence_update_bulk);
+            }
+            CachedDispatchEvent::MessageReactionAddMany(data) => {
+                call_event_handlers!(self.event_handlers, self.context, data => on_message_reaction_add_many);
+            }
+            CachedDispatchEvent::VoiceSignal(data) => {
+                call_event_handlers!(self.event_handlers, self.context, data => on_voice_signal);
+            }
+            CachedDispatchEvent::EntranceSoundPlay(data) => {
+                call_event_handlers!(self.event_handlers, self.context, data => on_entrance_sound_play);
+            }
+            CachedDispatchEvent::ChannelMemberCountsUpdate(data) => {
+                call_event_handlers!(self.event_handlers, self.context, data => on_channel_member_counts_update);
+            }
         }
     }
 }

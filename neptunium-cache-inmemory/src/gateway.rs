@@ -5,21 +5,23 @@ use neptunium_model::{
     gateway::{
         event::dispatch::DispatchEvent,
         payload::incoming::{
-            AuthSessionChange, CallCreate, CallDelete, CallUpdate, ChannelPinsAck,
-            ChannelPinsUpdate, ChannelRecipientAdd, ChannelRecipientRemove, ChannelUpdateBulk,
-            ForumUnreads, GuildAuditLogEntryCreate, GuildBanAdd, GuildBanRemove, GuildCountsUpdate,
-            GuildDelete, GuildEmojisUpdate, GuildMemberRemove, GuildRoleCreate, GuildRoleDelete,
-            GuildStickersUpdate, InviteDelete, MessageAck, MessageDelete, MessageDeleteBulk,
-            MessageReactionRemoveAll, MessageReactionRemoveEmoji, PresenceUpdateIncoming,
+            AuthSessionChange, CallCreate, CallDelete, CallUpdate, ChannelMemberCountsUpdate,
+            ChannelPinsAck, ChannelPinsUpdate, ChannelRecipientAdd, ChannelRecipientRemove,
+            ChannelUpdateBulk, EntranceSoundPlay, ForumUnreads, GuildAuditLogEntryCreate,
+            GuildBanAdd, GuildBanRemove, GuildCountsUpdate, GuildDelete, GuildEmojisUpdate,
+            GuildMemberRemove, GuildRoleCreate, GuildRoleDelete, GuildStickersUpdate, InviteDelete,
+            MessageAck, MessageDelete, MessageDeleteBulk, MessageReactionRemoveAll,
+            MessageReactionRemoveEmoji, PresenceUpdateBulk, PresenceUpdateIncoming, RateLimited,
             RecentMentionDelete, RelationshipRemove, Resumed, SavedMediaDelete, SavedMessageDelete,
-            ThreadDelete, UserNoteUpdate, UserPrivateResponse, VoiceServerUpdate, VoiceStateUpdate,
-            WebhooksUpdate,
+            SessionPresence, ThreadDelete, UserConnectionsUpdate, UserNoteUpdate,
+            UserPrivateResponse, VoiceServerUpdate, VoiceSignal, VoiceStateUpdate, WebhooksUpdate,
         },
     },
     guild::Guild,
     id::{Id, marker::ChannelMarker},
     invites::InviteWithMetadata,
     user::{
+        auth::WebAuthnCredential,
         relationship::Relationship,
         settings::{SavedMedia, UserGuildSettings, UserSettings},
     },
@@ -32,7 +34,8 @@ use crate::{
     gateway::cached_payload::{
         CachedGuildCreate, CachedGuildMemberListUpdate, CachedGuildMembersChunk,
         CachedGuildRoleUpdateBulk, CachedMessageCreate, CachedMessageReactionAdd,
-        CachedMessageReactionRemove, CachedPayload, CachedReady, CachedTypingStart,
+        CachedMessageReactionAddMany, CachedMessageReactionRemove, CachedPayload, CachedReady,
+        CachedTypingStart,
     },
 };
 
@@ -260,6 +263,28 @@ impl CachedDispatchEvent {
                 CachedDispatchEvent::ThreadMemberListUpdate((payload, cache).into())
             }
             DispatchEvent::ForumUnreads(payload) => CachedDispatchEvent::ForumUnreads(payload),
+            DispatchEvent::RateLimited(payload) => CachedDispatchEvent::RateLimited(payload),
+            DispatchEvent::UserConnectionsUpdate(payload) => {
+                CachedDispatchEvent::UserConnectionsUpdate(payload)
+            }
+            DispatchEvent::WebAuthnCredentialsUpdate(payload) => {
+                CachedDispatchEvent::WebAuthnCredentialsUpdate(payload)
+            }
+            DispatchEvent::PresenceUpdateBulk(payload) => {
+                CachedDispatchEvent::PresenceUpdateBulk(payload)
+            }
+            DispatchEvent::MessageReactionAddMany(payload) => {
+                CachedDispatchEvent::MessageReactionAddMany(
+                    CachedMessageReactionAddMany::cache_payload(payload, cache),
+                )
+            }
+            DispatchEvent::VoiceSignal(payload) => CachedDispatchEvent::VoiceSignal(payload),
+            DispatchEvent::EntranceSoundPlay(payload) => {
+                CachedDispatchEvent::EntranceSoundPlay(payload)
+            }
+            DispatchEvent::ChannelMemberCountsUpdate(payload) => {
+                CachedDispatchEvent::ChannelMemberCountsUpdate(payload)
+            }
         }
     }
 }
@@ -268,7 +293,11 @@ pub enum CachedDispatchEvent {
     Ready(CachedReady),
     /// The presence of this event indicates a successful resume.
     Resumed(Resumed),
-    SessionsReplace(Vec<serde_json::Value>),
+    SessionsReplace(Vec<SessionPresence>),
+    RateLimited(RateLimited),
+    UserConnectionsUpdate(UserConnectionsUpdate),
+    /// Replaces `webauthn_credentials` from `Ready`.
+    WebAuthnCredentialsUpdate(Vec<WebAuthnCredential>),
     GuildAuditLogEntryCreate(GuildAuditLogEntryCreate),
     UserUpdate(Cached<UserPrivateResponse>),
     UserPinnedDmsUpdate(Vec<Id<ChannelMarker>>),
@@ -283,6 +312,7 @@ pub enum CachedDispatchEvent {
     SavedMediaDelete(SavedMediaDelete),
     AuthSessionChange(AuthSessionChange),
     PresenceUpdate(PresenceUpdateIncoming),
+    PresenceUpdateBulk(PresenceUpdateBulk),
     GuildCreate(CachedGuildCreate),
     GuildUpdate(Cached<Guild>),
     GuildSync(CachedGuildCreate),
@@ -321,6 +351,7 @@ pub enum CachedDispatchEvent {
     MessageDelete(MessageDelete),
     MessageDeleteBulk(MessageDeleteBulk),
     MessageReactionAdd(CachedMessageReactionAdd),
+    MessageReactionAddMany(CachedMessageReactionAddMany),
     MessageReactionRemove(CachedMessageReactionRemove),
     MessageReactionRemoveAll(MessageReactionRemoveAll),
     MessageReactionRemoveEmoji(MessageReactionRemoveEmoji),
@@ -346,7 +377,6 @@ pub enum CachedDispatchEvent {
     GuildMembersChunk(CachedGuildMembersChunk),
     GuildMemberListUpdate(CachedGuildMemberListUpdate),
     GuildCountsUpdate(GuildCountsUpdate),
-    // All TODO:
     ThreadCreate(CachedThreadCreate),
     ThreadUpdate(Cached<ThreadChannel>),
     ThreadDelete(ThreadDelete),
@@ -355,4 +385,10 @@ pub enum CachedDispatchEvent {
     ThreadMembersUpdate(CachedThreadMembersUpdate),
     ThreadMemberListUpdate(CachedThreadMemberListUpdate),
     ForumUnreads(ForumUnreads),
+    /// A signaling message from another peer-to-peer connection.
+    VoiceSignal(VoiceSignal),
+    /// A participant's entrance sound plays in a voice channel.
+    EntranceSoundPlay(EntranceSoundPlay),
+    /// Per-channel member and online counts are returned for one guild.
+    ChannelMemberCountsUpdate(ChannelMemberCountsUpdate),
 }

@@ -3,7 +3,8 @@ use std::{collections::HashMap, sync::Arc};
 use neptunium_model::{
     gateway::{
         payload::incoming::{
-            GuildReadyResponse, Ready, RelationshipReadyResponse, RtcRegion, UserPrivateResponse,
+            GuildReadyResponse, Ready, RelationshipReadyResponse, RtcRegion, SessionPresence,
+            UserPrivateResponse,
         },
         presence::Presence,
     },
@@ -17,7 +18,6 @@ use neptunium_model::{
         settings::{SavedMedia, UserGuildSettings, UserSettings},
     },
 };
-use serde_json::Value;
 use zeroize::Zeroizing;
 
 use crate::{
@@ -35,7 +35,7 @@ pub struct CachedReady {
     pub relationships: Option<Vec<RelationshipReadyResponse>>,
     pub users: Option<Vec<Cached<PartialUser>>>,
     pub presences: Option<Vec<Presence>>,
-    pub sessions: Option<Vec<Value>>,
+    pub sessions: Vec<SessionPresence>,
     pub user_settings: Option<Cached<UserSettings>>,
     pub user_guild_settings: Option<Vec<UserGuildSettings>>,
     pub read_states: Option<Vec<ReadState>>,

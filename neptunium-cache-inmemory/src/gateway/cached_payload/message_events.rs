@@ -1,9 +1,13 @@
-use std::ops::{Deref, DerefMut};
+use std::{
+    ops::{Deref, DerefMut},
+    sync::Arc,
+};
 
 use neptunium_model::{
-    channel::ChannelType,
+    channel::{ChannelType, message::MessageReactionEmoji},
     gateway::payload::incoming::{
-        MessageCreate, MessageDelete, MessageReactionAdd, MessageReactionRemove,
+        MessageCreate, MessageDelete, MessageReactionAdd, MessageReactionAddMany,
+        MessageReactionRemove, ReactionAddition,
     },
     guild::Emoji,
     id::{
@@ -13,7 +17,8 @@ use neptunium_model::{
 };
 
 use crate::{
-    CacheValue, Cached, CachedGuildMember, CachedMessage, gateway::cached_payload::CachedPayload,
+    Cache, CacheValue, Cached, CachedGuildMember, CachedMessage,
+    gateway::cached_payload::CachedPayload,
 };
 
 pub struct CachedMessageCreate {
@@ -134,6 +139,82 @@ impl CachedPayload for CachedMessageReactionRemove {
             session_id: non_cached.session_id,
             guild_id: non_cached.guild_id,
             member,
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct CachedMessageReactionAddMany {
+    pub channel_id: Id<ChannelMarker>,
+    pub message_id: Id<MessageMarker>,
+    pub guild_id: Option<Id<GuildMarker>>,
+    pub reactions: Vec<CachedReactionAddition>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct CachedReactionAddition {
+    pub user_id: Id<UserMarker>,
+    pub emoji: MessageReactionEmoji,
+    pub member: Option<Cached<CachedGuildMember>>,
+}
+
+impl CachedPayload for CachedMessageReactionAddMany {
+    type NonCached = MessageReactionAddMany;
+
+    fn cache_payload(non_cached: Self::NonCached, cache: &std::sync::Arc<crate::Cache>) -> Self {
+        Self {
+            channel_id: non_cached.channel_id,
+            message_id: non_cached.message_id,
+            guild_id: non_cached.guild_id,
+            reactions: if let Some(guild_id) = non_cached.guild_id {
+                non_cached
+                    .reactions
+                    .into_iter()
+                    .map(|addition| (addition, guild_id, cache).into())
+                    .collect()
+            } else {
+                if !non_cached.reactions.is_empty() {
+                    tracing::warn!(
+                        ?non_cached,
+                        "`reactions` is not empty but the `guild_id` is Some"
+                    );
+                }
+                Vec::new()
+            },
+        }
+    }
+}
+
+impl From<(ReactionAddition, Id<GuildMarker>, &Arc<Cache>)> for CachedReactionAddition {
+    fn from((value, guild_id, cache): (ReactionAddition, Id<GuildMarker>, &Arc<Cache>)) -> Self {
+        Self {
+            user_id: value.user_id,
+            emoji: value.emoji,
+            member: value.member.map(|member| {
+                CachedGuildMember::from_guild_member(member, guild_id, cache)
+                    .insert_and_return(cache)
+            }),
+        }
+    }
+}
+
+impl From<CachedReactionAddition> for ReactionAddition {
+    fn from(value: CachedReactionAddition) -> Self {
+        Self {
+            user_id: value.user_id,
+            emoji: value.emoji,
+            member: value.member.map(|member| member.clone_inner().into()),
+        }
+    }
+}
+
+impl From<CachedMessageReactionAddMany> for MessageReactionAddMany {
+    fn from(value: CachedMessageReactionAddMany) -> Self {
+        Self {
+            channel_id: value.channel_id,
+            message_id: value.message_id,
+            guild_id: value.guild_id,
+            reactions: value.reactions.into_iter().map(Into::into).collect(),
         }
     }
 }
