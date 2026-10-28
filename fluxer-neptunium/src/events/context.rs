@@ -54,8 +54,8 @@ use neptunium_model::{
     gateway::payload::{
         incoming::{GuildCountsUpdateItem, UserPrivateResponse},
         outgoing::{
-            GuildSubscriptionRequest, LazyRequest, PresenceUpdateOutgoing, RequestGuildCounts,
-            RequestGuildMembers,
+            GuildSubscriptionRequest, LazyRequest, OutgoingGatewayMessage, PresenceUpdateOutgoing,
+            RequestGuildCounts, RequestGuildMembers,
         },
     },
     guild::Guild,
@@ -132,6 +132,22 @@ impl Context {
         self.cache.stats()
     }
 
+    pub async fn send_any_gateway_message(
+        &self,
+        message: OutgoingGatewayMessage,
+    ) -> Result<(), ClientError> {
+        let (oneshot_tx, oneshot_rx) = oneshot::channel();
+        self.tx
+            .send(ClientMessage::SendAnyOutgoingMessage(message, oneshot_tx))
+            .map_err(|_| ClientError::ClientNotPresent)?;
+
+        match oneshot_rx.await {
+            Ok(true) => Ok(()),
+            Ok(false) => Err(ClientError::SessionNotPresent),
+            Err(_) => Err(ClientError::ClientNotPresent),
+        }
+    }
+
     // NOTE: The token format is considered stable
     //
     // https://web.canary.fluxer.app/channels/1427764813854588940/1483532018185537313/1505406919415972091
@@ -179,17 +195,13 @@ impl Context {
         };
         let (oneshot_tx, oneshot_rx) = oneshot::channel();
         let (tx, rx) = oneshot::channel();
-        if self
-            .tx
+        self.tx
             .send(ClientMessage::RequestGuildCounts(
                 request,
                 oneshot_tx,
                 Some(tx),
             ))
-            .is_err()
-        {
-            return Err(ClientError::ClientNotPresent);
-        }
+            .map_err(|_| ClientError::ClientNotPresent)?;
 
         match oneshot_rx.await {
             Ok(true) => {}
@@ -210,13 +222,9 @@ impl Context {
         data: RequestGuildCounts,
     ) -> Result<(), ClientError> {
         let (oneshot_tx, oneshot_rx) = oneshot::channel();
-        if self
-            .tx
+        self.tx
             .send(ClientMessage::RequestGuildCounts(data, oneshot_tx, None))
-            .is_err()
-        {
-            return Err(ClientError::ClientNotPresent);
-        }
+            .map_err(|_| ClientError::ClientNotPresent)?;
 
         match oneshot_rx.await {
             Ok(true) => Ok(()),

@@ -49,6 +49,7 @@ pub(crate) enum ClientMessage {
         oneshot::Sender<bool>,
         Option<oneshot::Sender<GuildCountsUpdate>>,
     ),
+    SendAnyOutgoingMessage(OutgoingGatewayMessage, oneshot::Sender<bool>),
 }
 
 pub struct Client {
@@ -320,6 +321,9 @@ impl Client {
                         .send_message(OutgoingGatewayMessage::PresenceUpdate(request))
                         .await,
                 );
+            }
+            ClientMessage::SendAnyOutgoingMessage(message, result_tx) => {
+                let _ = result_tx.send(session_handle.send_message(message).await);
             }
         }
     }
