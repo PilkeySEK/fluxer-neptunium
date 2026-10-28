@@ -14,7 +14,8 @@ use neptunium_model::{
             MessageReactionRemoveEmoji, PresenceUpdateBulk, PresenceUpdateIncoming, RateLimited,
             RecentMentionDelete, RelationshipRemove, Resumed, SavedMediaDelete, SavedMessageDelete,
             SessionPresence, ThreadDelete, UserConnectionsUpdate, UserNoteUpdate,
-            UserPrivateResponse, VoiceServerUpdate, VoiceSignal, VoiceStateUpdate, WebhooksUpdate,
+            UserPrivateResponse, VoiceServerUpdate, VoiceSignalIncoming, VoiceStateUpdateIncoming,
+            WebhooksUpdate,
         },
     },
     guild::Guild,
@@ -366,7 +367,7 @@ pub enum CachedDispatchEvent {
     RelationshipUpdate(Relationship),
     RelationshipRemove(RelationshipRemove),
     /// Sent when a user’s voice state is updated (join/leave/move voice channel, mute/deafen).
-    VoiceStateUpdate(VoiceStateUpdate),
+    VoiceStateUpdate(VoiceStateUpdateIncoming),
     VoiceServerUpdate(VoiceServerUpdate),
     CallCreate(CallCreate),
     CallUpdate(CallUpdate),
@@ -386,7 +387,7 @@ pub enum CachedDispatchEvent {
     ThreadMemberListUpdate(CachedThreadMemberListUpdate),
     ForumUnreads(ForumUnreads),
     /// A signaling message from another peer-to-peer connection.
-    VoiceSignal(VoiceSignal),
+    VoiceSignal(VoiceSignalIncoming),
     /// A participant's entrance sound plays in a voice channel.
     EntranceSoundPlay(EntranceSoundPlay),
     /// Per-channel member and online counts are returned for one guild.

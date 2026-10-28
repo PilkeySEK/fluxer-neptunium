@@ -11,7 +11,7 @@ use crate::{
 // TODO: Probably make a seperate type "GuildVoiceState" which is flattened into this struct so that type stuff is nicer.
 #[expect(clippy::struct_excessive_bools)]
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct VoiceStateUpdate {
+pub struct VoiceStateUpdateIncoming {
     /// Only present for guild voice.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub guild_id: Option<Id<GuildMarker>>,

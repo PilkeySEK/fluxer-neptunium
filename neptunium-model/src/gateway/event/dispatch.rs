@@ -16,7 +16,7 @@ use crate::{
         Resumed, SavedMediaDelete, SavedMessageDelete, SessionPresence, ThreadCreate, ThreadDelete,
         ThreadListSync, ThreadMemberListUpdate, ThreadMemberUpdate, ThreadMembersUpdate,
         TypingStart, UserConnectionsUpdate, UserNoteUpdate, UserPrivateResponse, VoiceServerUpdate,
-        VoiceSignal, VoiceStateUpdate, WebhooksUpdate,
+        VoiceSignalIncoming, VoiceStateUpdateIncoming, WebhooksUpdate,
     },
     guild::Guild,
     id::{Id, marker::ChannelMarker},
@@ -139,10 +139,10 @@ pub enum DispatchEvent {
     ChannelPinsUpdate(ChannelPinsUpdate),
     ChannelPinsAck(ChannelPinsAck),
     /// Sent when a user’s voice state is updated (join/leave/move voice channel, mute/deafen).
-    VoiceStateUpdate(VoiceStateUpdate),
+    VoiceStateUpdate(VoiceStateUpdateIncoming),
     VoiceServerUpdate(VoiceServerUpdate),
     /// A signaling message from another peer-to-peer connection.
-    VoiceSignal(VoiceSignal),
+    VoiceSignal(VoiceSignalIncoming),
     /// A participant's entrance sound plays in a voice channel.
     EntranceSoundPlay(EntranceSoundPlay),
     CallCreate(CallCreate),

@@ -24,7 +24,7 @@ use neptunium_model::{
         PresenceUpdateBulk, PresenceUpdateIncoming, RateLimited, RecentMentionDelete,
         RelationshipRemove, Resumed, SavedMediaDelete, SavedMessageDelete, SessionPresence,
         ThreadDelete, UserConnectionsUpdate, UserNoteUpdate, UserPrivateResponse,
-        VoiceServerUpdate, VoiceSignal, VoiceStateUpdate, WebhooksUpdate,
+        VoiceServerUpdate, VoiceSignalIncoming, VoiceStateUpdateIncoming, WebhooksUpdate,
     },
     guild::Guild,
     id::{Id, marker::ChannelMarker},
@@ -422,7 +422,7 @@ pub trait EventHandler: Send {
     async fn on_voice_state_update(
         &self,
         ctx: Context,
-        data: Arc<VoiceStateUpdate>,
+        data: Arc<VoiceStateUpdateIncoming>,
     ) -> Result<(), EventError> {
         Ok(())
     }
@@ -565,7 +565,7 @@ pub trait EventHandler: Send {
     async fn on_voice_signal(
         &self,
         ctx: Context,
-        data: Arc<VoiceSignal>,
+        data: Arc<VoiceSignalIncoming>,
     ) -> Result<(), EventError> {
         Ok(())
     }
