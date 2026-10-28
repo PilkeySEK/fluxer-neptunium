@@ -30,7 +30,7 @@ Note that many of the APIs are user-only, so not interesting for bots. While thi
   - **Bot-relevant API:** 100%
   - **User-bot-relevant API:** >50% (probably)
 
-This is the current support for different APIs (Categories named after [The official Fluxer API documentation sections](https://docs.fluxer.app/api-reference/instance/get-instance-discovery-document)):
+This is the current support for different APIs:
 
 ✅ = Fully supported
 
