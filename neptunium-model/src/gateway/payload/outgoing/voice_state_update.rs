@@ -29,7 +29,7 @@ pub struct VoiceStateUpdateOutgoing {
     /// Whether the client publishes camera video (default `false`).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub self_video: Option<bool>,
-    /// Whether this connection advertises a screenshare track (default `false`)-
+    /// Whether this connection advertises a screenshare track (default `false`).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub self_stream: Option<bool>,
     /// Whether this is a mobile voice client (default `false`).
@@ -56,6 +56,7 @@ pub struct VoiceStateUpdateOutgoing {
     /// Whether the client agrees to peer-to-peer media for a new connection, or leaves the mesh on an existing one.
     ///
     /// Only `true` agrees. On an existing connection, `false` moves the whole channel or call to LiveKit. A bot session never agrees.
+    #[expect(clippy::doc_markdown)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub p2p: Option<bool>,
 }

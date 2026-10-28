@@ -43,9 +43,6 @@ impl<T: PartialEq<T>> PartialEq for Cached<T> {
     fn eq(&self, other: &Self) -> bool {
         (**self).eq(&**other)
     }
-    fn ne(&self, other: &Self) -> bool {
-        (**self).ne(&**other)
-    }
 }
 
 impl<T: Eq> Eq for Cached<T> {}

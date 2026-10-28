@@ -31,11 +31,12 @@ pub(crate) mod error;
 pub use error::*;
 mod dispatch_event_impl;
 
+#[cfg(feature = "user_api")]
 struct ClientInternalConfig {
-    #[cfg(feature = "user_api")]
     subscribe_to_everything: bool,
 }
 
+#[expect(clippy::large_enum_variant)]
 pub(crate) enum ClientMessage {
     UpdatePresence(PresenceUpdateOutgoing, oneshot::Sender<bool>),
     RequestGuildMembers(
@@ -56,6 +57,7 @@ pub struct Client {
     // shard_config: ShardConfig,
     context: Context,
     event_handlers: Vec<Arc<dyn EventHandler + Sync>>,
+    #[cfg(feature = "user_api")]
     config: ClientInternalConfig,
     session_config: SessionConfig,
     guild_members_chunk_listeners: HashMap<String, UnboundedSender<CachedGuildMembersChunk>>,
@@ -127,8 +129,8 @@ impl Client {
             },
             session_config,
             event_handlers: Vec::new(),
+            #[cfg(feature = "user_api")]
             config: ClientInternalConfig {
-                #[cfg(feature = "user_api")]
                 subscribe_to_everything: client_config.subscribe_to_everything,
             },
             guild_counts_update_listeners: HashMap::new(),

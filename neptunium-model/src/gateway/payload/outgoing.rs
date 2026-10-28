@@ -27,7 +27,6 @@ pub use voice_signal::*;
 pub use voice_state_update::*;
 
 #[derive(Clone, Debug)]
-#[expect(clippy::large_enum_variant)]
 pub enum OutgoingGatewayMessage {
     Heartbeat(Heartbeat),
     Identify(Identify),
@@ -130,6 +129,7 @@ impl<'de> Deserialize<'de> for OutgoingGatewayMessage {
             OutgoingOpCode::VoiceSignal => Self::VoiceSignal(
                 serde_json::from_value(schema.d).map_err(serde::de::Error::custom)?,
             ),
+            #[expect(clippy::todo, reason = "not a high priority TODO")]
             OutgoingOpCode::VoiceServerPing => {
                 todo!("voice server ping is supposed to never be sent by clients")
             }

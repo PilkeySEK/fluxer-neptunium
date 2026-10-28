@@ -545,11 +545,7 @@ impl From<CachedThreadListSync> for ThreadListSync {
                 .into_iter()
                 .map(|thread| thread.clone_inner())
                 .collect(),
-            members: value
-                .members
-                .into_iter()
-                .map(|member| member.into())
-                .collect(),
+            members: value.members.into_iter().map(Into::into).collect(),
         }
     }
 }
@@ -613,12 +609,9 @@ impl From<CachedThreadMembersUpdate> for ThreadMembersUpdate {
             id: value.id,
             guild_id: value.guild_id,
             member_count: value.member_count,
-            added_members: value.added_members.map(|added_members| {
-                added_members
-                    .into_iter()
-                    .map(|member| member.into())
-                    .collect()
-            }),
+            added_members: value
+                .added_members
+                .map(|added_members| added_members.into_iter().map(Into::into).collect()),
             removed_member_ids: value.removed_member_ids,
         }
     }

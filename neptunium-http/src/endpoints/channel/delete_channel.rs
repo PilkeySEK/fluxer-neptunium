@@ -21,9 +21,9 @@ pub struct DeleteOrLeaveChannelParams {
 /// - Deleting a guild channel requires `VIEW_CHANNEL` and `MANAGE_CHANNELS`.
 /// - Closing a direct message or leaving a group direct message requires current recipient access.
 /// - The personal notes channel cannot be deleted.
-/// - Setting delete_messages also requires sudo mode for a user session,
-/// satisfied by a valid sudo proof or by the verification fields in the body.
-/// A bot token always satisfies it.
+/// - Setting `delete_messages` also requires sudo mode for a user session,
+///   satisfied by a valid sudo proof or by the verification fields in the body.
+///   A bot token always satisfies it.
 #[derive(Builder, Clone, Debug, PartialEq, Eq)]
 pub struct DeleteOrLeaveChannel {
     pub channel_id: Id<ChannelMarker>,
