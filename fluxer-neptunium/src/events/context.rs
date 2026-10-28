@@ -78,7 +78,7 @@ use crate::{
 pub struct Context {
     pub(crate) http_client: Arc<HttpClient>,
     pub(crate) tx: UnboundedSender<crate::client::ClientMessage>,
-    pub(crate) cache: Arc<neptunium_cache_inmemory::Cache>,
+    pub cache: Arc<neptunium_cache_inmemory::Cache>,
     pub(crate) default_allowed_mentions: Arc<Option<AllowedMentions>>,
 }
 
