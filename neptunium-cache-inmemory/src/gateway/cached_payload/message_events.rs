@@ -1,4 +1,5 @@
 use std::{
+    collections::HashMap,
     ops::{Deref, DerefMut},
     sync::Arc,
 };
@@ -24,6 +25,12 @@ use crate::{
 pub struct CachedMessageCreate {
     pub message: Cached<CachedMessage>,
     pub channel_type: ChannelType,
+    /// Group direct message nicknames, when the group has any.
+    pub nicks: Option<HashMap<Id<UserMarker>, String>>,
+    pub mention_here: Option<bool>,
+    /// Guild the channel belongs to.
+    pub guild_id: Option<Id<GuildMarker>>,
+    pub member: Option<Cached<CachedGuildMember>>,
 }
 
 impl CachedPayload for CachedMessageCreate {
@@ -37,11 +44,35 @@ impl CachedPayload for CachedMessageCreate {
                 let _ = channel.last_message_id.set(non_cached.id.into());
             }
         }
-        let message =
-            CachedMessage::from_message(non_cached.message, cache).insert_and_return(cache);
         Self {
-            message,
             channel_type: non_cached.channel_type,
+            nicks: non_cached.nicks,
+            mention_here: non_cached.mention_here,
+            guild_id: non_cached.guild_id,
+            member: if let Some(guild_id) = non_cached.guild_id {
+                non_cached.member.map(|member| {
+                    CachedGuildMember {
+                        id: non_cached.message.author.id,
+                        user: non_cached.message.author.clone().insert_and_return(cache),
+                        guild_id,
+                        accent_color: member.accent_color,
+                        avatar: member.avatar,
+                        banner: member.banner,
+                        communication_disabled_until: member.communication_disabled_until,
+                        deaf: member.deaf,
+                        joined_at: member.joined_at,
+                        mute: member.mute,
+                        nick: member.nick,
+                        profile_flags: member.profile_flags,
+                        roles: member.roles,
+                    }
+                    .insert_and_return(cache)
+                })
+            } else {
+                None
+            },
+            message: CachedMessage::from_message(non_cached.message, cache)
+                .insert_and_return(cache),
         }
     }
 }
