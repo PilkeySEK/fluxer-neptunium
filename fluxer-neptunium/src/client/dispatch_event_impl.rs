@@ -321,6 +321,7 @@ impl super::Client {
             CachedDispatchEvent::UserConnectionsUpdate(data) => {
                 call_event_handlers!(self.event_handlers, self.context, data => on_user_connections_update);
             }
+            #[cfg(feature = "user_api")]
             CachedDispatchEvent::WebAuthnCredentialsUpdate(data) => {
                 call_event_handlers!(self.event_handlers, self.context, data => on_webauthn_credentials_update);
             }

@@ -12,6 +12,8 @@ use neptunium_cache_inmemory::{
         CachedMessageReactionAddMany, CachedMessageReactionRemove, CachedReady, CachedTypingStart,
     },
 };
+#[cfg(feature = "user_api")]
+use neptunium_model::user::auth::WebAuthnCredential;
 use neptunium_model::{
     channel::thread::ThreadChannel,
     gateway::payload::incoming::{
@@ -30,7 +32,6 @@ use neptunium_model::{
     id::{Id, marker::ChannelMarker},
     invites::InviteWithMetadata,
     user::{
-        auth::WebAuthnCredential,
         relationship::Relationship,
         settings::{SavedMedia, UserGuildSettings, UserSettings},
     },
@@ -541,6 +542,7 @@ pub trait EventHandler: Send {
     ) -> Result<(), EventError> {
         Ok(())
     }
+    #[cfg(feature = "user_api")]
     async fn on_webauthn_credentials_update(
         &self,
         ctx: Context,

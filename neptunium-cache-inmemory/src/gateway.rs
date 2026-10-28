@@ -1,5 +1,7 @@
 use std::sync::Arc;
 
+#[cfg(feature = "user_api")]
+use neptunium_model::user::auth::WebAuthnCredential;
 use neptunium_model::{
     channel::thread::ThreadChannel,
     gateway::{
@@ -22,7 +24,6 @@ use neptunium_model::{
     id::{Id, marker::ChannelMarker},
     invites::InviteWithMetadata,
     user::{
-        auth::WebAuthnCredential,
         relationship::Relationship,
         settings::{SavedMedia, UserGuildSettings, UserSettings},
     },
@@ -268,6 +269,7 @@ impl CachedDispatchEvent {
             DispatchEvent::UserConnectionsUpdate(payload) => {
                 CachedDispatchEvent::UserConnectionsUpdate(payload)
             }
+            #[cfg(feature = "user_api")]
             DispatchEvent::WebAuthnCredentialsUpdate(payload) => {
                 CachedDispatchEvent::WebAuthnCredentialsUpdate(payload)
             }
@@ -298,6 +300,7 @@ pub enum CachedDispatchEvent {
     RateLimited(RateLimited),
     UserConnectionsUpdate(UserConnectionsUpdate),
     /// Replaces `webauthn_credentials` from `Ready`.
+    #[cfg(feature = "user_api")]
     WebAuthnCredentialsUpdate(Vec<WebAuthnCredential>),
     GuildAuditLogEntryCreate(GuildAuditLogEntryCreate),
     UserUpdate(Cached<UserPrivateResponse>),

@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
 
+#[cfg(feature = "user_api")]
+use crate::user::auth::WebAuthnCredential;
 use crate::{
     channel::{Channel, message::Message, thread::ThreadChannel},
     gateway::payload::incoming::{
@@ -22,7 +24,6 @@ use crate::{
     id::{Id, marker::ChannelMarker},
     invites::InviteWithMetadata,
     user::{
-        auth::WebAuthnCredential,
         relationship::Relationship,
         settings::{SavedMedia, UserGuildSettings, UserSettings},
     },
@@ -49,6 +50,7 @@ pub enum DispatchEvent {
     UserPinnedDmsUpdate(Vec<Id<ChannelMarker>>),
     UserConnectionsUpdate(UserConnectionsUpdate),
     /// Replaces `webauthn_credentials` from `Ready`.
+    #[cfg(feature = "user_api")]
     #[serde(rename = "WEBAUTHN_CREDENTIALS_UPDATE")]
     WebAuthnCredentialsUpdate(Vec<WebAuthnCredential>),
     RelationshipAdd(Relationship),
