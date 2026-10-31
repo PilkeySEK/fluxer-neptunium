@@ -28,9 +28,10 @@ use neptunium_http::{
         channel::{
             AddUserToGroupDm, BulkDeleteMessages, CreateMessage, CreatePrivateChannel,
             CrosspostMessage, DeleteMessage, DeleteMessageAttachment, DeleteOrLeaveChannel,
-            DeletePermissionOverwrite, EditMessage, FetchMessage, GetChannel, ListChannelMessages,
-            ListPrivateChannels, RemoveUserFromGroupDm, SetPermissionOverwrite,
-            StartThreadFromMessage, UpdateCallRegion, UpdateChannelSettings,
+            DeletePermissionOverwrite, EditMessage, FetchMessage, GetChannel,
+            ListActiveGuildThreads, ListChannelMessages, ListPrivateChannels,
+            RemoveUserFromGroupDm, SetPermissionOverwrite, StartThreadFromMessage,
+            UpdateCallRegion, UpdateChannelSettings,
         },
         guild::{
             CreateGuildChannel, CreateGuildRole, DeleteGuildRole, GetCurrentUserGuildMember,
@@ -52,9 +53,9 @@ use neptunium_model::{
 };
 
 use crate::{
-    CachableEndpoint, Cache, Cached, CachedChannel, CachedGuildMember, CachedGuildRole,
-    CachedMessage, CachedUserProfileFullResponse, gateway::cached_payload::cache_vec,
-    traits::CacheValue,
+    CachableEndpoint, Cache, Cached, CachedActiveGuildThreads, CachedChannel, CachedGuildMember,
+    CachedGuildRole, CachedMessage, CachedUserProfileFullResponse,
+    gateway::cached_payload::cache_vec, traits::CacheValue,
 };
 
 pub const USER_MAX_GUILDS: usize = 200;
@@ -1040,5 +1041,18 @@ impl CachableEndpoint for StartThreadFromMessage {
     ) -> Result<<Self as CachableEndpoint>::Response, ExecuteEndpointRequestError> {
         let res = client.execute(self).await?;
         Ok(res.insert_and_return(cache))
+    }
+}
+
+#[async_trait]
+impl CachableEndpoint for ListActiveGuildThreads {
+    type Response = CachedActiveGuildThreads;
+    async fn execute_cached(
+        self,
+        client: &Arc<HttpClient>,
+        cache: &Arc<Cache>,
+    ) -> Result<<Self as CachableEndpoint>::Response, ExecuteEndpointRequestError> {
+        let res = client.execute(self).await?;
+        Ok((res, cache).into())
     }
 }

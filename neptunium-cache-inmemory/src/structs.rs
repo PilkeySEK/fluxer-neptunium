@@ -1,7 +1,10 @@
 use std::{collections::HashMap, sync::Arc};
 
 use atomic_once_cell::AtomicOnceCell;
-use neptunium_http::endpoints::users::{MutualGuild, UserProfileFullResponse};
+use neptunium_http::endpoints::{
+    channel::ActiveGuildThreads,
+    users::{MutualGuild, UserProfileFullResponse},
+};
 use neptunium_model::{
     channel::{
         Channel, ChannelType, PermissionOverwrite, VoiceRegion,
@@ -659,6 +662,54 @@ impl From<(ThreadMemberListItem, Id<GuildMarker>, &Arc<Cache>)> for CachedThread
                     .insert_and_return(cache)
             }),
             presence: item.presence,
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct CachedActiveGuildThreads {
+    pub threads: Vec<Cached<ThreadChannel>>,
+    /// A thread member object for each returned thread the bot joined.
+    pub members: Vec<CachedThreadMember>,
+}
+
+impl From<(ActiveGuildThreads, &Arc<Cache>)> for CachedActiveGuildThreads {
+    fn from((res, cache): (ActiveGuildThreads, &Arc<Cache>)) -> Self {
+        let guild_id = res.threads.iter().nth(0).map(|thread| thread.guild_id);
+        if let Some(guild_id) = guild_id {
+            Self {
+                threads: res
+                    .threads
+                    .into_iter()
+                    .map(|thread| thread.insert_and_return(cache))
+                    .collect(),
+                members: res
+                    .members
+                    .into_iter()
+                    .map(|member| (member, guild_id, cache).into())
+                    .collect(),
+            }
+        } else {
+            if !res.members.is_empty() {
+                tracing::warn!("members is not empty but threads is");
+            }
+            Self {
+                threads: Vec::new(),
+                members: Vec::new(),
+            }
+        }
+    }
+}
+
+impl From<CachedActiveGuildThreads> for ActiveGuildThreads {
+    fn from(value: CachedActiveGuildThreads) -> Self {
+        Self {
+            threads: value
+                .threads
+                .into_iter()
+                .map(|channel| channel.clone_inner())
+                .collect(),
+            members: value.members.into_iter().map(Into::into).collect(),
         }
     }
 }
