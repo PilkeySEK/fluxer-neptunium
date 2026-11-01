@@ -1,15 +1,18 @@
 use neptunium_model::id::Id;
-use neptunium_model::id::marker::GuildMarker;
-use neptunium_model::time::duration::{Duration, Millis};
+use neptunium_model::id::marker::{GuildBadgeMarker, GuildMarker};
+use neptunium_model::time::timestamp::Timestamp;
+use neptunium_model::time::timestamp::representations::Iso8601;
 use reqwest::Method;
 use serde::{Deserialize, Serialize};
 
 use crate::{endpoints::Endpoint, request::Request};
 
 mod branding;
+mod features;
 mod limits;
 
 pub use branding::*;
+pub use features::*;
 pub use limits::*;
 
 #[derive(Copy, Clone, Debug)]
@@ -40,6 +43,7 @@ pub struct InstanceDiscoveryDocumentEndpoints {
     /// Base URL for the media proxy.
     pub media: String,
     /// Attachment upload relay base URL
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub upload_relay: Option<String>,
     /// Base URL for static assets (avatars, emojis, etc.).
     pub static_cdn: String,
@@ -54,6 +58,7 @@ pub struct InstanceDiscoveryDocumentEndpoints {
     /// Base URL for the web application.
     pub webapp: String,
     /// Documentation site base URL
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub docs: Option<String>,
 }
 
@@ -64,39 +69,41 @@ pub enum InstanceDiscoveryDocumentCaptchaConfig {
     None,
 }
 
-#[expect(clippy::struct_excessive_bools)]
-#[derive(Serialize, Deserialize, Copy, Clone, Debug)]
-pub struct InstanceDiscoveryDocumentFeatures {
-    pub sms_mfa_enabled: bool,
-    pub voice_enabled: bool,
-    pub stripe_enabled: bool,
-    pub self_hosted: bool,
-    // TODO: Check what's up with https://github.com/fluxerapp/fluxer/blob/03813bbe17db008452f0f1be3090a7d2970a5447/packages/api/src/instance/InstanceController.tsx#L86
-    /// This is documented as "required" in the documentation, but appears to be missing.
-    pub manual_review_enabled: Option<bool>,
-    /// Undocumented so far.
-    pub presigned_attachment_uploads: bool,
-}
-
 /// Single sign-on configuration.
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct InstanceDiscoveryDocumentSSOConfiguration {
+pub struct InstanceDiscoveryDocumentSSOStatus {
+    /// Whether SSO is turned on and its provider is fully configured
     pub enabled: bool,
+    /// Whether every user has to sign in with SSO
     pub enforced: bool,
+    /// Whether each SSO sign-in sets the username from the provider,
+    /// so SSO accounts can't change it
+    pub username_from_provider: bool,
+    /// The provider display name
     pub display_name: Option<String>,
+    /// The text for the SSO sign-in button, or null to use the app's default
+    pub button_label: Option<String>,
+    /// The default redirect URI for the provider callback
     pub redirect_uri: String,
+    /// Not sent by the API, so check enabled
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub available: Option<bool>,
 }
 
 #[derive(Serialize, Deserialize, Copy, Clone, Debug, PartialEq, Eq)]
-#[serde(rename_all = "lowercase")]
+#[serde(rename_all = "snake_case")]
 pub enum InstanceDiscoveryDocumentGifProviders {
     Klipy,
-    Tenor,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct InstanceDiscoveryDocumentGifProvider {
+    /// The machine name of the GIF provider
     pub provider: InstanceDiscoveryDocumentGifProviders,
+    /// The provider name to show
+    pub display_name: String,
+    /// Whether you must show the provider's attribution next to GIF results
+    pub attribution_required: bool,
 }
 
 #[derive(Serialize, Deserialize, Copy, Clone, Debug, PartialEq, Eq)]
@@ -124,43 +131,6 @@ pub struct InstanceDiscoveryDocumentPushNotificationConfig {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub relay_signing_key_hashes: Option<Vec<String>>,
 }
-
-// #[derive(Serialize, Deserialize, Clone, Debug)]
-// pub struct InstanceDiscoveryDocumentGateway {
-//     #[serde(rename = "session_retry_min_ms")]
-//     pub session_retry_minimum: Duration<Millis>,
-//     #[serde(rename = "session_retry_max_ms")]
-//     pub session_retry_maximum: Duration<Millis>,
-//     #[serde(rename = "session_retry_jitter_ms")]
-//     pub session_retry_jitter: Duration<Millis>,
-// }
-// #[derive(Serialize, Deserialize, Clone, Debug)]
-// pub struct InstanceDiscoveryDocumentFederationConfig {
-//     pub enabled: bool,
-//     /// Federation protocol version.
-//     pub version: u64,
-// }
-
-// #[derive(Serialize, Deserialize, Copy, Clone, Debug, PartialEq, Eq)]
-// pub enum InstanceDiscoveryDocumentPublicKeyAlgorithm {
-//     #[serde(rename = "x25519")]
-//     X25519,
-// }
-
-// #[derive(Serialize, Deserialize, Clone, Debug)]
-// pub struct InstanceDiscoveryDocumentPublicKey {
-//     pub id: String,
-//     pub algorithm: InstanceDiscoveryDocumentPublicKeyAlgorithm,
-//     pub public_key_base64: String,
-// }
-
-// #[derive(Serialize, Deserialize, Clone, Debug)]
-// pub struct InstanceDiscoveryDocumentOauth2 {
-//     pub authorization_endpoint: String,
-//     pub token_endpoint: String,
-//     pub userinfo_endpoint: String,
-//     pub scopes_supported: Vec<String>,
-// }
 
 #[derive(Serialize, Deserialize, Copy, Clone, Debug, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
@@ -236,9 +206,53 @@ pub struct InstanceDiscoveryDocumentAgePolicy {
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct InstanceDiscoveryDocumentNotice {
+    /// The ID of this version of the notice, which changes when any other field changes
     pub id: String,
+    /// The notice text (1-1000 characters)
     pub message: String,
+    /// An http or https link shown with the notice, or null
     pub url: Option<String>,
+    /// When to start showing the notice, or null to show it at once
+    pub starts_at: Option<Timestamp<Iso8601>>,
+    /// When to stop showing the notice, or null for no end
+    pub ends_at: Option<Timestamp<Iso8601>>,
+}
+
+#[derive(Deserialize, Serialize, Clone, Debug)]
+pub struct InstanceDiscoveryDocumentGuildBadge {
+    /// The ID of the badge
+    pub id: Id<GuildBadgeMarker>,
+    /// The name of the badge
+    pub name: String,
+    /// The tooltip text under the name, or null
+    pub description: Option<String>,
+    /// The badge image as WebP from the media proxy.
+    /// Add a size query parameter to get it at the size you draw it.
+    pub asset_url: String,
+    /// The https URL a click opens, or null
+    pub href: Option<String>,
+    /// The display position as a 64-bit integer string.
+    /// Older instances leave it out, and clients keep the guild_badges order.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub position: Option<String>,
+}
+
+#[derive(Deserialize, Serialize, Clone, Debug)]
+pub struct InstanceDiscoveryDocumentBuiltinGuildBadgeImages {
+    /// The image for the verified badge, as WebP from the media proxy, or null
+    pub verified: Option<String>,
+    /// The image for the partnered badge, or null
+    pub partnered: Option<String>,
+    /// The image for the discoverable badge, or null
+    pub discoverable: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Copy, Clone, Debug, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum InstanceDiscoveryDocumentBuiltinGuildBadge {
+    Verified,
+    Partnered,
+    Discoverable,
 }
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
@@ -248,11 +262,16 @@ pub struct InstanceDiscoveryDocumentResponse {
     pub codename: Option<String>,
     /// Version of the API server code.
     pub api_code_version: u64,
+    /// Public service URLs
     pub endpoints: InstanceDiscoveryDocumentEndpoints,
+    /// CAPTCHA configuration
     pub captcha: InstanceDiscoveryDocumentCaptchaConfig,
+    /// Instance-wide feature switches
     pub features: InstanceDiscoveryDocumentFeatures,
+    /// The GIF provider and its attribution rule
     pub gif: InstanceDiscoveryDocumentGifProvider,
-    pub sso: InstanceDiscoveryDocumentSSOConfiguration,
+    /// Single sign-on state
+    pub sso: InstanceDiscoveryDocumentSSOStatus,
     /// Who can register
     pub registration: InstanceDiscoveryDocumentRegistrationPolicy,
     /// Community and direct message policy
@@ -271,16 +290,23 @@ pub struct InstanceDiscoveryDocumentResponse {
     /// The current notice from the instance admins, or null
     #[serde(skip_serializing_if = "Option::is_none")]
     pub notice: Option<InstanceDiscoveryDocumentNotice>,
+    /// The first custom badges that guilds can show next to their name, in display order (at most 100)
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub guild_badges: Option<()>,
+    pub guild_badges: Option<Vec<InstanceDiscoveryDocumentGuildBadge>>,
+    /// True when the instance has more guild badges than guild_badges lists
     #[serde(skip_serializing_if = "Option::is_none")]
     pub guild_badges_partial: Option<bool>,
+    /// The badge catalog version. It changes whenever a badge is created, edited, deleted or moved.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub custom_badges_version: Option<String>,
+    /// The images the instance shows in place of the built-in guild badges
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub built_in_guild_badge_images: Option<()>,
+    pub built_in_guild_badge_images: Option<InstanceDiscoveryDocumentBuiltinGuildBadgeImages>,
+    /// The built-in guild badges the instance doesn't show: any of verified, partnered and discoverable
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub hidden_built_in_guild_badges: Option<Vec<()>>,
+    pub hidden_built_in_guild_badges: Option<Vec<InstanceDiscoveryDocumentBuiltinGuildBadge>>,
+    /// The origin of every voice server endpoint, such as wss://voice.example.com,
+    /// for content security policies (at most 1000)
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub voice_origins: Option<Vec<()>>,
+    pub voice_origins: Option<Vec<String>>,
 }

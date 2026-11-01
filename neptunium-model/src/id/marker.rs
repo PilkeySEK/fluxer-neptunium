@@ -28,6 +28,7 @@ marker! {
     SavedMessageMarker,
     ForumTagMarker,
     SoundMarker,
+    GuildBadgeMarker,
 }
 
 pub trait IdMarker: Copy + Clone + std::hash::Hash + PartialEq + Eq + std::fmt::Debug {}
