@@ -310,3 +310,23 @@ pub struct InstanceDiscoveryDocumentResponse {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub voice_origins: Option<Vec<String>>,
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::client::HttpClient;
+
+    use super::*;
+
+    #[tokio::test]
+    #[ignore = "requires reaching out to Fluxer's main instance"]
+    async fn get_fluxer_main_instance_doc() {
+        let client = HttpClient::builder().token(String::default()).build();
+
+        let instance_doc = client
+            .execute(InstanceDiscoveryDocument)
+            .await
+            .expect("should successfully parse the instance doc for the main Fluxer instance");
+
+        dbg!(instance_doc);
+    }
+}
