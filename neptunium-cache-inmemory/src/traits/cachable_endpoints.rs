@@ -29,8 +29,9 @@ use neptunium_http::{
             AddUserToGroupDm, BulkDeleteMessages, CreateMessage, CreatePrivateChannel,
             CrosspostMessage, DeleteMessage, DeleteMessageAttachment, DeleteOrLeaveChannel,
             DeletePermissionOverwrite, EditMessage, FetchMessage, GetChannel,
-            ListActiveGuildThreads, ListChannelMessages, ListPrivateChannels,
-            RemoveUserFromGroupDm, SetPermissionOverwrite, StartThreadFromMessage,
+            ListActiveGuildThreads, ListArchivedThreads, ListChannelMessages,
+            ListJoinedPrivateArchivedThreads, ListPrivateChannels, RemoveUserFromGroupDm,
+            SearchThreads, SetPermissionOverwrite, StartThreadFromMessage, ThreadVisibilityMarker,
             UpdateCallRegion, UpdateChannelSettings,
         },
         guild::{
@@ -53,9 +54,9 @@ use neptunium_model::{
 };
 
 use crate::{
-    CachableEndpoint, Cache, Cached, CachedActiveGuildThreads, CachedChannel, CachedGuildMember,
-    CachedGuildRole, CachedMessage, CachedUserProfileFullResponse,
-    gateway::cached_payload::cache_vec, traits::CacheValue,
+    CachableEndpoint, Cache, Cached, CachedActiveGuildThreads, CachedArchivedThreads,
+    CachedChannel, CachedGuildMember, CachedGuildRole, CachedMessage, CachedSearchThreadsResponse,
+    CachedUserProfileFullResponse, gateway::cached_payload::cache_vec, traits::CacheValue,
 };
 
 pub const USER_MAX_GUILDS: usize = 200;
@@ -1047,6 +1048,45 @@ impl CachableEndpoint for StartThreadFromMessage {
 #[async_trait]
 impl CachableEndpoint for ListActiveGuildThreads {
     type Response = CachedActiveGuildThreads;
+    async fn execute_cached(
+        self,
+        client: &Arc<HttpClient>,
+        cache: &Arc<Cache>,
+    ) -> Result<<Self as CachableEndpoint>::Response, ExecuteEndpointRequestError> {
+        let res = client.execute(self).await?;
+        Ok((res, cache).into())
+    }
+}
+
+#[async_trait]
+impl<Vis: ThreadVisibilityMarker> CachableEndpoint for ListArchivedThreads<Vis> {
+    type Response = CachedArchivedThreads;
+    async fn execute_cached(
+        self,
+        client: &Arc<HttpClient>,
+        cache: &Arc<Cache>,
+    ) -> Result<<Self as CachableEndpoint>::Response, ExecuteEndpointRequestError> {
+        let res = client.execute(self).await?;
+        Ok((res, cache).into())
+    }
+}
+
+#[async_trait]
+impl CachableEndpoint for ListJoinedPrivateArchivedThreads {
+    type Response = CachedArchivedThreads;
+    async fn execute_cached(
+        self,
+        client: &Arc<HttpClient>,
+        cache: &Arc<Cache>,
+    ) -> Result<<Self as CachableEndpoint>::Response, ExecuteEndpointRequestError> {
+        let res = client.execute(self).await?;
+        Ok((res, cache).into())
+    }
+}
+
+#[async_trait]
+impl CachableEndpoint for SearchThreads {
+    type Response = CachedSearchThreadsResponse;
     async fn execute_cached(
         self,
         client: &Arc<HttpClient>,

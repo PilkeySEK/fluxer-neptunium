@@ -2,7 +2,7 @@ use std::{collections::HashMap, sync::Arc};
 
 use atomic_once_cell::AtomicOnceCell;
 use neptunium_http::endpoints::{
-    channel::ActiveGuildThreads,
+    channel::{ActiveGuildThreads, ArchivedThreads, SearchThreadsResponse},
     users::{MutualGuild, UserProfileFullResponse},
 };
 use neptunium_model::{
@@ -136,7 +136,7 @@ impl CachedChannel {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CachedMessage {
     pub id: Id<MessageMarker>,
     pub channel_id: Id<ChannelMarker>,
@@ -710,6 +710,117 @@ impl From<CachedActiveGuildThreads> for ActiveGuildThreads {
                 .map(|channel| channel.clone_inner())
                 .collect(),
             members: value.members.into_iter().map(Into::into).collect(),
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct CachedArchivedThreads {
+    /// The archived threads.
+    pub threads: Vec<Cached<ThreadChannel>>,
+    /// A thread member object for each returned thread the caller joined.
+    pub members: Vec<CachedThreadMember>,
+    /// Whether more threads are available.
+    pub has_more: bool,
+}
+
+impl From<(ArchivedThreads, &Arc<Cache>)> for CachedArchivedThreads {
+    fn from((res, cache): (ArchivedThreads, &Arc<Cache>)) -> Self {
+        let guild_id = res.threads.iter().nth(0).map(|thread| thread.guild_id);
+        if let Some(guild_id) = guild_id {
+            Self {
+                threads: res
+                    .threads
+                    .into_iter()
+                    .map(|thread| thread.insert_and_return(cache))
+                    .collect(),
+                members: res
+                    .members
+                    .into_iter()
+                    .map(|member| (member, guild_id, cache).into())
+                    .collect(),
+                has_more: res.has_more,
+            }
+        } else {
+            if !res.members.is_empty() {
+                tracing::warn!("members is not empty but threads is");
+            }
+            Self {
+                threads: Vec::new(),
+                members: Vec::new(),
+                has_more: res.has_more,
+            }
+        }
+    }
+}
+
+impl From<CachedArchivedThreads> for ArchivedThreads {
+    fn from(value: CachedArchivedThreads) -> Self {
+        Self {
+            threads: value
+                .threads
+                .into_iter()
+                .map(|channel| channel.clone_inner())
+                .collect(),
+            members: value.members.into_iter().map(Into::into).collect(),
+            has_more: value.has_more,
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, bon::Builder)]
+pub struct CachedSearchThreadsResponse {
+    pub threads: Vec<Cached<ThreadChannel>>,
+    pub members: Vec<CachedThreadMember>,
+    pub has_more: bool,
+    pub total_results: usize,
+    pub first_messages: Option<Vec<Cached<CachedMessage>>>,
+}
+
+impl From<(SearchThreadsResponse, &Arc<Cache>)> for CachedSearchThreadsResponse {
+    fn from((res, cache): (SearchThreadsResponse, &Arc<Cache>)) -> Self {
+        let guild_id = res.threads.iter().nth(0).map(|thread| thread.guild_id);
+        if let Some(guild_id) = guild_id {
+            Self {
+                threads: res
+                    .threads
+                    .into_iter()
+                    .map(|thread| thread.insert_and_return(cache))
+                    .collect(),
+                members: res
+                    .members
+                    .into_iter()
+                    .map(|member| (member, guild_id, cache).into())
+                    .collect(),
+                has_more: res.has_more,
+                total_results: res.total_results,
+                first_messages: res.first_messages.map(|messages| {
+                    messages
+                        .into_iter()
+                        .map(|message| {
+                            CachedMessage::from_message(message, cache).insert_and_return(cache)
+                        })
+                        .collect()
+                }),
+            }
+        } else {
+            if !res.members.is_empty() {
+                tracing::warn!("members is not empty but threads is");
+            }
+            Self {
+                threads: Vec::new(),
+                members: Vec::new(),
+                has_more: res.has_more,
+                total_results: res.total_results,
+                first_messages: res.first_messages.map(|messages| {
+                    messages
+                        .into_iter()
+                        .map(|message| {
+                            CachedMessage::from_message(message, cache).insert_and_return(cache)
+                        })
+                        .collect()
+                }),
+            }
         }
     }
 }
