@@ -77,7 +77,7 @@ bitflags! {
         /// Start a public thread or an announcement thread.
         const CREATE_PUBLIC_THREADS = 1 << 35;
         /// Start a private thread in a text channel.
-        const CREATE_PRIVATE_THREADS = 1 << 46;
+        const CREATE_PRIVATE_THREADS = 1 << 36;
         /// Allows using stickers from other guilds.
         const USE_EXTERNAL_STICKERS = 1 << 37;
         /// Send a message in a thread, and add another member to a thread.
