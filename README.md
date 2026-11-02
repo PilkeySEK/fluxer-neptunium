@@ -11,8 +11,9 @@ Support & Development community on Fluxer: https://fluxer.gg/R67sLSVp
 The `fluxer-api` crate has been moved to [PilkeySEK/fluxer-api](https://github.com/PilkeySEK/fluxer-api)!
 
 # Usage
-Add the `fluxer-neptunium` crate (**NOTE:** Not yet published to crates.io, as it is not production ready yet) and `tokio`. Check out the examples for examples on how to use the crate. 
-If you require even more fine-grained control over things, you may be interested in the `neptunium-gateway` and/or `neptunium-http` crates.
+Add the `fluxer-neptunium` crate and `tokio` (`tokio` is the bare minimum, but I also highly recommend `tracing-subscriber` to be able to see the logs). Check out the examples for examples on how to use the crate. 
+
+You can also use and combine any of `neptunium-model`, `neptunium-http`, `neptunium-gateway`, `neptunium-cache-inmemory` and `fluxer-neptunium` if you want/need more fine-grained control (or if you want to make a custom fluxer __server__ software).
 
 # Examples
 Examples can be found in the [examples/](./examples) directory, with a .png for some examples to show what they do.
