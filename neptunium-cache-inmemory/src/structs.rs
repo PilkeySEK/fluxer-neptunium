@@ -675,7 +675,7 @@ pub struct CachedActiveGuildThreads {
 
 impl From<(ActiveGuildThreads, &Arc<Cache>)> for CachedActiveGuildThreads {
     fn from((res, cache): (ActiveGuildThreads, &Arc<Cache>)) -> Self {
-        let guild_id = res.threads.iter().nth(0).map(|thread| thread.guild_id);
+        let guild_id = res.threads.first().map(|thread| thread.guild_id);
         if let Some(guild_id) = guild_id {
             Self {
                 threads: res
@@ -726,7 +726,7 @@ pub struct CachedArchivedThreads {
 
 impl From<(ArchivedThreads, &Arc<Cache>)> for CachedArchivedThreads {
     fn from((res, cache): (ArchivedThreads, &Arc<Cache>)) -> Self {
-        let guild_id = res.threads.iter().nth(0).map(|thread| thread.guild_id);
+        let guild_id = res.threads.first().map(|thread| thread.guild_id);
         if let Some(guild_id) = guild_id {
             Self {
                 threads: res
@@ -779,7 +779,7 @@ pub struct CachedSearchThreadsResponse {
 
 impl From<(SearchThreadsResponse, &Arc<Cache>)> for CachedSearchThreadsResponse {
     fn from((res, cache): (SearchThreadsResponse, &Arc<Cache>)) -> Self {
-        let guild_id = res.threads.iter().nth(0).map(|thread| thread.guild_id);
+        let guild_id = res.threads.first().map(|thread| thread.guild_id);
         if let Some(guild_id) = guild_id {
             Self {
                 threads: res
