@@ -68,7 +68,9 @@ async fn main() {
             .token_type(TokenType::User)
             .subscribe_to_everything(true)
             .build(),
-    );
+    )
+    .await
+    .unwrap();
     client.register_event_handler(Handler);
     client.start().await.unwrap();
 }

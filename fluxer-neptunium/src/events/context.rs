@@ -33,7 +33,7 @@ use neptunium_http::{
         },
         gateway::{GatewayInformation, GetGatewayInformation},
         guild::{ListCurrentUserGuilds, ListCurrentUserGuildsParams},
-        meta::{InstanceDiscoveryDocument, InstanceDiscoveryDocumentResponse},
+        meta::{GetInstanceDiscoveryDocument, InstanceDiscoveryDocumentResponse},
         users::GetCurrentUserProfile,
     },
 };
@@ -1166,7 +1166,10 @@ impl Context {
     pub async fn get_instance_discovery_document(
         &self,
     ) -> Result<InstanceDiscoveryDocumentResponse, ClientError> {
-        Ok(self.http_client.execute(InstanceDiscoveryDocument).await?)
+        Ok(self
+            .http_client
+            .execute(GetInstanceDiscoveryDocument)
+            .await?)
     }
 }
 
@@ -1184,18 +1187,18 @@ mod tests {
             .unwrap()
             .block_on(async {
                 {
-                    let client = Client::new("123.abc");
+                    let client = Client::new("123.abc").await.unwrap();
                     assert_eq!(
                         client.get_user_id_from_token(),
                         Some(Id::<UserMarker>::new(123))
                     );
                 }
                 {
-                    let client = Client::new("flx_abcdefg");
+                    let client = Client::new("flx_abcdefg").await.unwrap();
                     assert_eq!(client.get_user_id_from_token(), None);
                 }
                 {
-                    let client = Client::new(".invalid");
+                    let client = Client::new(".invalid").await.unwrap();
                     assert_eq!(client.get_user_id_from_token(), None);
                 }
             });

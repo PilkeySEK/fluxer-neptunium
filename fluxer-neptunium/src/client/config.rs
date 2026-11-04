@@ -1,14 +1,15 @@
 use bon::Builder;
 use neptunium_cache_inmemory::CacheConfig;
-use neptunium_http::endpoints::channel::AllowedMentions;
+use neptunium_http::{client::HttpClientConfig, endpoints::channel::AllowedMentions};
 
 #[derive(Builder, Debug)]
 pub struct ClientConfig {
-    /// See [`DEFAULT_API_BASE_URL`] for an example.
+    /// See [`DEFAULT_INSTANCE_ROOT`] for an example.
+    /// Will be set to the Fluxer official instance if set to `None` (the default).
     ///
-    /// [`DEFAULT_API_BASE_URL`]: crate::http::DEFAULT_API_BASE_URL
+    /// [`DEFAULT_INSTANCE_ROOT`]: crate::http::DEFAULT_INSTANCE_ROOT
     #[builder(into)]
-    pub api_base_url: Option<String>,
+    pub instance_root: Option<String>,
     // #[builder(default = false)]
     // pub always_propagate_event_errors: bool,
     #[builder(default)]
@@ -40,11 +41,9 @@ pub struct ClientConfig {
     /// The value will only be overwritten when using methods defined in this crate, not in `neptunium-http` or somewhere else.
     /// When sending a request manually using the HTTP client, this will not be applied.
     pub default_allowed_mentions: Option<AllowedMentions>,
-    /// This will be sent in the user agent alongside this crate name.
-    ///
-    /// Example format: `MyBot (+User#0000)` (you should specify contact information as seen here.)
-    #[builder(into)]
-    pub bot_user_agent_information: Option<String>,
+    /// This will be sent in the user agent. Set to an empty string to disable.
+    #[builder(into, default = HttpClientConfig::default_user_agent())]
+    pub user_agent: String,
     /// Whether to automatically subscribe to all guild events.
     /// Useful for user bots.
     ///

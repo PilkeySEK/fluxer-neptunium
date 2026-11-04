@@ -9,7 +9,10 @@ use std::{
 use neptunium_cache_inmemory::{Cache, gateway::cached_payload::CachedGuildMembersChunk};
 use neptunium_gateway::session::{ResumeInfo, Session, SessionHandle, config::SessionConfig};
 
-use neptunium_http::client::HttpClient;
+use neptunium_http::{
+    client::{HttpClient, HttpClientConfig},
+    endpoints::meta::InstanceDiscoveryDocumentResponse,
+};
 use neptunium_model::gateway::payload::{
     incoming::GuildCountsUpdate,
     outgoing::{
@@ -63,6 +66,7 @@ pub struct Client {
     guild_members_chunk_listeners: HashMap<String, UnboundedSender<CachedGuildMembersChunk>>,
     guild_counts_update_listeners: HashMap<String, oneshot::Sender<GuildCountsUpdate>>,
     context_rx: UnboundedReceiver<ClientMessage>,
+    instance_discovery_document: InstanceDiscoveryDocumentResponse,
 }
 
 impl Deref for Client {
@@ -96,32 +100,33 @@ impl Client {
     /// let client = Client::new(SessionConfig::builder().token("my bot token".to_string()).build());
     /// # }
     /// ```
-    #[must_use]
-    pub fn new(session_config: impl Into<SessionConfig>) -> Self {
-        Self::new_with_config(session_config, ClientConfig::default())
+    pub async fn new(session_config: impl Into<SessionConfig>) -> Result<Self, ClientError> {
+        Self::new_with_config(session_config, ClientConfig::default()).await
     }
 
-    #[must_use]
-    pub fn new_with_config(
+    pub async fn new_with_config(
         session_config: impl Into<SessionConfig>,
         client_config: ClientConfig,
-    ) -> Self {
+    ) -> Result<Self, ClientError> {
         let session_config = session_config.into();
 
         let (context_tx, context_rx) = unbounded_channel();
 
-        Self {
+        let instance_discovery_document;
+        Ok(Self {
             context: Context {
                 http_client: Arc::new({
-                    let mut api_client = HttpClient::builder()
-                        .token(session_config.token.clone())
-                        .token_type(client_config.token_type)
-                        .maybe_bot_user_agent(client_config.bot_user_agent_information)
-                        .build();
-                    if let Some(api_base_url) = client_config.api_base_url {
-                        api_client.api_base_url = api_base_url;
-                    }
-                    api_client
+                    let (http_client, instance_discovery_document_response) = HttpClient::new(
+                        HttpClientConfig::builder()
+                            .token((*session_config.token).clone())
+                            .token_type(client_config.token_type)
+                            .user_agent(client_config.user_agent)
+                            .maybe_instance_root(client_config.instance_root)
+                            .build(),
+                    )
+                    .await?;
+                    instance_discovery_document = instance_discovery_document_response;
+                    http_client
                 }),
                 tx: context_tx,
                 cache: Arc::new(Cache::new(client_config.cache_config)),
@@ -136,7 +141,8 @@ impl Client {
             guild_counts_update_listeners: HashMap::new(),
             guild_members_chunk_listeners: HashMap::new(),
             context_rx,
-        }
+            instance_discovery_document,
+        })
     }
 
     #[must_use]
@@ -236,13 +242,11 @@ impl Client {
             });
         }
 
-        let instance_discovery_document = self.context.get_instance_discovery_document().await?;
-
         let (event_tx, mut event_rx) = unbounded_channel();
         let session_config = self.session_config.clone();
         let mut session = Session::connect(
             session_config,
-            &instance_discovery_document.endpoints.gateway,
+            &self.instance_discovery_document.endpoints.gateway,
         )
         .await
         .map_err(ClientError::GatewayConnectError)?;

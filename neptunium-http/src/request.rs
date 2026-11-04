@@ -6,7 +6,7 @@ use reqwest::{
     header::{HeaderMap, HeaderValue},
 };
 
-use crate::client::{HttpClient, TokenType};
+use crate::client::TokenType;
 
 #[derive(Clone, Debug, Builder)]
 pub struct Request {
@@ -20,23 +20,38 @@ pub struct Request {
     pub audit_log_reason: Option<String>,
 }
 
+pub struct RequestExecuteClientInfo<'a> {
+    pub reqwest_client: &'a reqwest::Client,
+    pub base_url: &'a str,
+    pub token_info: Option<(&'a str, TokenType)>,
+    pub user_agent: Option<&'a str>,
+}
+
 impl Request {
     /// Execute the request. For a non-consuming version, see [`Self::borrowed_execute`].
     /// # Errors
     /// Returns an error if there was an error while sending the request, a redirect loop was detected or the redirect limit was exhausted.
-    pub async fn execute(self, client: &HttpClient) -> Result<Response, Error> {
-        let mut request = client
-            .reqwest_client
-            .request(self.method, format!("{}{}", client.api_base_url, self.path))
-            .header("User-Agent", client.get_full_user_agent());
+    pub async fn execute(
+        self,
+        client_info: RequestExecuteClientInfo<'_>,
+    ) -> Result<Response, Error> {
+        let mut request = client_info.reqwest_client.request(
+            self.method,
+            format!("{}{}", client_info.base_url, self.path),
+        );
+        if let Some(user_agent) = client_info.user_agent {
+            request = request.header("User-Agent", user_agent);
+        }
         if let Some(headers) = self.headers {
             request = request.headers(headers);
         }
-        if self.use_authorization_token {
-            let token = match client.token_type {
-                TokenType::Bot => format!("Bot {}", *client.token),
-                TokenType::User => (*client.token).clone(),
-                TokenType::Bearer => format!("Bearer {}", *client.token),
+        if self.use_authorization_token
+            && let Some((token, token_type)) = client_info.token_info
+        {
+            let token = match token_type {
+                TokenType::Bot => format!("Bot {}", token),
+                TokenType::User => token.to_owned(),
+                TokenType::Bearer => format!("Bearer {}", token),
             };
 
             request = request.header("Authorization", token);
@@ -51,30 +66,6 @@ impl Request {
             && !params.is_empty()
         {
             request = request.query(&params);
-        }
-
-        request.send().await
-    }
-
-    /// Execute the request without consuming it. This clones certain fields when necessary. For a consuming version, see [`Self::execute`].
-    /// # Errors
-    /// Returns the same errors as [`Self::execute`].
-    pub async fn borrowed_execute(&self, client: &HttpClient) -> Result<Response, Error> {
-        let mut request = client
-            .reqwest_client
-            .request(
-                self.method.clone(),
-                format!("{}{}", client.api_base_url, self.path),
-            )
-            .header("User-Agent", client.get_full_user_agent());
-        if let Some(headers) = &self.headers {
-            request = request.headers(headers.clone());
-        }
-        if self.use_authorization_token {
-            request = request.header("Authorization", format!("Bot {}", *client.token));
-        }
-        if let Some(body) = &self.body {
-            request = request.body(body.clone());
         }
 
         request.send().await

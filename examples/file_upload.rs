@@ -61,7 +61,9 @@ impl EventHandler for Handler {
 
 #[tokio::main]
 async fn main() {
-    let mut client = Client::new(env::var("FLUXER_TOKEN").unwrap());
+    let mut client = Client::new(env::var("FLUXER_TOKEN").unwrap())
+        .await
+        .unwrap();
     client.register_event_handler(Handler);
     client.start().await.unwrap();
 }

@@ -16,9 +16,9 @@ pub use features::*;
 pub use limits::*;
 
 #[derive(Copy, Clone, Debug)]
-pub struct InstanceDiscoveryDocument;
+pub struct GetInstanceDiscoveryDocument;
 
-impl Endpoint for InstanceDiscoveryDocument {
+impl Endpoint for GetInstanceDiscoveryDocument {
     type Response = InstanceDiscoveryDocumentResponse;
 
     fn into_request(self) -> crate::request::Request {
@@ -313,20 +313,14 @@ pub struct InstanceDiscoveryDocumentResponse {
 
 #[cfg(test)]
 mod tests {
-    use crate::client::HttpClient;
-
-    use super::*;
+    use crate::client::{HttpClient, HttpClientConfig};
 
     #[tokio::test]
     #[ignore = "requires reaching out to Fluxer's main instance"]
     async fn get_fluxer_main_instance_doc() {
-        let client = HttpClient::builder().token(String::default()).build();
-
-        let instance_doc = client
-            .execute(InstanceDiscoveryDocument)
-            .await
-            .expect("should successfully parse the instance doc for the main Fluxer instance");
-
-        dbg!(instance_doc);
+        let (_client, _instance_doc) =
+            HttpClient::new(HttpClientConfig::builder().token("").build())
+                .await
+                .unwrap();
     }
 }

@@ -54,7 +54,9 @@ async fn main() {
             )
             .send_initial_presence_on_every_reconnect(true)
             .build(),
-    );
+    )
+    .await
+    .unwrap();
 
     client.register_event_handler(Handler);
 
