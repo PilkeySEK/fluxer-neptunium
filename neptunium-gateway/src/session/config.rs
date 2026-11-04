@@ -262,10 +262,6 @@ pub enum GatewayCompression {
     ZstdStream,
 }
 
-impl SessionConfig {
-    pub const DEFAULT_GATEWAY_URL: &str = "wss://gateway.fluxer.app/?v=1&encoding=json";
-}
-
 impl From<&str> for SessionConfig {
     fn from(value: &str) -> Self {
         Self::builder().token(value.to_owned()).build()

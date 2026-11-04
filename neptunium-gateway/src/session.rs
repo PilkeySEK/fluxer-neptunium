@@ -90,8 +90,9 @@ impl Session {
         let cancellation_token = CancellationToken::new();
         let tracker = TaskTracker::new();
         let conn = Connection::connect_and_await_hello(format!(
-            "{}?{}",
+            "{}{}?{}",
             gateway_url,
+            if gateway_url.ends_with('/') { "" } else { "/" },
             serde_qs::to_string(&config.connection_params).unwrap(),
         ))
         .await?;
