@@ -4,6 +4,9 @@ use neptunium_http::endpoints::channel::AllowedMentions;
 
 #[derive(Builder, Debug)]
 pub struct ClientConfig {
+    /// See [`DEFAULT_API_BASE_URL`] for an example.
+    ///
+    /// [`DEFAULT_API_BASE_URL`]: crate::http::DEFAULT_API_BASE_URL
     #[builder(into)]
     pub api_base_url: Option<String>,
     // #[builder(default = false)]

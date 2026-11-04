@@ -9,8 +9,6 @@ use crate::session::ResumeInfo;
 
 #[derive(Debug, Builder, Clone)]
 pub struct SessionConfig {
-    #[builder(default = SessionConfig::DEFAULT_GATEWAY_URL.to_owned())]
-    pub gateway_base_url: String,
     #[builder(into)]
     pub token: Zeroizing<String>,
     /// The Dispatch event names this session does not want, at most 256 entries.

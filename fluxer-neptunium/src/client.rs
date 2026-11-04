@@ -191,7 +191,7 @@ impl Client {
     ///
     /// # Errors
     /// Returns an error if the gateway closes the connection and the close code indicates that
-    /// reconnecting is not possible.
+    /// reconnecting is not possible, or if fetching the instance discovery document fails.
     ///
     /// [`start_cancellable`]: Self::start_cancellable
     pub async fn start(&mut self) -> Result<Infallible, ClientError> {
@@ -207,7 +207,7 @@ impl Client {
     ///
     /// # Errors
     /// Returns an error if the gateway closes the connection and the close code indicates that
-    /// reconnecting is not possible.
+    /// reconnecting is not possible, or if fetching the instance discovery document fails.
     #[expect(clippy::missing_panics_doc)]
     pub async fn start_cancellable<T: Send + Sync + 'static>(
         &mut self,
@@ -236,11 +236,16 @@ impl Client {
             });
         }
 
+        let instance_discovery_document = self.context.get_instance_discovery_document().await?;
+
         let (event_tx, mut event_rx) = unbounded_channel();
         let session_config = self.session_config.clone();
-        let mut session = Session::connect(session_config)
-            .await
-            .map_err(ClientError::GatewayConnectError)?;
+        let mut session = Session::connect(
+            session_config,
+            &instance_discovery_document.endpoints.gateway,
+        )
+        .await
+        .map_err(ClientError::GatewayConnectError)?;
         let handle = session.handle();
         let mut session_task = tokio::spawn(async move {
             session

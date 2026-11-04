@@ -28,6 +28,10 @@ pub enum TokenType {
 #[derive(Debug, Builder)]
 pub struct HttpClient {
     /// Change this if you want to make requests to a different instance.
+    ///
+    /// See [`DEFAULT_API_BASE_URL`] for an example.
+    ///
+    /// [`DEFAULT_API_BASE_URL`]: crate::DEFAULT_API_BASE_URL
     #[builder(into, default = DEFAULT_API_BASE_URL.to_owned())]
     pub api_base_url: String,
     #[builder(into)]

@@ -33,6 +33,7 @@ use neptunium_http::{
         },
         gateway::{GatewayInformation, GetGatewayInformation},
         guild::{ListCurrentUserGuilds, ListCurrentUserGuildsParams},
+        meta::{InstanceDiscoveryDocument, InstanceDiscoveryDocumentResponse},
         users::GetCurrentUserProfile,
     },
 };
@@ -1160,6 +1161,12 @@ impl Context {
             })
             .await?;
         Ok(response.deleted_count)
+    }
+
+    pub async fn get_instance_discovery_document(
+        &self,
+    ) -> Result<InstanceDiscoveryDocumentResponse, ClientError> {
+        Ok(self.http_client.execute(InstanceDiscoveryDocument).await?)
     }
 }
 

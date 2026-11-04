@@ -80,13 +80,18 @@ pub struct Session {
 }
 
 impl Session {
-    #[expect(clippy::missing_panics_doc, clippy::missing_errors_doc)]
-    pub async fn connect(config: SessionConfig) -> Result<Self, ConnectError> {
+    /// Connect and return a new [`Session`].
+    /// # Errors
+    /// Returns an error if connecting to the gateway or waiting for the `Hello` event failed.
+    ///
+    /// [`Session`]: crate::session::Session
+    #[expect(clippy::missing_panics_doc)]
+    pub async fn connect(config: SessionConfig, gateway_url: &str) -> Result<Self, ConnectError> {
         let cancellation_token = CancellationToken::new();
         let tracker = TaskTracker::new();
         let conn = Connection::connect_and_await_hello(format!(
             "{}?{}",
-            config.gateway_base_url,
+            gateway_url,
             serde_qs::to_string(&config.connection_params).unwrap(),
         ))
         .await?;
