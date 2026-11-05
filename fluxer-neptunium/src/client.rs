@@ -94,8 +94,12 @@ impl Client {
     /// # async fn main() {
     /// // A single string will be interpreted as the token,
     /// // which is the only required configuration:
-    /// let client = Client::new("my bot token");
-    /// let client = Client::new(SessionConfig::builder().token("my bot token".to_string()).build());
+    /// let client = Client::new("my bot token").await.unwrap();
+    /// let client = Client::new(
+    ///     SessionConfig::builder()
+    ///         .token("my bot token".to_string())
+    ///         .build()
+    /// ).await.unwrap();
     /// # }
     /// ```
     ///

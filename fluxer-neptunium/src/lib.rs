@@ -21,9 +21,9 @@
 //! #[tokio::main]
 //! async fn main() {
 //!   let token = std::env::var("FLUXER_TOKEN").unwrap();
-//!   let mut client = Client::new(token);
+//!   let mut client = Client::new(token).await.unwrap();
 //!   client.register_event_handler(Handler);
-//!   client.start().await;
+//!   client.start().await.unwrap();
 //! }
 //! ```
 
