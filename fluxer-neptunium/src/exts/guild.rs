@@ -12,14 +12,13 @@ use neptunium_http::endpoints::{
         GetCurrentUserGuildMember, GetGuildInformation, GetGuildMember, GetGuildVanityUrl,
         GetGuildVanityUrlResponse, GuildChannelCreateRequest, KickGuildMember, LeaveGuild,
         ListGuildAuditLogs, ListGuildAuditLogsParams, ListGuildBans, ListGuildChannels,
-        ListGuildMembers, ListGuildRoles, ListGuildStickers, RemoveRoleFromGuildMember,
-        ResetGuildRoleHoistPositions, SearchGuildMembersMemberResponse, ToggleDetachedBanner,
-        ToggleGuildTextChannelFlexibleNames, UnbanGuildMember, UpdateGuildChannelPositions,
-        UpdateGuildChannelPositionsEntry, UpdateGuildMember, UpdateGuildMemberBody,
-        UpdateGuildRole, UpdateGuildRoleBody, UpdateGuildRoleHoistPositions,
-        UpdateGuildRoleHoistPositionsEntry, UpdateGuildRolePositions,
-        UpdateGuildRolePositionsEntry, UpdateGuildSettings, UpdateGuildSettingsBody,
-        UpdateGuildSticker, UpdateGuildStickerBody, UpdateGuildVanityUrl,
+        ListGuildMembers, ListGuildRoles, ListGuildStickers, ModifyGuildRole, ModifyGuildRoleBody,
+        RemoveRoleFromGuildMember, ResetGuildRoleHoistPositions, SearchGuildMembersMemberResponse,
+        ToggleDetachedBanner, ToggleGuildTextChannelFlexibleNames, UnbanGuildMember,
+        UpdateGuildChannelPositions, UpdateGuildChannelPositionsEntry, UpdateGuildMember,
+        UpdateGuildMemberBody, UpdateGuildRoleHoistPositions, UpdateGuildRoleHoistPositionsEntry,
+        UpdateGuildRolePositions, UpdateGuildRolePositionsEntry, UpdateGuildSettings,
+        UpdateGuildSettingsBody, UpdateGuildSticker, UpdateGuildStickerBody, UpdateGuildVanityUrl,
         UpdateGuildVanityUrlResponse,
     },
     invites::ListGuildInvites,
@@ -267,13 +266,13 @@ pub trait GuildExt {
         &self,
         ctx: &Context,
         role_id: Id<RoleMarker>,
-        updates: UpdateGuildRoleBody,
+        updates: ModifyGuildRoleBody,
     ) -> Result<Cached<CachedGuildRole>, ClientError>;
     async fn update_role_with_reason(
         &self,
         ctx: &Context,
         role_id: Id<RoleMarker>,
-        updates: UpdateGuildRoleBody,
+        updates: ModifyGuildRoleBody,
         reason: impl Into<String> + Send,
     ) -> Result<Cached<CachedGuildRole>, ClientError>;
     async fn list_stickers(&self, ctx: &Context) -> Result<Vec<GuildSticker>, ClientError>;
@@ -929,9 +928,9 @@ impl<T: GuildTrait> GuildExt for T {
         &self,
         ctx: &Context,
         role_id: Id<RoleMarker>,
-        updates: UpdateGuildRoleBody,
+        updates: ModifyGuildRoleBody,
     ) -> Result<Cached<CachedGuildRole>, ClientError> {
-        Ok(UpdateGuildRole {
+        Ok(ModifyGuildRole {
             guild_id: self.get_guild_id(),
             role_id,
             body: updates,
@@ -945,10 +944,10 @@ impl<T: GuildTrait> GuildExt for T {
         &self,
         ctx: &Context,
         role_id: Id<RoleMarker>,
-        updates: UpdateGuildRoleBody,
+        updates: ModifyGuildRoleBody,
         reason: impl Into<String> + Send,
     ) -> Result<Cached<CachedGuildRole>, ClientError> {
-        Ok(UpdateGuildRole {
+        Ok(ModifyGuildRole {
             guild_id: self.get_guild_id(),
             role_id,
             body: updates,

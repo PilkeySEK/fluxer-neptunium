@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use neptunium_cache_inmemory::{Cached, CachedGuildRole};
-use neptunium_http::endpoints::guild::UpdateGuildRoleBody;
+use neptunium_http::endpoints::guild::ModifyGuildRoleBody;
 
 use crate::{client::error::ClientError, events::context::Context, exts::GuildExt};
 
@@ -10,13 +10,13 @@ pub trait GuildRoleExt {
     async fn update(
         &self,
         ctx: &Context,
-        updates: UpdateGuildRoleBody,
+        updates: ModifyGuildRoleBody,
     ) -> Result<Cached<CachedGuildRole>, ClientError>;
     /// Update this role with a reason for the audit log.
     async fn update_with_reason(
         &self,
         ctx: &Context,
-        updates: UpdateGuildRoleBody,
+        updates: ModifyGuildRoleBody,
         reason: impl Into<String> + Send,
     ) -> Result<Cached<CachedGuildRole>, ClientError>;
     /// Delete this role.
@@ -34,14 +34,14 @@ impl GuildRoleExt for CachedGuildRole {
     async fn update(
         &self,
         ctx: &Context,
-        updates: UpdateGuildRoleBody,
+        updates: ModifyGuildRoleBody,
     ) -> Result<Cached<CachedGuildRole>, ClientError> {
         self.guild_id.update_role(ctx, self.id, updates).await
     }
     async fn update_with_reason(
         &self,
         ctx: &Context,
-        updates: UpdateGuildRoleBody,
+        updates: ModifyGuildRoleBody,
         reason: impl Into<String> + Send,
     ) -> Result<Cached<CachedGuildRole>, ClientError> {
         self.guild_id

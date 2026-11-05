@@ -99,17 +99,26 @@ bitflags! {
 
 serde_bitflags! {Permissions, String(u64)}
 
-#[derive(Deserialize, Serialize, Clone, Debug)]
+#[derive(Deserialize, Serialize, Clone, Debug, PartialEq, Eq)]
 pub struct GuildRole {
     pub id: Id<RoleMarker>,
     pub name: String,
-    pub permissions: Permissions,
-    pub position: u16,
     pub color: HexColor,
-    /// Hash of the icon.
-    pub icon: Option<String>,
-    pub unicode_emoji: Option<String>,
+    pub position: usize,
+    pub hoist_position: Option<usize>,
+    pub permissions: Permissions,
     pub hoist: bool,
-    pub hoist_position: Option<u16>,
     pub mentionable: bool,
+    /// The role icon, either a unicode emoji or the hash of the role icon image.
+    /// `None` if neither are set.
+    #[serde(flatten)]
+    pub icon: Option<RoleIcon>,
+    pub unicode_emoji: Option<String>,
+}
+
+#[derive(serde::Serialize, serde::Deserialize, Clone, Debug, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum RoleIcon {
+    Icon(String),
+    UnicodeEmoji(String),
 }

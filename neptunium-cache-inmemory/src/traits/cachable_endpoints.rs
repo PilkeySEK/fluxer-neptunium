@@ -37,11 +37,12 @@ use neptunium_http::{
         guild::{
             CreateGuildChannel, CreateGuildRole, DeleteGuildRole, GetCurrentUserGuildMember,
             GetGuildInformation, GetGuildMember, LeaveGuild, ListCurrentUserGuilds,
-            ListGuildChannels, ListGuildMembers, ListGuildRoles, ToggleDetachedBanner,
-            ToggleGuildTextChannelFlexibleNames, UpdateCurrentUserGuildMember, UpdateGuildMember,
-            UpdateGuildRole, UpdateGuildRoleHoistPositions, UpdateGuildRoleHoistPositionsEntry,
-            UpdateGuildRolePositions, UpdateGuildRolePositionsEntry, UpdateGuildSettings,
-            UpdateGuildVanityUrl, UpdateGuildVanityUrlResponse,
+            ListGuildChannels, ListGuildMembers, ListGuildRoles, ModifyGuildRole,
+            ToggleDetachedBanner, ToggleGuildTextChannelFlexibleNames,
+            UpdateCurrentUserGuildMember, UpdateGuildMember, UpdateGuildRoleHoistPositions,
+            UpdateGuildRoleHoistPositionsEntry, UpdateGuildRolePositions,
+            UpdateGuildRolePositionsEntry, UpdateGuildSettings, UpdateGuildVanityUrl,
+            UpdateGuildVanityUrlResponse,
         },
         invites::{CreateChannelInvite, ListChannelInvites, ListGuildInvites},
         users::{GetCurrentUserProfile, GetUserById, GetUserProfile},
@@ -711,7 +712,7 @@ impl CachableEndpoint for DeleteGuildRole {
 }
 
 #[async_trait]
-impl CachableEndpoint for UpdateGuildRole {
+impl CachableEndpoint for ModifyGuildRole {
     type Response = Cached<CachedGuildRole>;
     async fn execute_cached(
         self,
