@@ -49,9 +49,9 @@ impl Request {
             && let Some((token, token_type)) = client_info.token_info
         {
             let token = match token_type {
-                TokenType::Bot => format!("Bot {}", token),
+                TokenType::Bot => format!("Bot {token}"),
                 TokenType::User => token.to_owned(),
-                TokenType::Bearer => format!("Bearer {}", token),
+                TokenType::Bearer => format!("Bearer {token}"),
             };
 
             request = request.header("Authorization", token);

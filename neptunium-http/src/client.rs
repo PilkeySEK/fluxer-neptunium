@@ -46,6 +46,7 @@ pub struct HttpClientConfig {
 }
 
 impl HttpClientConfig {
+    #[must_use]
     pub fn default_user_agent() -> String {
         format!("{}/{} (+{})", BASE_USER_AGENT.0, VERSION, BASE_USER_AGENT.1)
     }
@@ -87,7 +88,6 @@ impl HttpClient {
     /// Send a request to the specified endpoint, returning the result.
     /// # Errors
     /// Returns an error if the response is not what is expected by the given endpoint or if a network error occurs.
-    #[expect(clippy::too_many_lines)]
     pub async fn execute<T: Endpoint + Send>(
         &self,
         endpoint: T,
@@ -99,7 +99,7 @@ impl HttpClient {
             self.retry_times,
             &self.reqwest_client,
             Some((&self.token, self.token_type)),
-            self.user_agent.as_ref().map(|s| s.as_str()),
+            self.user_agent.as_deref(),
         )
         .await
     }
@@ -130,6 +130,7 @@ impl HttpClient {
         Ok(())
     }
 
+    #[must_use]
     pub fn new_with_api_base_url(config: HttpClientConfig, api_base_url: String) -> Self {
         Self {
             api_base_url,
@@ -147,6 +148,9 @@ impl HttpClient {
     }
 
     /// Will get required information from the instance discovery document.
+    ///
+    /// # Errors
+    /// Returns an error if fetching the instance discovery document fails.
     pub async fn new(
         config: HttpClientConfig,
     ) -> Result<(Self, InstanceDiscoveryDocumentResponse), ExecuteEndpointRequestError> {
@@ -165,7 +169,7 @@ impl HttpClient {
             config.max_request_retries,
             &client,
             None,
-            user_agent.as_ref().map(|s| s.as_str()),
+            user_agent.as_deref(),
         )
         .await?;
 
@@ -184,6 +188,7 @@ impl HttpClient {
     }
 }
 
+#[expect(clippy::too_many_lines)]
 async fn try_request<Res: ResponseBody>(
     base: &str,
     req: crate::request::Request,

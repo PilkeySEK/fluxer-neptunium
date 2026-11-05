@@ -86,8 +86,6 @@ impl DerefMut for Client {
 impl Client {
     /// Create a new client provided a session config.
     ///
-    /// Must be called from the context of a tokio runtime.
-    ///
     /// # Examples
     /// ```
     /// # use fluxer_neptunium::client::Client;
@@ -100,10 +98,17 @@ impl Client {
     /// let client = Client::new(SessionConfig::builder().token("my bot token".to_string()).build());
     /// # }
     /// ```
+    ///
+    /// # Errors
+    /// Returns an error if fetching the instance discovery document fails.
     pub async fn new(session_config: impl Into<SessionConfig>) -> Result<Self, ClientError> {
         Self::new_with_config(session_config, ClientConfig::default()).await
     }
 
+    /// Create a new client provided a session config and a client config.
+    ///
+    /// # Errors
+    /// Returns an error if fetching the instance discovery document fails.
     pub async fn new_with_config(
         session_config: impl Into<SessionConfig>,
         client_config: ClientConfig,
