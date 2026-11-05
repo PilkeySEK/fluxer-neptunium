@@ -113,7 +113,6 @@ pub struct GuildRole {
     /// `None` if neither are set.
     #[serde(flatten)]
     pub icon: Option<RoleIcon>,
-    pub unicode_emoji: Option<String>,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Clone, Debug, PartialEq, Eq)]

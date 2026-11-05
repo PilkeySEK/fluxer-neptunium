@@ -1,6 +1,4 @@
-#[cfg(feature = "rate-limiting")]
 use crate::endpoints::MethodExt;
-#[cfg(feature = "rate-limiting")]
 use crate::ratelimiting::RateLimiter;
 use bon::Builder;
 use reqwest::{IntoUrl, Method, StatusCode};
@@ -63,7 +61,6 @@ pub struct HttpClient {
     // /// Set to an empty string to disable.
     // pub library_user_agent: String,
     pub user_agent: Option<String>,
-    #[cfg(feature = "rate-limiting")]
     pub(crate) rate_limiter: RateLimiter,
     /// How many times the client should retry if an error is received that is
     /// likely due to network conditions or rate limits. Set to 0 for no retries.
@@ -74,7 +71,6 @@ impl HttpClient {
     /// The Fluxer global rate limit. This applies to all users unless they have a private `HIGH_GLOBAL_RATE_LIMIT` flag set.
     ///
     /// [Source](https://github.com/fluxerapp/fluxer/blob/ee1f27fe1a372b5291aead8042944afd706bf5db/packages/api/src/middleware/RateLimitMiddleware.tsx#L72).
-    #[cfg(feature = "rate-limiting")]
     const DEFAULT_GLOBAL_RATE_LIMIT: u16 = 50;
 
     // #[must_use]
@@ -201,7 +197,6 @@ async fn try_request<Res: ResponseBody>(
     let mut current_try = 0;
     loop {
         let request = req.clone();
-        #[cfg(feature = "rate-limiting")]
         let permit = 'rate_limiting_blk: {
             let path_for_rate_limiter = request.path.strip_prefix('/').unwrap_or(&request.path);
             let Some(method_for_rate_limiter) = request.method.clone().into_rate_limiter_method()
@@ -243,7 +238,6 @@ async fn try_request<Res: ResponseBody>(
         };
         tracing::trace!("API response: {:?}", response);
 
-        #[cfg(feature = "rate-limiting")]
         if let Some(permit) = permit {
             use crate::ratelimiting::RateLimitHeaders;
 

@@ -1,8 +1,6 @@
 use std::string::FromUtf8Error;
 
-#[cfg(feature = "rate-limiting")]
 use crate::ratelimiting::RateLimitHeaders;
-#[cfg(feature = "rate-limiting")]
 use reqwest::Response;
 use serde::{Serialize, de::DeserializeOwned};
 
@@ -131,12 +129,10 @@ impl From<reqwest::Error> for ExecuteEndpointRequestError {
     }
 }
 
-#[cfg(feature = "rate-limiting")]
 pub(crate) trait MethodExt {
     fn into_rate_limiter_method(self) -> Option<crate::ratelimiting::Method>;
 }
 
-#[cfg(feature = "rate-limiting")]
 impl MethodExt for reqwest::Method {
     fn into_rate_limiter_method(self) -> Option<crate::ratelimiting::Method> {
         use crate::ratelimiting::Method as TwilightMethod;
@@ -152,12 +148,10 @@ impl MethodExt for reqwest::Method {
     }
 }
 
-#[cfg(feature = "rate-limiting")]
 pub(crate) trait RateLimitHeadersExt: Sized {
     fn from_response(res: &Response) -> Option<Self>;
 }
 
-#[cfg(feature = "rate-limiting")]
 impl RateLimitHeadersExt for RateLimitHeaders {
     fn from_response(res: &Response) -> Option<Self> {
         let headers = res.headers();
@@ -192,7 +186,6 @@ impl RateLimitHeadersExt for RateLimitHeaders {
     }
 }
 
-#[cfg(feature = "rate-limiting")]
 fn parse_bucket(s: &str) -> Option<Vec<u8>> {
     if !s.len().is_multiple_of(2) {
         return None;
