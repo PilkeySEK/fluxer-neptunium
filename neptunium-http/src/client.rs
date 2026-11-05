@@ -130,6 +130,22 @@ impl HttpClient {
         Ok(())
     }
 
+    pub fn new_with_api_base_url(config: HttpClientConfig, api_base_url: String) -> Self {
+        Self {
+            api_base_url,
+            token: Zeroizing::new(config.token),
+            token_type: config.token_type,
+            reqwest_client: reqwest::Client::new(),
+            rate_limiter: RateLimiter::new(Self::DEFAULT_GLOBAL_RATE_LIMIT),
+            user_agent: if config.user_agent.is_empty() {
+                None
+            } else {
+                Some(config.user_agent)
+            },
+            retry_times: config.max_request_retries,
+        }
+    }
+
     /// Will get required information from the instance discovery document.
     pub async fn new(
         config: HttpClientConfig,

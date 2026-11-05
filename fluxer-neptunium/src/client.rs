@@ -145,6 +145,43 @@ impl Client {
         })
     }
 
+    pub fn new_with_config_and_instance_discovery_document(
+        session_config: impl Into<SessionConfig>,
+        client_config: ClientConfig,
+        instance_discovery_document: InstanceDiscoveryDocumentResponse,
+    ) -> Self {
+        let session_config = session_config.into();
+
+        let (context_tx, context_rx) = unbounded_channel();
+
+        Self {
+            context: Context {
+                http_client: Arc::new(HttpClient::new_with_api_base_url(
+                    HttpClientConfig::builder()
+                        .token((*session_config.token).clone())
+                        .token_type(client_config.token_type)
+                        .user_agent(client_config.user_agent)
+                        .maybe_instance_root(client_config.instance_root)
+                        .build(),
+                    instance_discovery_document.endpoints.api_public.clone(),
+                )),
+                tx: context_tx,
+                cache: Arc::new(Cache::new(client_config.cache_config)),
+                default_allowed_mentions: Arc::new(client_config.default_allowed_mentions),
+            },
+            session_config,
+            event_handlers: Vec::new(),
+            #[cfg(feature = "user_api")]
+            config: ClientInternalConfig {
+                subscribe_to_everything: client_config.subscribe_to_everything,
+            },
+            guild_counts_update_listeners: HashMap::new(),
+            guild_members_chunk_listeners: HashMap::new(),
+            context_rx,
+            instance_discovery_document,
+        }
+    }
+
     #[must_use]
     pub fn context(&self) -> &Context {
         &self.context
