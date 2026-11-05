@@ -21,7 +21,7 @@ use neptunium_model::{
     },
     guild::{
         member::{GuildMember, GuildMemberProfile, GuildMemberProfileFlags},
-        permissions::{GuildRole, Permissions},
+        permissions::{GuildRole, Permissions, RoleIcon},
     },
     id::{
         AtomicId, Id,
@@ -407,13 +407,12 @@ pub struct CachedGuildRole {
     pub id: Id<RoleMarker>,
     pub name: String,
     pub permissions: Permissions,
-    pub position: u16,
+    pub position: usize,
     pub color: HexColor,
-    /// Hash of the icon.
-    pub icon: Option<String>,
+    pub icon: Option<RoleIcon>,
     pub unicode_emoji: Option<String>,
     pub hoist: bool,
-    pub hoist_position: Option<u16>,
+    pub hoist_position: Option<usize>,
     pub mentionable: bool,
     pub guild_id: Id<GuildMarker>,
 }
