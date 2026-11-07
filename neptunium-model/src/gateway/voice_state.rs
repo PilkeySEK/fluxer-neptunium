@@ -12,29 +12,29 @@ use crate::{
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct VoiceState {
     /// `None` if in a DM call.
-    guild_id: Option<Id<GuildMarker>>,
+    pub guild_id: Option<Id<GuildMarker>>,
     /// `None` if disconnected.
-    channel_id: Option<Id<ChannelMarker>>,
-    user_id: Id<UserMarker>,
+    pub channel_id: Option<Id<ChannelMarker>>,
+    pub user_id: Id<UserMarker>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    connection_id: Option<String>,
+    pub connection_id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    session_id: Option<String>,
+    pub session_id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    member: Option<GuildMember>,
-    mute: bool,
-    deaf: bool,
-    self_mute: bool,
-    self_deaf: bool,
+    pub member: Option<GuildMember>,
+    pub mute: bool,
+    pub deaf: bool,
+    pub self_mute: bool,
+    pub self_deaf: bool,
     #[serde(default)]
-    self_video: bool,
+    pub self_video: bool,
     #[serde(default)]
-    self_stream: bool,
+    pub self_stream: bool,
     #[serde(default)]
-    is_mobile: bool,
+    pub is_mobile: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
-    viewer_stream_keys: Option<Vec<String>>,
+    pub viewer_stream_keys: Option<Vec<String>>,
     /// The voice state version for ordering updates.
     #[serde(skip_serializing_if = "Option::is_none")]
-    version: Option<u64>,
+    pub version: Option<u64>,
 }
