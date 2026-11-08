@@ -32,6 +32,9 @@ Licensed under either of:
 
 at your option.
 
+---
+
+
 <a href="https://brainmade.org">
  	<picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://brainmade.org/white-logo.svg">
