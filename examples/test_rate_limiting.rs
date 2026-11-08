@@ -11,7 +11,7 @@ async fn main() {
         .with_max_level(LevelFilter::DEBUG)
         .init();
     let token = std::env::var("FLUXER_TOKEN").unwrap();
-    let client = Client::new(token).await.unwrap();
+    let client = Client::create(token).await.unwrap();
 
     let ctx = client.context();
     let start_time = Instant::now();

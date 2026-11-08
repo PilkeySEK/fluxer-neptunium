@@ -44,7 +44,7 @@ async fn main() {
         .with_max_level(LevelFilter::DEBUG)
         .init();
     let token = env::var("FLUXER_TOKEN").unwrap();
-    let mut client = Client::new(
+    let mut client = Client::create(
         SessionConfig::builder()
             .token(token)
             .initial_presence(

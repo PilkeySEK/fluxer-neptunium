@@ -62,7 +62,7 @@ async fn main() {
         .with_max_level(LevelFilter::DEBUG)
         .init();
 
-    let mut client = Client::new_with_config(
+    let mut client = Client::create_with_config(
         env::var("FLUXER_USER_TOKEN").unwrap(),
         ClientConfig::builder()
             .token_type(TokenType::User)

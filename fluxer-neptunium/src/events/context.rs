@@ -1187,18 +1187,18 @@ mod tests {
             .unwrap()
             .block_on(async {
                 {
-                    let client = Client::new("123.abc").await.unwrap();
+                    let client = Client::create("123.abc").await.unwrap();
                     assert_eq!(
                         client.get_user_id_from_token(),
                         Some(Id::<UserMarker>::new(123))
                     );
                 }
                 {
-                    let client = Client::new("flx_abcdefg").await.unwrap();
+                    let client = Client::create("flx_abcdefg").await.unwrap();
                     assert_eq!(client.get_user_id_from_token(), None);
                 }
                 {
-                    let client = Client::new(".invalid").await.unwrap();
+                    let client = Client::create(".invalid").await.unwrap();
                     assert_eq!(client.get_user_id_from_token(), None);
                 }
             });

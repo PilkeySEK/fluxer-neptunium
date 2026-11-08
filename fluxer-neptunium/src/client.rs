@@ -94,8 +94,8 @@ impl Client {
     /// # async fn main() {
     /// // A single string will be interpreted as the token,
     /// // which is the only required configuration:
-    /// let client = Client::new("my bot token").await.unwrap();
-    /// let client = Client::new(
+    /// let client = Client::create("my bot token").await.unwrap();
+    /// let client = Client::create(
     ///     SessionConfig::builder()
     ///         .token("my bot token".to_string())
     ///         .build()
@@ -105,15 +105,15 @@ impl Client {
     ///
     /// # Errors
     /// Returns an error if fetching the instance discovery document fails.
-    pub async fn new(session_config: impl Into<SessionConfig>) -> Result<Self, ClientError> {
-        Self::new_with_config(session_config, ClientConfig::default()).await
+    pub async fn create(session_config: impl Into<SessionConfig>) -> Result<Self, ClientError> {
+        Self::create_with_config(session_config, ClientConfig::default()).await
     }
 
     /// Create a new client provided a session config and a client config.
     ///
     /// # Errors
     /// Returns an error if fetching the instance discovery document fails.
-    pub async fn new_with_config(
+    pub async fn create_with_config(
         session_config: impl Into<SessionConfig>,
         client_config: ClientConfig,
     ) -> Result<Self, ClientError> {
