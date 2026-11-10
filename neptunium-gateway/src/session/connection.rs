@@ -25,6 +25,7 @@ pub struct Connection {
     request: tokio_tungstenite::tungstenite::http::Request<()>,
     pub last_heartbeat_ack_at: Instant,
     pub heartbeat_interval: Duration,
+    pub num_tries: usize,
 }
 
 impl Connection {
@@ -39,8 +40,10 @@ impl Connection {
             .await
             .map_err(ConnectError::Tungstenite)?;
 
+        let mut num_tries = 0;
+
         let heartbeat_interval = loop {
-            match next_event(&mut stream, &request)
+            match next_event(&mut stream, &request, &mut num_tries)
                 .await
                 .map_err(ConnectError::ClosedUnrecoverable)?
                 .0
@@ -56,6 +59,7 @@ impl Connection {
                         &OutgoingGatewayMessage::Heartbeat(Heartbeat {
                             last_sequence_number: None,
                         }),
+                        &mut num_tries,
                     )
                     .await;
                 }
@@ -73,6 +77,7 @@ impl Connection {
             request,
             last_heartbeat_ack_at: Instant::now(),
             heartbeat_interval,
+            num_tries: 0,
         })
     }
 
@@ -95,11 +100,14 @@ impl Connection {
 
     /// Wait for the next gateway event to be received.
     ///
-    /// # Errors
     /// Will always retry if receiving the event fails, and reconnect if the
     /// received event could not be deserialized.
+    ///
+    /// # Errors
+    /// Returns an error if the connection is closed with a close code that is unrecoverable.
     pub async fn next_event(&mut self) -> Result<GatewayEventIncoming, CloseFrame> {
-        let (event, reconnected) = internal::next_event(&mut self.stream, &self.request).await?;
+        let (event, reconnected) =
+            internal::next_event(&mut self.stream, &self.request, &mut self.num_tries).await?;
         if reconnected {
             self.last_heartbeat_ack_at = Instant::now();
         }
@@ -110,7 +118,13 @@ impl Connection {
     /// This never returns an error as it will try to reconnect again if
     /// one occurs.
     pub async fn reconnect_with_backoff(&mut self, close_frame: Option<CloseFrame>) {
-        internal::reconnect_with_backoff(&mut self.stream, &self.request, close_frame).await;
+        internal::reconnect_with_backoff(
+            &mut self.stream,
+            &self.request,
+            close_frame,
+            &mut self.num_tries,
+        )
+        .await;
         self.last_heartbeat_ack_at = Instant::now();
     }
 
@@ -128,7 +142,9 @@ impl Connection {
     */
 
     pub async fn send_message(&mut self, event: &OutgoingGatewayMessage) {
-        let reconnected = internal::send_message(&mut self.stream, &self.request, event).await;
+        let reconnected =
+            internal::send_message(&mut self.stream, &self.request, event, &mut self.num_tries)
+                .await;
         if reconnected {
             self.last_heartbeat_ack_at = Instant::now();
         }
@@ -168,6 +184,7 @@ mod internal {
         stream: &mut Stream,
         request: &Request<()>,
         close_frame: Option<CloseFrame>,
+        num_tries: &mut usize,
     ) {
         fn wait_time(num_tries: usize) -> Duration {
             if num_tries < 3 {
@@ -177,10 +194,9 @@ mod internal {
             }
         }
 
-        let mut num_tries = 0;
         while let Err(e) = reconnect(stream, request.clone(), close_frame.clone()).await {
-            num_tries += 1;
-            let wait_time = wait_time(num_tries);
+            *num_tries += 1;
+            let wait_time = wait_time(*num_tries);
             tracing::error!(
                 "Error reconnecting (try #{num_tries}), waiting {}s before reconnecting: {e}",
                 wait_time.as_secs()
@@ -189,18 +205,22 @@ mod internal {
         }
     }
 
-    pub async fn next_message(stream: &mut Stream, request: &Request<()>) -> (Message, bool) {
+    pub async fn next_message(
+        stream: &mut Stream,
+        request: &Request<()>,
+        num_tries: &mut usize,
+    ) -> (Message, bool) {
         let mut reconnected = false;
         let message = loop {
             match stream.try_next().await {
                 Ok(Some(message)) => break message,
                 Ok(None) => {
-                    reconnect_with_backoff(stream, request, None).await;
+                    reconnect_with_backoff(stream, request, None, num_tries).await;
                     reconnected = true;
                 }
                 Err(e) => {
                     tracing::error!("{e}");
-                    reconnect_with_backoff(stream, request, None).await;
+                    reconnect_with_backoff(stream, request, None, num_tries).await;
                     reconnected = true;
                 }
             }
@@ -211,10 +231,11 @@ mod internal {
     pub async fn next_event(
         stream: &mut Stream,
         request: &Request<()>,
+        num_tries: &mut usize,
     ) -> Result<(GatewayEventIncoming, bool), CloseFrame> {
         let mut reconnected = false;
         let event = loop {
-            let (message, set_reconnected) = next_message(stream, request).await;
+            let (message, set_reconnected) = next_message(stream, request, num_tries).await;
             if set_reconnected {
                 reconnected = true;
             }
@@ -226,7 +247,7 @@ mod internal {
                             message_text = bytes.as_str(),
                             "Failed to deserialize incoming event, reconnecting: {e}"
                         );
-                        reconnect_with_backoff(stream, request, None).await;
+                        reconnect_with_backoff(stream, request, None, num_tries).await;
                         reconnected = true;
                     }
                 },
@@ -251,6 +272,7 @@ mod internal {
         stream: &mut Stream,
         request: &Request<()>,
         event: &OutgoingGatewayMessage,
+        num_tries: &mut usize,
     ) -> bool {
         let mut reconnected = false;
         while let Err(e) = stream
@@ -258,7 +280,7 @@ mod internal {
             .await
         {
             tracing::error!("Failed to send message, reconnecting and then retrying: {e}");
-            reconnect_with_backoff(stream, request, None).await;
+            reconnect_with_backoff(stream, request, None, num_tries).await;
             reconnected = true;
         }
         reconnected

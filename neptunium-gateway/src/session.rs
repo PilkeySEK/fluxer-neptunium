@@ -263,6 +263,7 @@ impl Session {
                 self.conn.last_heartbeat_ack_at = Instant::now();
             }
             GatewayEventIncoming::Hello(event) => {
+                self.conn.num_tries = 0;
                 self.conn.heartbeat_interval = event.heartbeat_interval.into();
                 self.respawn_heartbeat_task();
                 let identify_or_resume = self.create_identify_or_resume_message();
