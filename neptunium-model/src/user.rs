@@ -1,6 +1,7 @@
 use bitflags::bitflags;
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
+use time::OffsetDateTime;
 
 use crate::{
     id::{Id, marker::UserMarker},
@@ -38,6 +39,14 @@ pub struct PartialUser {
     pub username: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub mention_flags: Option<MentionReplyPreference>,
+}
+
+impl PartialUser {
+    /// Get the fluxer join date of the user, derived from the user ID.
+    #[must_use]
+    pub fn join_date(&self) -> OffsetDateTime {
+        self.id.get_timestamp()
+    }
 }
 
 #[derive(Serialize, Deserialize, Copy, Clone, Debug)]
