@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use neptunium_cache_inmemory::{
-    CachableEndpoint, Cached, CachedChannel, CachedGuildMember, CachedGuildRole,
+    CachableEndpoint, Cached, CachedChannel, CachedGuildBan, CachedGuildMember, CachedGuildRole,
 };
 #[cfg(feature = "user_api")]
 use neptunium_http::endpoints::users::{UpdateUserGuildSettings, UpdateUserGuildSettingsBody};
@@ -9,9 +9,9 @@ use neptunium_http::endpoints::{
         AddRoleToGuildMember, BanGuildMember, BanGuildMemberBody, BulkCreateGuildStickers,
         BulkCreateGuildStickersResponse, CreateGuildChannel, CreateGuildRole, CreateGuildRoleBody,
         CreateGuildSticker, CreateGuildStickerBody, DeleteGuildRole, DeleteGuildSticker,
-        GetCurrentUserGuildMember, GetGuildInformation, GetGuildMember, GetGuildVanityUrl,
-        GetGuildVanityUrlResponse, GuildChannelCreateRequest, KickGuildMember, LeaveGuild,
-        ListGuildAuditLogs, ListGuildAuditLogsParams, ListGuildBans, ListGuildChannels,
+        GetCurrentUserGuildMember, GetGuildBan, GetGuildInformation, GetGuildMember,
+        GetGuildVanityUrl, GetGuildVanityUrlResponse, GuildChannelCreateRequest, KickGuildMember,
+        LeaveGuild, ListGuildAuditLogs, ListGuildAuditLogsParams, ListGuildBans, ListGuildChannels,
         ListGuildMembers, ListGuildRoles, ListGuildStickers, ModifyGuildRole, ModifyGuildRoleBody,
         RemoveRoleFromGuildMember, ResetGuildRoleHoistPositions, SearchGuildMembersMemberResponse,
         ToggleDetachedBanner, ToggleGuildTextChannelFlexibleNames, UnbanGuildMember,
@@ -27,10 +27,7 @@ use neptunium_http::endpoints::{
 #[cfg(feature = "user_api")]
 use neptunium_model::user::{auth::SudoVerification, settings::UserGuildSettings};
 use neptunium_model::{
-    guild::{
-        Guild, audit_log::GuildAuditLogs, bans::GuildBanListEntry, properties::GuildSticker,
-        webhook::Webhook,
-    },
+    guild::{Guild, audit_log::GuildAuditLogs, properties::GuildSticker, webhook::Webhook},
     id::{
         Id,
         marker::{RoleMarker, StickerMarker, UserMarker},
@@ -56,7 +53,12 @@ pub trait GuildExt {
         ctx: &Context,
         params: ListGuildAuditLogsParams,
     ) -> Result<GuildAuditLogs, ClientError>;
-    async fn list_bans(&self, ctx: &Context) -> Result<Vec<GuildBanListEntry>, ClientError>;
+    async fn list_bans(&self, ctx: &Context) -> Result<Vec<CachedGuildBan>, ClientError>;
+    async fn get_ban(
+        &self,
+        ctx: &Context,
+        user_id: Id<UserMarker>,
+    ) -> Result<CachedGuildBan, ClientError>;
     async fn ban_member(
         &self,
         ctx: &Context,
@@ -394,13 +396,25 @@ impl<T: GuildTrait> GuildExt for T {
             .await?)
     }
 
-    async fn list_bans(&self, ctx: &Context) -> Result<Vec<GuildBanListEntry>, ClientError> {
-        Ok(ctx
-            .get_http_client()
-            .execute(ListGuildBans {
-                guild_id: self.get_guild_id(),
-            })
-            .await?)
+    async fn list_bans(&self, ctx: &Context) -> Result<Vec<CachedGuildBan>, ClientError> {
+        Ok(ListGuildBans {
+            guild_id: self.get_guild_id(),
+        }
+        .execute_cached(ctx.get_http_client(), &ctx.cache)
+        .await?)
+    }
+
+    async fn get_ban(
+        &self,
+        ctx: &Context,
+        user_id: Id<UserMarker>,
+    ) -> Result<CachedGuildBan, ClientError> {
+        Ok(GetGuildBan {
+            guild_id: self.get_guild_id(),
+            user_id,
+        }
+        .execute_cached(ctx.get_http_client(), &ctx.cache)
+        .await?)
     }
 
     async fn ban_member(

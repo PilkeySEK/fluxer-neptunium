@@ -20,6 +20,7 @@ use neptunium_model::{
         ThreadMemberListUpdate, ThreadMemberUpdate, ThreadMembersUpdate, UserPremiumType,
     },
     guild::{
+        bans::GuildBan,
         member::{GuildMember, GuildMemberProfile, GuildMemberProfileFlags},
         permissions::{GuildRole, Permissions, RoleIcon},
     },
@@ -818,6 +819,41 @@ impl From<(SearchThreadsResponse, &Arc<Cache>)> for CachedSearchThreadsResponse 
                         .collect()
                 }),
             }
+        }
+    }
+}
+
+/// An active guild ban.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct CachedGuildBan {
+    pub user: Cached<PartialUser>,
+    pub reason: Option<String>,
+    pub moderator_id: Id<UserMarker>,
+    pub banned_at: Timestamp<Iso8601>,
+    /// `None` if the ban is permanent.
+    pub expires_at: Option<Timestamp<Iso8601>>,
+}
+
+impl From<(GuildBan, &Arc<Cache>)> for CachedGuildBan {
+    fn from((res, cache): (GuildBan, &Arc<Cache>)) -> Self {
+        Self {
+            user: res.user.insert_and_return(cache),
+            reason: res.reason,
+            moderator_id: res.moderator_id,
+            banned_at: res.banned_at,
+            expires_at: res.expires_at,
+        }
+    }
+}
+
+impl From<CachedGuildBan> for GuildBan {
+    fn from(value: CachedGuildBan) -> Self {
+        Self {
+            user: value.user.clone_inner(),
+            reason: value.reason,
+            moderator_id: value.moderator_id,
+            banned_at: value.banned_at,
+            expires_at: value.expires_at,
         }
     }
 }

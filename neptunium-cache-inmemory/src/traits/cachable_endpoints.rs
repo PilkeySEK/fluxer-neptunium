@@ -36,8 +36,8 @@ use neptunium_http::{
         },
         guild::{
             CreateGuildChannel, CreateGuildRole, DeleteGuildRole, GetCurrentUserGuildMember,
-            GetGuildInformation, GetGuildMember, LeaveGuild, ListCurrentUserGuilds,
-            ListGuildChannels, ListGuildMembers, ListGuildRoles, ModifyGuildRole,
+            GetGuildBan, GetGuildInformation, GetGuildMember, LeaveGuild, ListCurrentUserGuilds,
+            ListGuildBans, ListGuildChannels, ListGuildMembers, ListGuildRoles, ModifyGuildRole,
             ToggleDetachedBanner, ToggleGuildTextChannelFlexibleNames,
             UpdateCurrentUserGuildMember, UpdateGuildMember, UpdateGuildRoleHoistPositions,
             UpdateGuildRoleHoistPositionsEntry, UpdateGuildRolePositions,
@@ -56,8 +56,9 @@ use neptunium_model::{
 
 use crate::{
     CachableEndpoint, Cache, Cached, CachedActiveGuildThreads, CachedArchivedThreads,
-    CachedChannel, CachedGuildMember, CachedGuildRole, CachedMessage, CachedSearchThreadsResponse,
-    CachedUserProfileFullResponse, gateway::cached_payload::cache_vec, traits::CacheValue,
+    CachedChannel, CachedGuildBan, CachedGuildMember, CachedGuildRole, CachedMessage,
+    CachedSearchThreadsResponse, CachedUserProfileFullResponse, gateway::cached_payload::cache_vec,
+    traits::CacheValue,
 };
 
 pub const USER_MAX_GUILDS: usize = 200;
@@ -1088,6 +1089,32 @@ impl CachableEndpoint for ListJoinedPrivateArchivedThreads {
 #[async_trait]
 impl CachableEndpoint for SearchThreads {
     type Response = CachedSearchThreadsResponse;
+    async fn execute_cached(
+        self,
+        client: &Arc<HttpClient>,
+        cache: &Arc<Cache>,
+    ) -> Result<<Self as CachableEndpoint>::Response, ExecuteEndpointRequestError> {
+        let res = client.execute(self).await?;
+        Ok((res, cache).into())
+    }
+}
+
+#[async_trait]
+impl CachableEndpoint for ListGuildBans {
+    type Response = Vec<CachedGuildBan>;
+    async fn execute_cached(
+        self,
+        client: &Arc<HttpClient>,
+        cache: &Arc<Cache>,
+    ) -> Result<<Self as CachableEndpoint>::Response, ExecuteEndpointRequestError> {
+        let res = client.execute(self).await?;
+        Ok(res.into_iter().map(|ban| (ban, cache).into()).collect())
+    }
+}
+
+#[async_trait]
+impl CachableEndpoint for GetGuildBan {
+    type Response = CachedGuildBan;
     async fn execute_cached(
         self,
         client: &Arc<HttpClient>,
