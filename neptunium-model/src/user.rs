@@ -42,9 +42,9 @@ pub struct PartialUser {
 }
 
 impl PartialUser {
-    /// Get the fluxer join date of the user, derived from the user ID.
+    /// Get the account creation date of the user, derived from the user ID.
     #[must_use]
-    pub fn join_date(&self) -> OffsetDateTime {
+    pub fn creation_date(&self) -> OffsetDateTime {
         self.id.get_timestamp()
     }
 }
