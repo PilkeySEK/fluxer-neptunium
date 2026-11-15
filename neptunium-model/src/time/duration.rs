@@ -14,7 +14,7 @@ pub use representation::*;
 /// assert_eq!(number_of_seconds, 10);
 /// # }
 /// ```
-#[derive(Copy, Debug, Clone, PartialEq, Eq)]
+#[derive(Copy, Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Duration<Repr: DurationRepr> {
     value: Repr,
 }

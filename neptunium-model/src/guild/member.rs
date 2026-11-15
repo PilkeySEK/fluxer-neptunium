@@ -23,6 +23,8 @@ pub enum JoinSourceType {
     BotInvite = 3,
     /// Member was force-added by a platform administrator.
     AdminForceAdd = 4,
+    /// Member joined through guild discovery.
+    Discovery = 6,
 }
 
 bitflags! {

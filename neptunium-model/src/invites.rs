@@ -1,3 +1,5 @@
+use std::num::NonZeroUsize;
+
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -53,9 +55,12 @@ pub struct GroupDmInviteMetadata {
 pub struct GuildInviteMetadata {
     pub created_at: Timestamp<Iso8601>,
     pub uses: u64,
-    pub max_uses: u64,
-    /// Duration before the invite expires.
-    pub max_age: Duration<Seconds>,
+    /// `None` if there is no limit.
+    #[serde(with = "crate::serde_utils::zero_is_option_usize")]
+    pub max_uses: Option<NonZeroUsize>,
+    /// Duration before the invite expires. `None` if the invite never expires.
+    #[serde(with = "crate::serde_utils::zero_is_option_duration_seconds")]
+    pub max_age: Option<Duration<Seconds>>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]

@@ -6,6 +6,7 @@ pub mod guild;
 pub mod id;
 pub mod invites;
 pub mod misc;
+pub(crate) mod serde_utils;
 pub mod time;
 pub mod user;
 

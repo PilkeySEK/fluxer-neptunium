@@ -13,20 +13,22 @@ pub trait DurationRepr:
     + Copy
     + PartialEq
     + Eq
+    + PartialOrd
+    + Ord
 {
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Seconds {
     inner: std::time::Duration,
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Millis {
     inner: std::time::Duration,
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct MillisF64 {
     inner: std::time::Duration,
 }
