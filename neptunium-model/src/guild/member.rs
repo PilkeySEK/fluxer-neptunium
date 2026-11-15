@@ -1,6 +1,7 @@
 use bitflags::bitflags;
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
+use time::OffsetDateTime;
 
 use crate::{
     id::{Id, marker::RoleMarker},
@@ -75,4 +76,14 @@ pub struct GuildMemberProfile {
     pub pronouns: Option<String>,
     pub banner: Option<String>,
     pub accent_color: Option<HexColor>,
+}
+
+impl GuildMember {
+    /// See [`PartialUser::creation_date`] for details.
+    ///
+    /// [`PartialUser::creation_date`]: crate::user::PartialUser::creation_date
+    #[must_use]
+    pub fn creation_date(&self) -> OffsetDateTime {
+        self.user.creation_date()
+    }
 }

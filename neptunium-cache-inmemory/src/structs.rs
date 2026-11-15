@@ -31,7 +31,10 @@ use neptunium_model::{
         },
     },
     misc::HexColor,
-    time::timestamp::{Timestamp, representations::Iso8601},
+    time::{
+        OffsetDateTime,
+        timestamp::{Timestamp, representations::Iso8601},
+    },
     user::{PartialUser, UserConnection, UserProfileData, settings::GuildMuteConfiguration},
 };
 
@@ -320,6 +323,14 @@ impl CachedGuildMember {
             guild_id,
             id,
         }
+    }
+
+    /// See [`PartialUser::creation_date`] for details.
+    ///
+    /// [`PartialUser::creation_date`]: neptunium_model::user::PartialUser::creation_date
+    #[must_use]
+    pub fn creation_date(&self) -> OffsetDateTime {
+        self.user.creation_date()
     }
 }
 
