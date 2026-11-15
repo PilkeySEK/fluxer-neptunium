@@ -117,7 +117,11 @@ impl Client {
         session_config: impl Into<SessionConfig>,
         client_config: ClientConfig,
     ) -> Result<Self, ClientError> {
-        let session_config = session_config.into();
+        let mut session_config = session_config.into();
+
+        if client_config.trim_token {
+            session_config.token = session_config.token.trim().to_owned().into();
+        }
 
         let (context_tx, context_rx) = unbounded_channel();
 

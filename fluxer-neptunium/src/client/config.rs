@@ -54,6 +54,8 @@ pub struct ClientConfig {
     #[cfg(feature = "user_api")]
     #[builder(default = false)]
     pub subscribe_to_everything: bool,
+    #[builder(default = true)]
+    pub trim_token: bool,
 }
 
 impl Default for ClientConfig {
