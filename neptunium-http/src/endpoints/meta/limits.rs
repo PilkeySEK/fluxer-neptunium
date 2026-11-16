@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Deserialize, Serialize, Copy, Clone, Debug, Hash, PartialEq, Eq)]
+#[derive(Deserialize, Serialize, Clone, Debug, Hash, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum LimitKey {
     /// Maximum avatar upload size in bytes, up to 104857600 (user).
@@ -101,6 +101,7 @@ pub enum LimitKey {
     MaxWebhooksPerGuild,
     /// Maximum sticker upload size in bytes, up to 104857600 (guild).
     StickerMaxSize,
+    Other(String),
 }
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
@@ -120,6 +121,7 @@ pub struct InstanceDiscoveryDocumentLimitsRule {
     /// What selects the rule, omitted when it always matches.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub filters: Option<InstanceDiscoveryDocumentLimitsRuleFilters>,
+    // TODO: Don't make this hashmap, just use a struct...
     /// Values keyed by limit key. Negative values are ignored.
     pub overrides: HashMap<LimitKey, i64>,
 }
