@@ -52,12 +52,11 @@ macro_rules! create_embed {
 mod tests {
     use neptunium_model::{
         channel::message::embed::{EmbedAuthorInput, EmbedFieldInput, EmbedFooterInput, RichEmbed},
-        time::OffsetDateTime,
     };
 
     #[test]
     fn create_embed_macro() {
-        let timestamp = OffsetDateTime::now_utc();
+        let timestamp = jiff::Timestamp::now();
         let embed = create_embed!(
             title: "Hi!",
             description: "This is the description",

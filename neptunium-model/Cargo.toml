@@ -15,19 +15,20 @@ serde_json = "1.0.154"
 serde_repr = "0.1.21"
 serde = { version = "1.0.229", features = ["derive"] }
 bitflags = "2.13.2"
-time = { version = "0.3.55", features = ["serde", "parsing", "formatting"] }
+# time = { version = "0.3.55", features = ["serde", "parsing", "formatting"], optional = true }
 zeroize = { version = "1.9.1", features = ["serde"] }
 bon = "3.10.3"
 language-tags = { version = "0.3.2", features = ["serde"] }
-chrono = { version = "0.4.45", optional = true }
+# chrono = { version = "0.4.45", optional = true }
 serde-bool = "0.1.6"
 either = { version = "1.19.0", features = ["serde"] }
+jiff = { version = "1.0.0", features = ["serde"] }
 
 [features]
 default = []
 user_api = []
 staff_api = []
-chrono-timestamp-conversion = ["dep:chrono"]
+# timestamp-conversion = ["dep:time", "dep:chrono"]
 
 [lints]
 workspace = true

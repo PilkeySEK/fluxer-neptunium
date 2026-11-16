@@ -1,5 +1,4 @@
 use bon::Builder;
-use neptunium_model::time::timestamp::{Timestamp, representations::Iso8601};
 use reqwest::Method;
 use serde::{Deserialize, Serialize};
 
@@ -20,8 +19,10 @@ pub struct RequestNewEmailAddress {
 pub struct RequestNewEmailAddressResponse {
     pub ticket: String,
     pub new_email: String,
-    pub new_code_expires_at: Timestamp<Iso8601>,
-    pub resend_available_at: Option<Timestamp<Iso8601>>,
+    // ISO8601
+    pub new_code_expires_at: jiff::Timestamp,
+    // ISO8601
+    pub resend_available_at: Option<jiff::Timestamp>,
 }
 
 impl Endpoint for RequestNewEmailAddress {

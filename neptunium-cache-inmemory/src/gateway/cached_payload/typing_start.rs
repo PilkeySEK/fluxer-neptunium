@@ -4,7 +4,6 @@ use neptunium_model::{
         Id,
         marker::{ChannelMarker, GuildMarker, UserMarker},
     },
-    time::timestamp::{Timestamp, representations::UnixMillis},
 };
 
 use crate::{CacheValue, Cached, CachedGuildMember, gateway::cached_payload::CachedPayload};
@@ -13,8 +12,9 @@ use crate::{CacheValue, Cached, CachedGuildMember, gateway::cached_payload::Cach
 pub struct CachedTypingStart {
     pub channel_id: Id<ChannelMarker>,
     pub user_id: Id<UserMarker>,
+    // UNIX millis
     /// Timestamp of when the typing started.
-    pub timestamp: Timestamp<UnixMillis>,
+    pub timestamp: jiff::Timestamp,
     pub guild_id: Option<Id<GuildMarker>>,
     pub member: Option<Cached<CachedGuildMember>>,
 }

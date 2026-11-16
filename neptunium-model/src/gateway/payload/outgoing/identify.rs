@@ -5,7 +5,7 @@ use serde_repr::{Deserialize_repr, Serialize_repr};
 use zeroize::Zeroizing;
 
 use crate::{
-    gateway::{payload::outgoing::Status, presence::CustomStatus, shard::ShardInfo},
+    gateway::{payload::outgoing::PresenceStatus, presence::CustomStatus, shard::ShardInfo},
     id::{Id, marker::GuildMarker},
     misc::serde_bitflags,
 };
@@ -214,8 +214,8 @@ serde_bitflags!(SessionFlags, u32);
 
 #[derive(Builder, Serialize, Deserialize, Clone, Debug)]
 pub struct InitialPresence {
-    #[builder(default = Status::Online)]
-    pub status: Status,
+    #[builder(default = PresenceStatus::Online)]
+    pub status: PresenceStatus,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub custom_status: Option<CustomStatus>,
     #[serde(skip_serializing_if = "Option::is_none")]

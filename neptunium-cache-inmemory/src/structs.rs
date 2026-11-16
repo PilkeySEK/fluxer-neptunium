@@ -31,10 +31,6 @@ use neptunium_model::{
         },
     },
     misc::HexColor,
-    time::{
-        OffsetDateTime,
-        timestamp::{Timestamp, representations::Iso8601},
-    },
     user::{PartialUser, UserConnection, UserProfileData, settings::GuildMuteConfiguration},
 };
 
@@ -53,7 +49,7 @@ pub struct CachedChannel {
     pub icon: Option<String>,
     pub id: Id<ChannelMarker>,
     pub last_message_id: AtomicOnceCell<AtomicId<MessageMarker>>,
-    pub last_pin_timestamp: Option<Timestamp<Iso8601>>,
+    pub last_pin_timestamp: Option<jiff::Timestamp>,
     pub name: Option<String>,
     /// Custom nicknames for users in this channel (for group DMs).
     pub nicks: Option<HashMap<Id<UserMarker>, String>>,
@@ -149,8 +145,8 @@ pub struct CachedMessage {
     pub r#type: MessageType,
     pub flags: MessageFlags,
     pub content: String,
-    pub timestamp: Timestamp<Iso8601>,
-    pub edited_timestamp: Option<Timestamp<Iso8601>>,
+    pub timestamp: jiff::Timestamp,
+    pub edited_timestamp: Option<jiff::Timestamp>,
     pub pinned: bool,
     /// Whether the message mentions everyone.
     pub mention_everyone: bool,
@@ -288,9 +284,9 @@ pub struct CachedGuildMember {
     pub avatar: Option<String>,
     pub banner: Option<String>,
     /// Timestamp until which the member is timed out.
-    pub communication_disabled_until: Option<Timestamp<Iso8601>>,
+    pub communication_disabled_until: Option<jiff::Timestamp>,
     pub deaf: bool,
-    pub joined_at: Timestamp<Iso8601>,
+    pub joined_at: jiff::Timestamp,
     pub mute: bool,
     pub nick: Option<String>,
     pub profile_flags: Option<GuildMemberProfileFlags>,
@@ -329,7 +325,7 @@ impl CachedGuildMember {
     ///
     /// [`PartialUser::creation_date`]: neptunium_model::user::PartialUser::creation_date
     #[must_use]
-    pub fn creation_date(&self) -> OffsetDateTime {
+    pub fn creation_date(&self) -> jiff::Timestamp {
         self.user.creation_date()
     }
 }
@@ -359,7 +355,7 @@ pub struct CachedUserProfileFullResponse {
     pub guild_member: Option<Cached<CachedGuildMember>>,
     pub guild_member_profile: Option<Cached<GuildMemberProfile>>,
     pub premium_type: Option<UserPremiumType>,
-    pub premium_since: Option<Timestamp<Iso8601>>,
+    pub premium_since: Option<jiff::Timestamp>,
     /// Visionary ID.
     pub premium_lifetime_seqence: Option<u32>,
     pub mutual_friends: Option<Vec<Cached<PartialUser>>>,
@@ -454,7 +450,7 @@ pub struct CachedThreadMember {
     /// Omitted on the member of a thread in `Ready`, `GuildCreate`, and `GuildSync`.
     pub user_id: Option<Id<UserMarker>>,
     /// The time the user last joined the thread.
-    pub join_timestamp: Timestamp<Iso8601>,
+    pub join_timestamp: jiff::Timestamp,
     pub flags: ThreadMemberFlags,
     /// Whether the user muted the thread.
     /// Present only on the caller's own membership.
@@ -639,7 +635,7 @@ pub struct CachedThreadMemberListUpdate {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CachedThreadMemberListItem {
     pub user_id: Id<UserMarker>,
-    pub join_timestamp: Option<Timestamp<Iso8601>>,
+    pub join_timestamp: Option<jiff::Timestamp>,
     /// Undocumented (?)
     pub flags: u64,
     pub member: Option<Cached<CachedGuildMember>>,
@@ -840,9 +836,9 @@ pub struct CachedGuildBan {
     pub user: Cached<PartialUser>,
     pub reason: Option<String>,
     pub moderator_id: Id<UserMarker>,
-    pub banned_at: Timestamp<Iso8601>,
+    pub banned_at: jiff::Timestamp,
     /// `None` if the ban is permanent.
-    pub expires_at: Option<Timestamp<Iso8601>>,
+    pub expires_at: Option<jiff::Timestamp>,
 }
 
 impl From<(GuildBan, &Arc<Cache>)> for CachedGuildBan {

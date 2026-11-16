@@ -1,12 +1,10 @@
 use bitflags::bitflags;
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
-use time::OffsetDateTime;
 
 use crate::{
     id::{Id, marker::RoleMarker},
     misc::{HexColor, serde_bitflags},
-    time::timestamp::{Timestamp, representations::Iso8601},
     user::PartialUser,
 };
 
@@ -48,13 +46,15 @@ pub struct GuildMember {
     pub avatar: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub banner: Option<String>,
+    // ISO8601
     /// Timestamp until which the member is timed out.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub communication_disabled_until: Option<Timestamp<Iso8601>>,
+    pub communication_disabled_until: Option<jiff::Timestamp>,
     // May be not present when the payload is of type `GuildMemberData` and not `GuildMemberResponse`.
     #[serde(default = "boolean_false")]
     pub deaf: bool,
-    pub joined_at: Timestamp<Iso8601>,
+    // ISO8601
+    pub joined_at: jiff::Timestamp,
     // May be not present when the payload is of type `GuildMemberData` and not `GuildMemberResponse`.
     #[serde(default = "boolean_false")]
     pub mute: bool,
@@ -83,7 +83,7 @@ impl GuildMember {
     ///
     /// [`PartialUser::creation_date`]: crate::user::PartialUser::creation_date
     #[must_use]
-    pub fn creation_date(&self) -> OffsetDateTime {
+    pub fn creation_date(&self) -> jiff::Timestamp {
         self.user.creation_date()
     }
 }

@@ -1,7 +1,6 @@
 use neptunium_model::{
     channel::thread::{ThreadChannel, ThreadMember},
     id::{Id, marker::ChannelMarker},
-    time::timestamp::{Timestamp, representations::Iso8601},
 };
 use reqwest::Method;
 
@@ -9,9 +8,10 @@ use crate::{endpoints::Endpoint, request::Request};
 
 #[derive(serde::Serialize, serde::Deserialize, Copy, Clone, Debug, PartialEq, Eq, bon::Builder)]
 pub struct ListArchivedThreadsQuery {
+    // ISO8601
     /// Return threads archived before this time.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub before: Option<Timestamp<Iso8601>>,
+    pub before: Option<jiff::Timestamp>,
     /// `2`-`100`, default `50`.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub limit: Option<usize>,

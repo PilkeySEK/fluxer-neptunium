@@ -14,7 +14,6 @@ use crate::{
     misc::{HexColor, serde_bitflags},
     time::{
         duration::{Duration, Seconds},
-        timestamp::{Timestamp, representations::Iso8601},
     },
 };
 
@@ -204,8 +203,9 @@ pub struct UserSettings {
     pub render_spoilers: RenderSpoilers,
     pub restricted_guilds: Vec<Id<GuildMarker>>,
     pub status: PresenceStatus,
+    // ISO8601
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub status_resets_at: Option<Timestamp<Iso8601>>,
+    pub status_resets_at: Option<jiff::Timestamp>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub status_resets_to: Option<PresenceStatus>,
     pub theme: String,
@@ -224,7 +224,8 @@ pub enum UserNotificationSettings {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct GuildMuteConfiguration {
-    pub end_time: Option<Timestamp<Iso8601>>,
+    // ISO8601
+    pub end_time: Option<jiff::Timestamp>,
     pub selected_time_window: crate::time::duration::Duration<Seconds>,
 }
 

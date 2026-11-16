@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use bon::Builder;
 use neptunium_model::{
     guild::Guild,
@@ -9,9 +7,7 @@ use reqwest::Method;
 
 use crate::{endpoints::Endpoint, request::Request};
 
-// TODO: What is bearer token?
-
-#[derive(Builder, Copy, Clone, Debug)]
+#[derive(Builder, serde::Serialize, serde::Deserialize, Copy, Clone, Debug)]
 pub struct ListCurrentUserGuildsParams {
     pub before: Option<Id<GuildMarker>>,
     pub after: Option<Id<GuildMarker>>,
@@ -30,24 +26,9 @@ impl Endpoint for ListCurrentUserGuilds {
     type Response = Vec<Guild>;
 
     fn into_request(self) -> crate::request::Request {
-        let mut params = HashMap::new();
-
-        if let Some(before) = self.params.before {
-            params.insert("before".to_owned(), before.to_string());
-        }
-        if let Some(after) = self.params.after {
-            params.insert("after".to_owned(), after.to_string());
-        }
-        if let Some(limit) = self.params.limit {
-            params.insert("limit".to_owned(), limit.to_string());
-        }
-        if let Some(with_counts) = self.params.with_counts {
-            params.insert("with_counts".to_owned(), with_counts.to_string());
-        }
-
         Request::builder()
             .method(Method::GET)
-            .params(params)
+            .params(serde_qs::to_string(&self.params).unwrap())
             .path("/users/@me/guilds".to_owned())
             .build()
     }

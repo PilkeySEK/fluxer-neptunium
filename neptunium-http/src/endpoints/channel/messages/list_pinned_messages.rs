@@ -1,25 +1,20 @@
-use std::collections::HashMap;
-
 use bon::Builder;
 use neptunium_model::{
     channel::message::Message,
     id::{Id, marker::ChannelMarker},
-    time::{
-        OffsetDateTime,
-        timestamp::{Timestamp, representations::UnixMillis},
-    },
 };
 use reqwest::Method;
 use serde::{Deserialize, Serialize};
 
 use crate::{endpoints::Endpoint, request::Request};
 
-#[derive(Builder, Copy, Clone, Debug, Default)]
+#[derive(Builder, serde::Serialize, serde::Deserialize, Copy, Clone, Debug, Default)]
 pub struct ListPinnedMessagesParams {
     /// 1-50.
     pub limit: Option<u8>,
-    // TODO: Check whether this is UnixMillis or not
-    pub before: Option<Timestamp<UnixMillis>>,
+    // ISO8601
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub before: Option<jiff::Timestamp>,
 }
 
 #[derive(Builder, Copy, Clone, Debug)]
@@ -39,19 +34,9 @@ impl Endpoint for ListPinnedMessages {
     type Response = ListPinnedMessagesResponse;
 
     fn into_request(self) -> crate::request::Request {
-        let mut params = HashMap::new();
-        if let Some(limit) = self.params.limit {
-            params.insert("limit".to_string(), limit.to_string());
-        }
-        if let Some(before) = self.params.before {
-            let timestamp = OffsetDateTime::from(before);
-            let timestamp =
-                (timestamp.unix_timestamp() * 1000) + i64::from(timestamp.millisecond());
-            params.insert("before".to_string(), timestamp.to_string());
-        }
         Request::builder()
             .method(Method::GET)
-            .params(params)
+            .params(serde_qs::to_string(&self.params).unwrap())
             .path(format!("/channels/{}/messages/pins", self.channel_id))
             .build()
     }

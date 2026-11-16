@@ -15,7 +15,6 @@ use crate::{
             ApplicationMarker, ChannelMarker, GenericMarker, GuildMarker, RoleMarker, UserMarker,
         },
     },
-    time::timestamp::{Timestamp, representations::Iso8601},
 };
 use serde::{Deserialize, Serialize};
 
@@ -181,12 +180,14 @@ pub enum AuditLogChange {
     // },
     /// Member timeout state changed.
     CommunicationDisabledUntil {
+        // ISO8601
         /// New timeout timestamp.
         #[serde(rename = "new_value", skip_serializing_if = "Option::is_none")]
-        new: Option<Timestamp<Iso8601>>,
+        new: Option<jiff::Timestamp>,
+        // ISO8601
         /// Old timeout timestamp.
         #[serde(rename = "old_value", skip_serializing_if = "Option::is_none")]
-        old: Option<Timestamp<Iso8601>>,
+        old: Option<jiff::Timestamp>,
     },
     /// Whether a member is guild deafened.
     Deaf {

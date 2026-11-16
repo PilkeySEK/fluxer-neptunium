@@ -10,7 +10,6 @@ use neptunium_model::{
         properties::{GuildEmoji, GuildSticker},
     },
     id::{Id, marker::GuildMarker},
-    time::timestamp::{Timestamp, representations::Iso8601},
 };
 
 use crate::{
@@ -28,7 +27,7 @@ pub struct CachedGuildCreate {
     pub members: Vec<Cached<CachedGuildMember>>,
     pub presences: Vec<Presence>,
     pub voice_states: Vec<VoiceState>,
-    pub joined_at: Timestamp<Iso8601>,
+    pub joined_at: jiff::Timestamp,
 }
 
 impl CachedPayload for CachedGuildCreate {

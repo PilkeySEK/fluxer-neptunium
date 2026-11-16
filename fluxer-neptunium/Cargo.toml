@@ -27,6 +27,7 @@ serde_path_to_error = "0.1.20"
 bon = "3.10.3"
 tokio-util = { version = "0.7.20", features = ["rt"] }
 thiserror = "2.0.21"
+jiff = "1.0.0"
 
 [features]
 default = ["webpki-roots", "cache-statistics", "rustls"]
@@ -52,7 +53,7 @@ rustls = [
     "reqwest/rustls",
 ]
 experimental-macros = []
-chrono-timestamp-conversion = ["neptunium-model/chrono-timestamp-conversion"]
+# timestamp-conversion = ["neptunium-model/timestamp-conversion"]
 
 [lints]
 workspace = true

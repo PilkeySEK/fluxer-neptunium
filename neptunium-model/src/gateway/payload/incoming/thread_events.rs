@@ -6,7 +6,6 @@ use crate::{
         Id,
         marker::{ChannelMarker, GuildMarker, UserMarker},
     },
-    time::timestamp::{Timestamp, representations::Iso8601},
 };
 
 #[derive(serde::Serialize, serde::Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -73,7 +72,8 @@ pub struct ThreadMemberListUpdate {
 #[derive(serde::Serialize, serde::Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct ThreadMemberListItem {
     pub user_id: Id<UserMarker>,
-    pub join_timestamp: Option<Timestamp<Iso8601>>,
+    // ISO8601
+    pub join_timestamp: Option<jiff::Timestamp>,
     /// Undocumented (?)
     pub flags: u64,
     pub member: Option<GuildMember>,

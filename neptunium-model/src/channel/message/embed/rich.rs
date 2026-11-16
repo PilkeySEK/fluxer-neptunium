@@ -2,7 +2,6 @@
 
 use crate::{
     misc::HexColor,
-    time::timestamp::{Timestamp, representations::Iso8601},
 };
 
 /// A rich embed input is an embed a client supplies on a message, and Fluxer always stores it with the `Rich` embed type.
@@ -20,9 +19,10 @@ pub struct RichEmbed {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(into)]
     pub color: Option<HexColor>,
+    // ISO8601
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(into)]
-    pub timestamp: Option<Timestamp<Iso8601>>,
+    pub timestamp: Option<jiff::Timestamp>,
     /// `1`-`4096` characters. An empty string is treated as `None`.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(into)]

@@ -34,6 +34,7 @@ tokio-util = { version = "0.7.20", default-features = false, features = [
 serde-bool = "0.1.6"
 serde-constant = "0.1.0"
 serde_qs = "1.1.3"
+jiff = { version = "1.0.0", features = ["serde"] }
 # twilight-http-ratelimiting = { version = "0.17.1", optional = true }
 
 [features]

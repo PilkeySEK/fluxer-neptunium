@@ -3,7 +3,6 @@ use serde_repr::{Deserialize_repr, Serialize_repr};
 
 use crate::{
     id::{Id, marker::RelationshipMarker},
-    time::timestamp::{Timestamp, representations::Iso8601},
     user::PartialUser,
 };
 
@@ -21,8 +20,9 @@ pub struct Relationship {
     pub id: Id<RelationshipMarker>,
     /// A custom nickname set for the related user.
     pub nickname: Option<String>,
+    // ISO8601
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub since: Option<Timestamp<Iso8601>>,
+    pub since: Option<jiff::Timestamp>,
     #[serde(rename = "type")]
     pub r#type: RelationshipType,
     pub user: PartialUser,

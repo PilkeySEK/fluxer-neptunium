@@ -1,7 +1,5 @@
 use neptunium_model::id::Id;
 use neptunium_model::id::marker::{GuildBadgeMarker, GuildMarker};
-use neptunium_model::time::timestamp::Timestamp;
-use neptunium_model::time::timestamp::representations::Iso8601;
 use reqwest::Method;
 use serde::{Deserialize, Serialize};
 
@@ -212,10 +210,12 @@ pub struct InstanceDiscoveryDocumentNotice {
     pub message: String,
     /// An http or https link shown with the notice, or null.
     pub url: Option<String>,
+    // ISO8601
     /// When to start showing the notice, or null to show it at once.
-    pub starts_at: Option<Timestamp<Iso8601>>,
+    pub starts_at: Option<jiff::Timestamp>,
+    // ISO8601
     /// When to stop showing the notice, or null for no end.
-    pub ends_at: Option<Timestamp<Iso8601>>,
+    pub ends_at: Option<jiff::Timestamp>,
 }
 
 #[derive(Deserialize, Serialize, Clone, Debug)]

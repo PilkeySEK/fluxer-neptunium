@@ -12,7 +12,6 @@ use crate::{
     misc::serde_bitflags,
     time::{
         duration::{Duration, Seconds},
-        timestamp::{Timestamp, representations::Iso8601},
     },
     user::settings::GuildMuteConfiguration,
 };
@@ -32,8 +31,9 @@ pub struct ThreadChannel {
     pub name: String,
     /// The ID of the most recent message in the thread or `None` when the thread has no messages.
     pub last_message_id: Option<Id<MessageMarker>>,
+    // ISO8601
     /// The time a message in the thread was most recently pinned or `None` when no message has ever been pinned.
-    pub last_pin_timestamp: Option<Timestamp<Iso8601>>,
+    pub last_pin_timestamp: Option<jiff::Timestamp>,
     /// The slowmode interval in seconds (`0`-`21600`).
     pub rate_limit_per_user: Duration<Seconds>,
     pub flags: ThreadFlags,
@@ -93,16 +93,18 @@ serde_bitflags!(ThreadFlags, u32);
 pub struct ThreadMetadata {
     pub archived: bool,
     pub auto_archive_duration: ThreadAutoArchiveDuration,
+    // ISO8601
     /// The time the thread was last archived, unarchived, or given a new auto archive duration.
     /// Equal to `create_timestamp` until the first of those changes.
-    pub archive_timestamp: Timestamp<Iso8601>,
+    pub archive_timestamp: jiff::Timestamp,
     /// Whether only thread moderators can act in the thread.
     pub locked: bool,
     /// Whether a member who is not a thread moderator can add members who are not thread moderators.
     /// Only present on a private thread.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub invitable: Option<bool>,
-    pub create_timestamp: Timestamp<Iso8601>,
+    // ISO8601
+    pub create_timestamp: jiff::Timestamp,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -114,8 +116,9 @@ pub struct ThreadMember {
     /// Omitted on the member of a thread in `Ready`, `GuildCreate`, and `GuildSync`.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub user_id: Option<Id<UserMarker>>,
+    // ISO8601
     /// The time the user last joined the thread.
-    pub join_timestamp: Timestamp<Iso8601>,
+    pub join_timestamp: jiff::Timestamp,
     pub flags: ThreadMemberFlags,
     /// Whether the user muted the thread.
     /// Present only on the caller's own membership.

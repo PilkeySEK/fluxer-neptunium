@@ -12,11 +12,12 @@ use neptunium_http::endpoints::{
         GetCurrentUserGuildMember, GetGuildBan, GetGuildInformation, GetGuildMember,
         GetGuildVanityUrl, GetGuildVanityUrlResponse, GuildChannelCreateRequest, KickGuildMember,
         LeaveGuild, ListGuildAuditLogs, ListGuildAuditLogsParams, ListGuildBans, ListGuildChannels,
-        ListGuildMembers, ListGuildRoles, ListGuildStickers, ModifyGuildRole, ModifyGuildRoleBody,
-        RemoveRoleFromGuildMember, ResetGuildRoleHoistPositions, SearchGuildMembersMemberResponse,
-        ToggleDetachedBanner, ToggleGuildTextChannelFlexibleNames, UnbanGuildMember,
-        UpdateGuildChannelPositions, UpdateGuildChannelPositionsEntry, UpdateGuildMember,
-        UpdateGuildMemberBody, UpdateGuildRoleHoistPositions, UpdateGuildRoleHoistPositionsEntry,
+        ListGuildMembers, ListGuildMembersParams, ListGuildRoles, ListGuildStickers,
+        ModifyGuildRole, ModifyGuildRoleBody, RemoveRoleFromGuildMember,
+        ResetGuildRoleHoistPositions, SearchGuildMembersMemberResponse, ToggleDetachedBanner,
+        ToggleGuildTextChannelFlexibleNames, UnbanGuildMember, UpdateGuildChannelPositions,
+        UpdateGuildChannelPositionsEntry, UpdateGuildMember, UpdateGuildMemberBody,
+        UpdateGuildRoleHoistPositions, UpdateGuildRoleHoistPositionsEntry,
         UpdateGuildRolePositions, UpdateGuildRolePositionsEntry, UpdateGuildSettings,
         UpdateGuildSettingsBody, UpdateGuildSticker, UpdateGuildStickerBody, UpdateGuildVanityUrl,
         UpdateGuildVanityUrlResponse,
@@ -33,7 +34,6 @@ use neptunium_model::{
         marker::{RoleMarker, StickerMarker, UserMarker},
     },
     invites::InviteWithMetadata,
-    time::timestamp::{Timestamp, representations::Iso8601},
 };
 
 use crate::{
@@ -171,13 +171,13 @@ pub trait GuildExt {
         &self,
         ctx: &Context,
         member_id: Id<UserMarker>,
-        until: impl Into<Timestamp<Iso8601>> + Send,
+        until: jiff::Timestamp,
     ) -> Result<Cached<CachedGuildMember>, ClientError>;
     async fn timeout_member_with_reason(
         &self,
         ctx: &Context,
         member_id: Id<UserMarker>,
-        until: impl Into<Timestamp<Iso8601>> + Send,
+        until: jiff::Timestamp,
         reason: impl Into<String> + Send,
     ) -> Result<Cached<CachedGuildMember>, ClientError>;
     async fn untimeout_member(
@@ -590,8 +590,7 @@ impl<T: GuildTrait> GuildExt for T {
     ) -> Result<Vec<Cached<CachedGuildMember>>, ClientError> {
         Ok(ListGuildMembers {
             guild_id: self.get_guild_id(),
-            limit,
-            after,
+            params: ListGuildMembersParams { limit, after },
         }
         .execute_cached(ctx.get_http_client(), &ctx.cache)
         .await?)
@@ -1182,7 +1181,7 @@ impl<T: GuildTrait> GuildExt for T {
         &self,
         ctx: &Context,
         member_id: Id<UserMarker>,
-        until: impl Into<Timestamp<Iso8601>> + Send,
+        until: jiff::Timestamp,
     ) -> Result<Cached<CachedGuildMember>, ClientError> {
         self.update_member(
             ctx,
@@ -1205,7 +1204,7 @@ impl<T: GuildTrait> GuildExt for T {
         &self,
         ctx: &Context,
         member_id: Id<UserMarker>,
-        until: impl Into<Timestamp<Iso8601>> + Send,
+        until: jiff::Timestamp,
         reason: impl Into<String> + Send,
     ) -> Result<Cached<CachedGuildMember>, ClientError> {
         self.update_member(

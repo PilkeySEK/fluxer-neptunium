@@ -2,7 +2,6 @@ use crate::{
     misc::{HexColor, serde_bitflags},
     time::{
         duration::{Duration, Seconds},
-        timestamp::{Timestamp, representations::Iso8601},
     },
 };
 
@@ -21,8 +20,9 @@ pub struct Embed {
     pub description: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub url: Option<String>,
+    // ISO8601
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub timestamp: Option<Timestamp<Iso8601>>,
+    pub timestamp: Option<jiff::Timestamp>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub color: Option<HexColor>,
     #[serde(skip_serializing_if = "Option::is_none")]

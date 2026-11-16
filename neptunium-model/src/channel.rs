@@ -12,7 +12,6 @@ use crate::{
             ChannelMarker, GenericMarker, GuildMarker, MessageMarker, UserMarker, WebhookMarker,
         },
     },
-    time::timestamp::{Timestamp, representations::Iso8601},
     user::PartialUser,
 };
 
@@ -113,8 +112,9 @@ pub struct Channel {
     pub id: Id<ChannelMarker>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub last_message_id: Option<Id<MessageMarker>>,
+    // ISO8601
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub last_pin_timestamp: Option<Timestamp<Iso8601>>,
+    pub last_pin_timestamp: Option<jiff::Timestamp>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
     /// Custom nicknames for users in this channel (for group DMs).

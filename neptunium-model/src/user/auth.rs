@@ -3,7 +3,6 @@ use serde::{Deserialize, Serialize};
 use zeroize::Zeroizing;
 
 use crate::{
-    time::timestamp::{Timestamp, representations::Iso8601},
     user::auth::webauthn::WebAuthnAssertion,
 };
 
@@ -53,8 +52,10 @@ pub struct MfaBackupCode {
 pub struct WebAuthnCredential {
     pub id: String,
     pub name: String,
-    pub created_at: Timestamp<Iso8601>,
-    pub last_used_at: Option<Timestamp<Iso8601>>,
+    // ISO8601
+    pub created_at: jiff::Timestamp,
+    // ISO8601
+    pub last_used_at: Option<jiff::Timestamp>,
     /// The domain the passkey was created for.
     pub rp_id: String,
 }

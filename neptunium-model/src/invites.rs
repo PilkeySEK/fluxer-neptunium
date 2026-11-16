@@ -11,7 +11,6 @@ use crate::{
     },
     time::{
         duration::{Duration, Seconds},
-        timestamp::{Timestamp, representations::Iso8601},
     },
     user::PartialUser,
 };
@@ -32,28 +31,33 @@ pub struct PackInfo {
     #[serde(rename = "type")]
     pub r#type: PackType,
     pub creator_id: Id<UserMarker>,
-    pub created_at: Timestamp<Iso8601>,
-    pub updated_at: Timestamp<Iso8601>,
+    // ISO8601
+    pub created_at: jiff::Timestamp,
+    // ISO8601
+    pub updated_at: jiff::Timestamp,
     pub creator: PartialUser,
 }
 
 #[derive(Serialize, Deserialize, Copy, Clone, Debug)]
 pub struct PackInviteMetadata {
-    pub created_at: Timestamp<Iso8601>,
+    // ISO8601
+    pub created_at: jiff::Timestamp,
     pub uses: u64,
     pub max_uses: u64,
 }
 
 #[derive(Serialize, Deserialize, Copy, Clone, Debug)]
 pub struct GroupDmInviteMetadata {
-    pub created_at: Timestamp<Iso8601>,
+    // ISO8601
+    pub created_at: jiff::Timestamp,
     pub uses: u64,
     pub max_uses: u64,
 }
 
 #[derive(Serialize, Deserialize, Copy, Clone, Debug)]
 pub struct GuildInviteMetadata {
-    pub created_at: Timestamp<Iso8601>,
+    // ISO8601
+    pub created_at: jiff::Timestamp,
     pub uses: u64,
     /// `None` if there is no limit.
     #[serde(with = "crate::serde_utils::zero_is_option_usize")]
@@ -74,8 +78,9 @@ pub struct GuildInvite {
     pub member_count: u64,
     /// The approximate online member count of the guild.
     pub presence_count: u64,
+    // ISO8601
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub expires_at: Option<Timestamp<Iso8601>>,
+    pub expires_at: Option<jiff::Timestamp>,
     #[serde(rename = "temporary")]
     pub grants_temporary_membership: bool,
 }
@@ -88,8 +93,9 @@ pub struct GroupDmInvite {
     pub inviter: Option<PartialUser>,
     /// The approximate total member count of the group DM.
     pub member_count: u64,
+    // ISO8601
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub expires_at: Option<Timestamp<Iso8601>>,
+    pub expires_at: Option<jiff::Timestamp>,
     #[serde(rename = "temporary")]
     pub grants_temporary_membership: bool,
 }
@@ -100,8 +106,9 @@ pub struct PackInvite {
     pub pack: PackInfo,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub inviter: Option<PartialUser>,
+    // ISO8601
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub expires_at: Option<Timestamp<Iso8601>>,
+    pub expires_at: Option<jiff::Timestamp>,
     #[serde(rename = "temporary")]
     pub grants_temporary_access: bool,
 }

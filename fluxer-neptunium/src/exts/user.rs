@@ -20,7 +20,6 @@ use neptunium_model::{
         Id,
         marker::{GenericMarker, RoleMarker},
     },
-    time::timestamp::{Timestamp, representations::Iso8601},
     user::PartialUser,
 };
 
@@ -255,12 +254,12 @@ pub trait GuildMemberExt {
     async fn timeout(
         &self,
         ctx: &Context,
-        until: impl Into<Timestamp<Iso8601>> + Send,
+        until: jiff::Timestamp,
     ) -> Result<Cached<CachedGuildMember>, ClientError>;
     async fn timeout_with_reason(
         &self,
         ctx: &Context,
-        until: impl Into<Timestamp<Iso8601>> + Send,
+        until: jiff::Timestamp,
         reason: impl Into<String> + Send,
     ) -> Result<Cached<CachedGuildMember>, ClientError>;
     async fn untimeout(&self, ctx: &Context) -> Result<Cached<CachedGuildMember>, ClientError>;
@@ -413,7 +412,7 @@ impl GuildMemberExt for CachedGuildMember {
     async fn timeout(
         &self,
         ctx: &Context,
-        until: impl Into<Timestamp<Iso8601>> + Send,
+        until: jiff::Timestamp,
     ) -> Result<Cached<CachedGuildMember>, ClientError> {
         self.guild_id.timeout_member(ctx, self.id, until).await
     }
@@ -421,7 +420,7 @@ impl GuildMemberExt for CachedGuildMember {
     async fn timeout_with_reason(
         &self,
         ctx: &Context,
-        until: impl Into<Timestamp<Iso8601>> + Send,
+        until: jiff::Timestamp,
         reason: impl Into<String> + Send,
     ) -> Result<Cached<CachedGuildMember>, ClientError> {
         self.guild_id
