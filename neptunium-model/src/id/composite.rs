@@ -48,7 +48,7 @@ impl<'de, L: IdMarker, R: IdMarker> Deserialize<'de> for CompositeId<L, R> {
     {
         let string = String::deserialize(deserializer)?;
 
-        let Some((left, right)) = string.split_once(':') else {
+        let Some((left, right)) = string.split_once('_') else {
             return Err(serde::de::Error::custom("invalid composite id"));
         };
 
@@ -72,7 +72,7 @@ impl<L: IdMarker, R: IdMarker> Serialize for CompositeId<L, R> {
         S: serde::Serializer,
     {
         // TODO: Maybe use a more efficient way of creating this string
-        let s = format!("{}:{}", self.left, self.right);
+        let s = format!("{}_{}", self.left, self.right);
         s.serialize(serializer)
     }
 }
