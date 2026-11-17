@@ -1,6 +1,4 @@
-use neptunium_model::{
-    user::auth::handoff::HandoffCode,
-};
+use neptunium_model::user::auth::handoff::HandoffCode;
 use reqwest::Method;
 use serde::{Deserialize, Serialize};
 

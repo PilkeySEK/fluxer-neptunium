@@ -1,8 +1,6 @@
 //! The embed type when sending it to the API ("input").
 
-use crate::{
-    misc::HexColor,
-};
+use crate::misc::HexColor;
 
 /// A rich embed input is an embed a client supplies on a message, and Fluxer always stores it with the `Rich` embed type.
 /// The number of embeds on one message is bounded by the resolved `max_embeds_per_message` limit, which defaults to `10`.

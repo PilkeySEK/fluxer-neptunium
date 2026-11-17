@@ -13,9 +13,7 @@ use crate::{
         Id,
         marker::{ChannelMarker, GuildMarker, UserMarker},
     },
-    time::{
-        duration::{Duration, Seconds},
-    },
+    time::duration::{Duration, Seconds},
 };
 
 pub mod audit_log;

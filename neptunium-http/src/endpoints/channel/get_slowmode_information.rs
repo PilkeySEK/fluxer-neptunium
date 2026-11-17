@@ -1,9 +1,7 @@
 use bon::Builder;
 use neptunium_model::{
     id::{Id, marker::ChannelMarker},
-    time::{
-        duration::{Duration, Millis, Seconds},
-    },
+    time::duration::{Duration, Millis, Seconds},
 };
 use reqwest::Method;
 use serde::{Deserialize, Serialize};

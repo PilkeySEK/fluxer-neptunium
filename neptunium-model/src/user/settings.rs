@@ -12,9 +12,7 @@ use crate::{
         marker::{ChannelMarker, GuildMarker},
     },
     misc::{HexColor, serde_bitflags},
-    time::{
-        duration::{Duration, Seconds},
-    },
+    time::duration::{Duration, Seconds},
 };
 
 #[derive(Serialize_repr, Deserialize_repr, Copy, Clone, Debug)]

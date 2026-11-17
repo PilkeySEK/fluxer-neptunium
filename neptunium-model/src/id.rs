@@ -91,7 +91,7 @@ impl<T: IdMarker> Id<T> {
     /// assert_eq!(some_user_id.get_timestamp(), expected_timestamp);
     /// # }
     /// ```
-    /// 
+    ///
     /// [`Timestamp`]: jiff::Timestamp
     #[must_use]
     pub fn get_timestamp(self) -> Timestamp {
@@ -105,7 +105,7 @@ impl<T: IdMarker> Id<T> {
     ///
     /// # Errors
     /// Returns an error if creating a [`Timestamp`] from the timestamp info in the snowflake fails.
-    /// 
+    ///
     /// [`Timestamp`]: jiff::Timestamp
     pub fn try_get_timestamp(self) -> Result<Timestamp, jiff::Error> {
         Timestamp::from_nanosecond(i128::from(self.get_timestamp_raw()) * 1_000_000)

@@ -40,7 +40,7 @@ impl Request {
                 client_info.base_url,
                 self.path,
                 if self.params.is_some() { "?" } else { "" },
-                self.params.unwrap_or(String::new())
+                self.params.unwrap_or_default()
             ),
         );
         if let Some(user_agent) = client_info.user_agent {

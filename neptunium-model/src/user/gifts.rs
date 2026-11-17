@@ -1,8 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    user::PartialUser,
-};
+use crate::user::PartialUser;
 
 #[derive(Deserialize, Clone, Debug, Serialize)]
 pub struct GiftPrivateResponse {

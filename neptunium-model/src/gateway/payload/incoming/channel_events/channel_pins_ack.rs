@@ -1,8 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    id::{Id, marker::ChannelMarker},
-};
+use crate::id::{Id, marker::ChannelMarker};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ChannelPinsAck {

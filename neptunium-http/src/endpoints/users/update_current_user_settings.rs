@@ -2,9 +2,7 @@ use bon::Builder;
 use neptunium_model::{
     gateway::presence::{CustomStatus, PresenceStatus},
     id::{Id, marker::GuildMarker},
-    time::{
-        duration::{Duration, Seconds},
-    },
+    time::duration::{Duration, Seconds},
     user::settings::{
         FriendSourceFlags, GroupDmAddPermissionFlags, GuildFoldersItem, IncomingCallFlags,
         LanguageTag, RenderSpoilers, StickerAnimationOptions, TimeFormatTypes, UserSettings,

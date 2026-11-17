@@ -1,10 +1,8 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    id::{
-        Id,
-        marker::{ChannelMarker, MessageMarker},
-    },
+use crate::id::{
+    Id,
+    marker::{ChannelMarker, MessageMarker},
 };
 
 #[derive(Deserialize, Serialize, Clone, Debug)]

@@ -1,8 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    id::{Id, marker::UserMarker},
-};
+use crate::id::{Id, marker::UserMarker};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct MessageCall {

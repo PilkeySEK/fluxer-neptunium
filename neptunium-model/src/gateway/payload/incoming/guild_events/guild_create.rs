@@ -16,9 +16,7 @@ use crate::{
         Id,
         marker::{ChannelMarker, GuildMarker, UserMarker},
     },
-    time::{
-        duration::{Duration, Seconds},
-    },
+    time::duration::{Duration, Seconds},
 };
 
 #[derive(Serialize, Deserialize, Clone, Debug)]

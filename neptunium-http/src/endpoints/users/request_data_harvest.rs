@@ -1,6 +1,4 @@
-use neptunium_model::{
-    user::data_harvest::DataHarvestStatus,
-};
+use neptunium_model::user::data_harvest::DataHarvestStatus;
 use reqwest::Method;
 use serde::{Deserialize, Serialize};
 

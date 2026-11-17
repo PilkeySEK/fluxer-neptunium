@@ -1,8 +1,6 @@
 use crate::{
     misc::{HexColor, serde_bitflags},
-    time::{
-        duration::{Duration, Seconds},
-    },
+    time::duration::{Duration, Seconds},
 };
 
 mod rich;

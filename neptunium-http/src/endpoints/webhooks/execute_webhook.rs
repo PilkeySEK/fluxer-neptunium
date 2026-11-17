@@ -1,6 +1,10 @@
 use bon::Builder;
 use neptunium_model::{
-    channel::message::Message, id::{Id, marker::{ChannelMarker, WebhookMarker}},
+    channel::message::Message,
+    id::{
+        Id,
+        marker::{ChannelMarker, WebhookMarker},
+    },
 };
 use reqwest::Method;
 use serde::Serialize;

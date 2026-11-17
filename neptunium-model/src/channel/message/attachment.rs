@@ -4,9 +4,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     id::{Id, marker::AttachmentMarker},
     misc::serde_bitflags,
-    time::{
-        duration::{Duration, Seconds},
-    },
+    time::duration::{Duration, Seconds},
 };
 
 bitflags! {

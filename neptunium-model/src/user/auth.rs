@@ -2,9 +2,7 @@ use bon::Builder;
 use serde::{Deserialize, Serialize};
 use zeroize::Zeroizing;
 
-use crate::{
-    user::auth::webauthn::WebAuthnAssertion,
-};
+use crate::user::auth::webauthn::WebAuthnAssertion;
 
 pub mod handoff;
 pub mod webauthn;

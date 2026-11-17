@@ -10,9 +10,7 @@ use crate::{
         marker::{ChannelMarker, ForumTagMarker, GuildMarker, MessageMarker, UserMarker},
     },
     misc::serde_bitflags,
-    time::{
-        duration::{Duration, Seconds},
-    },
+    time::duration::{Duration, Seconds},
     user::settings::GuildMuteConfiguration,
 };
 

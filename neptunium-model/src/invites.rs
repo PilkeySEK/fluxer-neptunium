@@ -9,9 +9,7 @@ use crate::{
         Id,
         marker::{PackMarker, UserMarker},
     },
-    time::{
-        duration::{Duration, Seconds},
-    },
+    time::duration::{Duration, Seconds},
     user::PartialUser,
 };
 

@@ -1,6 +1,10 @@
 use bon::Builder;
 use neptunium_model::{
-    guild::member::GuildMember, id::{Id, marker::{GuildMarker, UserMarker}},
+    guild::member::GuildMember,
+    id::{
+        Id,
+        marker::{GuildMarker, UserMarker},
+    },
 };
 use reqwest::Method;
 

@@ -4,8 +4,6 @@ use reqwest::Method;
 
 use crate::{endpoints::Endpoint, request::Request};
 
-
-
 #[derive(Builder, serde::Serialize, serde::Deserialize, Copy, Clone, Debug)]
 pub struct ListSavedMessagesParams {
     /// Maximum number of saved messages to return. 1-100, default 25.
