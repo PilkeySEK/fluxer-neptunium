@@ -6,7 +6,6 @@ use crate::{
     misc::serde_bitflags,
     time::{
         duration::{Duration, Seconds},
-        timestamp::{Timestamp, representations::Iso8601},
     },
 };
 
@@ -41,8 +40,9 @@ pub struct MessageAttachment {
     /// Whether the attachment URL has expired.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub expired: Option<bool>,
+    // ISO8601
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub expires_at: Option<Timestamp<Iso8601>>,
+    pub expires_at: Option<jiff::Timestamp>,
     /// The name of the attached file.
     pub filename: String,
     pub flags: AttachmentFlags,

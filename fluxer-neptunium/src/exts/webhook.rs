@@ -1,8 +1,8 @@
 use async_trait::async_trait;
 use neptunium_http::endpoints::webhooks::{
-    DeleteWebhook, DeleteWebhookMessage, DeleteWebhookWithToken, ExecuteWebhook, GetWebhook,
-    GetWebhookWithToken, GetWebhookWithTokenResponse, UpdateWebhook, UpdateWebhookBody,
-    WebhookMessage,
+    DeleteWebhook, DeleteWebhookMessage, DeleteWebhookWithToken, ExecuteWebhook,
+    ExecuteWebhookParams, GetWebhook, GetWebhookWithToken, GetWebhookWithTokenResponse,
+    UpdateWebhook, UpdateWebhookBody, WebhookMessage,
 };
 use neptunium_model::{
     channel::message::Message,
@@ -114,7 +114,10 @@ impl WebhookExt for Id<WebhookMarker> {
                 webhook_id: *self,
                 token: Zeroizing::new(token),
                 message,
-                wait: false,
+                params: ExecuteWebhookParams {
+                    wait: None,
+                    thread_id: None,
+                },
             })
             .await?
         else {
@@ -137,7 +140,10 @@ impl WebhookExt for Id<WebhookMarker> {
                 webhook_id: *self,
                 token: Zeroizing::new(token),
                 message,
-                wait: true,
+                params: ExecuteWebhookParams {
+                    wait: None,
+                    thread_id: None,
+                },
             })
             .await?
         else {

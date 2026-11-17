@@ -11,7 +11,6 @@ use crate::{
         Id,
         marker::{ChannelMarker, GuildMarker, RelationshipMarker, UserMarker},
     },
-    time::timestamp::{Timestamp, representations::Iso8601},
     user::{
         MentionReplyPreference, PartialUser,
         flags::PublicUserFlags,
@@ -38,15 +37,17 @@ pub struct GuildReadyResponse {
     pub lazy: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub large: Option<bool>,
+    // ISO8601
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub joined_at: Option<Timestamp<Iso8601>>,
+    pub joined_at: Option<jiff::Timestamp>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UserPrivateResponsePendingBulkMessageDeletion {
     pub channel_count: i32,
     pub message_count: i32,
-    pub scheduled_at: Timestamp<Iso8601>,
+    // ISO8601
+    pub scheduled_at: jiff::Timestamp,
 }
 
 #[derive(Debug, Copy, Clone, Serialize_repr, Deserialize_repr)]
@@ -85,7 +86,8 @@ pub struct UserPrivateResponse {
     pub is_staff: bool,
     pub mfa_enabled: bool,
     pub nsfw_allowed: bool,
-    pub password_last_changed_at: Option<Timestamp<Iso8601>>,
+    // ISO8601
+    pub password_last_changed_at: Option<jiff::Timestamp>,
     pub pending_bulk_message_deletion: Option<UserPrivateResponsePendingBulkMessageDeletion>,
     pub phone: Option<String>,
     pub premium_badge_hidden: bool,
@@ -96,7 +98,8 @@ pub struct UserPrivateResponse {
     pub premium_enabled_override: bool,
     pub premium_lifetime_sequence: Option<i32>,
     pub premium_purchase_disabled: bool,
-    pub premium_since: Option<Timestamp<Iso8601>>,
+    // ISO8601
+    pub premium_since: Option<jiff::Timestamp>,
     pub premium_type: Option<UserPremiumType>,
     pub premium_will_cancel: bool,
     pub pronouns: Option<String>,
@@ -109,19 +112,12 @@ pub struct UserPrivateResponse {
     pub username: String,
     /// Whether the email address has been verified.
     pub verified: bool,
-    // Undocumented.
-    // TODO: Is this optional?
-    #[serde(skip_serializing_if = "Option::is_none")]
+    // ISO8601
     #[cfg(feature = "user_api")]
-    pub privacy_agreed_at: Option<Timestamp<Iso8601>>,
-    // Undocumented.
-    // TODO: Is this optional?
-    #[serde(skip_serializing_if = "Option::is_none")]
+    pub privacy_agreed_at: Option<jiff::Timestamp>,
+    // ISO8601
     #[cfg(feature = "user_api")]
-    pub terms_agreed_at: Option<Timestamp<Iso8601>>,
-    // Undocumented.
-    #[cfg(feature = "user_api")]
-    pub premium_out_of_band_trial_ends_at: Option<Timestamp<Iso8601>>,
+    pub terms_agreed_at: Option<jiff::Timestamp>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub mention_flags: Option<MentionReplyPreference>,
 }
@@ -147,8 +143,9 @@ pub struct RelationshipReadyResponse {
     pub id: Id<RelationshipMarker>,
     /// A custom nickname set for the related user.
     pub nickname: Option<String>,
+    // ISO8601
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub since: Option<Timestamp<Iso8601>>,
+    pub since: Option<jiff::Timestamp>,
     #[serde(rename = "type")]
     pub r#type: RelationshipType,
 }

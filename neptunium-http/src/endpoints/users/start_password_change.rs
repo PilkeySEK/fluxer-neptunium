@@ -1,4 +1,3 @@
-use neptunium_model::time::timestamp::{Timestamp, representations::Iso8601};
 use reqwest::Method;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -11,8 +10,10 @@ pub struct StartPasswordChange;
 #[derive(Deserialize, Clone, Debug, Serialize)]
 pub struct StartPasswordChangeResponse {
     pub ticket: String,
-    pub code_expires_at: Timestamp<Iso8601>,
-    pub resend_available_at: Option<Timestamp<Iso8601>>,
+    // ISO8601
+    pub code_expires_at: jiff::Timestamp,
+    // ISO8601
+    pub resend_available_at: Option<jiff::Timestamp>,
 }
 
 impl Endpoint for StartPasswordChange {

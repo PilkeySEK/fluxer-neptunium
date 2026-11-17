@@ -1055,11 +1055,13 @@ impl Context {
         &self,
         limit: Option<u8>,
     ) -> Result<Vec<SavedMessage>, ClientError> {
-        use neptunium_http::endpoints::channel::ListSavedMessages;
+        use neptunium_http::endpoints::channel::{ListSavedMessages, ListSavedMessagesParams};
 
         Ok(self
             .http_client
-            .execute(ListSavedMessages { limit })
+            .execute(ListSavedMessages {
+                params: ListSavedMessagesParams { limit },
+            })
             .await?)
     }
 
@@ -1124,13 +1126,17 @@ impl Context {
         username: String,
         discriminator: String,
     ) -> Result<bool, ClientError> {
-        use neptunium_http::endpoints::users::CheckUsernameTagAvailability;
+        use neptunium_http::endpoints::users::{
+            CheckUsernameTagAvailability, CheckUsernameTagAvailabilityParams,
+        };
 
         let response = self
             .http_client
             .execute(CheckUsernameTagAvailability {
-                username,
-                discriminator,
+                params: CheckUsernameTagAvailabilityParams {
+                    username,
+                    discriminator,
+                },
             })
             .await?;
 

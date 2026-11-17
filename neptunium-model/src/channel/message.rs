@@ -15,7 +15,6 @@ use crate::{
         },
     },
     misc::serde_bitflags,
-    time::timestamp::{Timestamp, representations::Iso8601},
     user::PartialUser,
 };
 
@@ -112,8 +111,10 @@ pub struct Message {
     pub r#type: MessageType,
     pub flags: MessageFlags,
     pub content: String,
-    pub timestamp: Timestamp<Iso8601>,
-    pub edited_timestamp: Option<Timestamp<Iso8601>>,
+    // ISO8601
+    pub timestamp: jiff::Timestamp,
+    // ISO8601
+    pub edited_timestamp: Option<jiff::Timestamp>,
     pub pinned: bool,
     /// Whether the message mentions everyone.
     pub mention_everyone: bool,

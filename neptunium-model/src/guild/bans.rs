@@ -2,7 +2,6 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     id::{Id, marker::UserMarker},
-    time::timestamp::{Timestamp, representations::Iso8601},
     user::PartialUser,
 };
 
@@ -13,7 +12,9 @@ pub struct GuildBan {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub reason: Option<String>,
     pub moderator_id: Id<UserMarker>,
-    pub banned_at: Timestamp<Iso8601>,
+    // ISO8601
+    pub banned_at: jiff::Timestamp,
+    // ISO8601
     /// `None` if the ban is permanent.
-    pub expires_at: Option<Timestamp<Iso8601>>,
+    pub expires_at: Option<jiff::Timestamp>,
 }

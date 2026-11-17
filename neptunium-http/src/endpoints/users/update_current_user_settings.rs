@@ -4,7 +4,6 @@ use neptunium_model::{
     id::{Id, marker::GuildMarker},
     time::{
         duration::{Duration, Seconds},
-        timestamp::{Timestamp, representations::Iso8601},
     },
     user::settings::{
         FriendSourceFlags, GroupDmAddPermissionFlags, GuildFoldersItem, IncomingCallFlags,
@@ -64,8 +63,9 @@ pub struct UpdateUserSettings {
     pub restricted_guilds: Option<Vec<Id<GuildMarker>>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub status: Option<PresenceStatus>,
+    // ISO8601
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub status_resets_at: Option<Timestamp<Iso8601>>,
+    pub status_resets_at: Option<jiff::Timestamp>,
     /// Set to `Some(None)` to reset this setting.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub status_resets_to: Option<Option<PresenceStatus>>,

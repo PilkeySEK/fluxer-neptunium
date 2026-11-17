@@ -1,7 +1,7 @@
 use bitflags::bitflags;
+use jiff::Timestamp;
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
-use time::OffsetDateTime;
 
 use crate::{
     id::{Id, marker::UserMarker},
@@ -44,7 +44,7 @@ pub struct PartialUser {
 impl PartialUser {
     /// Get the account creation date of the user, derived from the user ID.
     #[must_use]
-    pub fn creation_date(&self) -> OffsetDateTime {
+    pub fn creation_date(&self) -> Timestamp {
         self.id.get_timestamp()
     }
 }

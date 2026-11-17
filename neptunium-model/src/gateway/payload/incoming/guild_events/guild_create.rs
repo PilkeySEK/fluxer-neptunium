@@ -18,7 +18,6 @@ use crate::{
     },
     time::{
         duration::{Duration, Seconds},
-        timestamp::{Timestamp, representations::Iso8601},
     },
 };
 
@@ -40,7 +39,8 @@ pub struct GuildProperties {
     /// Hash of the guild icon.
     pub icon: Option<String>,
     pub id: Id<GuildMarker>,
-    pub message_history_cutoff: Option<Timestamp<Iso8601>>,
+    // ISO8601
+    pub message_history_cutoff: Option<jiff::Timestamp>,
     pub mfa_level: GuildMfaLevel,
     pub name: String,
     pub nsfw_level: NsfwLevel,
@@ -75,7 +75,8 @@ pub struct GuildCreate {
     pub members: Vec<GuildMember>,
     pub presences: Vec<Presence>,
     pub voice_states: Vec<VoiceState>,
-    pub joined_at: Timestamp<Iso8601>,
+    // ISO8601
+    pub joined_at: jiff::Timestamp,
 }
 
 impl From<GuildProperties> for Guild {

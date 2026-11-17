@@ -3,7 +3,6 @@ use neptunium_model::{
     id::{Id, marker::ChannelMarker},
     time::{
         duration::{Duration, Millis, Seconds},
-        timestamp::{Timestamp, representations::Iso8601},
     },
 };
 use reqwest::Method;
@@ -23,10 +22,11 @@ pub struct GetChannelSlowmodeInformation {
 pub struct ChannelSlowmodeInformation {
     /// Whether the current user can bypass slowmode.
     pub can_bypass: bool,
+    // ISO8601
     /// When the next message can be sent. `None` if the slowmode
     /// duration has expired for the user or if no slowmode is set
     /// in the channel.
-    pub next_send_allowed_at: Option<Timestamp<Iso8601>>,
+    pub next_send_allowed_at: Option<jiff::Timestamp>,
     /// The slowmode duration. 0 if no slowmode is set.
     pub rate_limit_per_user: Duration<Seconds>,
     /// When the current user should retry sending a message.

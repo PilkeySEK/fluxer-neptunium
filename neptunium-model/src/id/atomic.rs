@@ -6,7 +6,6 @@ use std::{
 };
 
 use serde::{Deserialize, Serialize};
-use time::OffsetDateTime;
 
 use crate::id::{Id, marker::IdMarker};
 
@@ -116,8 +115,8 @@ impl<'de, T: IdMarker> Deserialize<'de> for AtomicId<T> {
     }
 }
 
-impl<T: IdMarker> From<OffsetDateTime> for AtomicId<T> {
-    fn from(value: OffsetDateTime) -> Self {
+impl<T: IdMarker> From<jiff::Timestamp> for AtomicId<T> {
+    fn from(value: jiff::Timestamp) -> Self {
         // Just use `Id`s implementation.
         Self::from(Id::from(value))
     }

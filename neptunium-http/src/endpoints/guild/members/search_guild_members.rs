@@ -6,7 +6,6 @@ use neptunium_model::{
         composite::CompositeId,
         marker::{GuildMarker, RoleMarker, UserMarker},
     },
-    time::timestamp::{Timestamp, representations::UnixMillis},
 };
 use reqwest::Method;
 use serde::{Deserialize, Serialize};
@@ -41,28 +40,36 @@ pub struct SearchGuildMembersBody {
     /// Member must have all specified roles.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub role_ids: Option<Vec<Id<RoleMarker>>>,
-    // TODO: Is this millis or seconds?
     /// Joined at or after this timestamp.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub joined_at_gte: Option<Timestamp<UnixMillis>>,
-    // TODO: Is this millis or seconds?
+    #[serde(
+        skip_serializing_if = "Option::is_none",
+        with = "jiff::fmt::serde::timestamp::second::optional"
+    )]
+    pub joined_at_gte: Option<jiff::Timestamp>,
     /// Joined at or before this timestamp.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub joined_at_lte: Option<Timestamp<UnixMillis>>,
+    #[serde(
+        skip_serializing_if = "Option::is_none",
+        with = "jiff::fmt::serde::timestamp::second::optional"
+    )]
+    pub joined_at_lte: Option<jiff::Timestamp>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub join_source_type: Option<Vec<JoinSourceType>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub source_invite_code: Option<Vec<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub is_bot: Option<bool>,
-    // TODO: Is this millis or seconds?
     /// Account created at or after this timestamp.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub user_created_at_gte: Option<Timestamp<UnixMillis>>,
-    // TODO: Is this millis or seconds?
+    #[serde(
+        skip_serializing_if = "Option::is_none",
+        with = "jiff::fmt::serde::timestamp::second::optional"
+    )]
+    pub user_created_at_gte: Option<jiff::Timestamp>,
     /// Account created at or before this timestamp.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub user_created_at_lte: Option<Timestamp<UnixMillis>>,
+    #[serde(
+        skip_serializing_if = "Option::is_none",
+        with = "jiff::fmt::serde::timestamp::second::optional"
+    )]
+    pub user_created_at_lte: Option<jiff::Timestamp>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub sort_by: Option<SearchGuildMembersSortBy>,
     #[serde(skip_serializing_if = "Option::is_none")]

@@ -12,7 +12,6 @@ use neptunium_model::{
         Id,
         marker::{ChannelMarker, GuildMarker},
     },
-    time::timestamp::{Timestamp, representations::Iso8601},
 };
 use reqwest::Method;
 use serde::Serialize;
@@ -63,8 +62,9 @@ pub struct UpdateGuildSettingsBody {
     /// Note that only some feature flags can be set by a user.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub remove_features: Option<Vec<GuildFeatureFlag>>,
+    // ISO8601
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub message_history_cutoff: Option<Timestamp<Iso8601>>,
+    pub message_history_cutoff: Option<jiff::Timestamp>,
 }
 
 #[derive(Builder, Clone, Debug)]

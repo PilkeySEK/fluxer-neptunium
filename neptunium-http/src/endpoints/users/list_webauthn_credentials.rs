@@ -1,4 +1,3 @@
-use neptunium_model::time::timestamp::{Timestamp, representations::Iso8601};
 use reqwest::Method;
 use serde::{Deserialize, Serialize};
 
@@ -11,8 +10,10 @@ pub struct ListWebauthnCredentials;
 pub struct ListWebauthnCredentialsResponseEntry {
     pub id: String,
     pub name: String,
-    pub created_at: Timestamp<Iso8601>,
-    pub last_used_at: Option<Timestamp<Iso8601>>,
+    // ISO8601
+    pub created_at: jiff::Timestamp,
+    // ISO8601
+    pub last_used_at: Option<jiff::Timestamp>,
 }
 
 impl Endpoint for ListWebauthnCredentials {

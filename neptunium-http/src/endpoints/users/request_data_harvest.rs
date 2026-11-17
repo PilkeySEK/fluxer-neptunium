@@ -1,5 +1,4 @@
 use neptunium_model::{
-    time::timestamp::{Timestamp, representations::Iso8601},
     user::data_harvest::DataHarvestStatus,
 };
 use reqwest::Method;
@@ -14,7 +13,8 @@ pub struct RequestDataHarvest;
 pub struct RequestDataHarvestResponse {
     pub harvest_id: String,
     pub status: DataHarvestStatus,
-    pub created_at: Timestamp<Iso8601>,
+    // ISO8601
+    pub created_at: jiff::Timestamp,
 }
 
 impl Endpoint for RequestDataHarvest {

@@ -1,10 +1,10 @@
 use std::{fmt::Display, marker::PhantomData, num::ParseIntError};
 
+use jiff::Timestamp;
 use serde::{
     Deserialize, Serialize,
     de::{Unexpected, Visitor},
 };
-use time::OffsetDateTime;
 
 use crate::id::marker::IdMarker;
 
@@ -76,7 +76,7 @@ impl<T: IdMarker> Id<T> {
     /// it was created. This method returns the timestamp information stored in this snowflake.
     ///
     /// # Panics
-    /// Panics if creating an `OffsetDateTime` from the timestamp info in the snowflake fails.
+    /// Panics if creating a [`Timestamp`] from the timestamp info in the snowflake fails.
     ///
     /// For a non-panicking version of this method, use `try_get_timestamp`.
     ///
@@ -91,8 +91,10 @@ impl<T: IdMarker> Id<T> {
     /// assert_eq!(some_user_id.get_timestamp(), expected_timestamp);
     /// # }
     /// ```
+    /// 
+    /// [`Timestamp`]: jiff::Timestamp
     #[must_use]
-    pub fn get_timestamp(self) -> OffsetDateTime {
+    pub fn get_timestamp(self) -> Timestamp {
         self.try_get_timestamp().unwrap()
     }
 
@@ -102,9 +104,11 @@ impl<T: IdMarker> Id<T> {
     /// This is the non-panicking version of `get_timestamp`.
     ///
     /// # Errors
-    /// Returns an error if creating an `OffsetDateTime` from the timestamp info in the snowflake fails.
-    pub fn try_get_timestamp(self) -> Result<OffsetDateTime, time::error::ComponentRange> {
-        OffsetDateTime::from_unix_timestamp_nanos(i128::from(self.get_timestamp_raw()) * 1_000_000)
+    /// Returns an error if creating a [`Timestamp`] from the timestamp info in the snowflake fails.
+    /// 
+    /// [`Timestamp`]: jiff::Timestamp
+    pub fn try_get_timestamp(self) -> Result<Timestamp, jiff::Error> {
+        Timestamp::from_nanosecond(i128::from(self.get_timestamp_raw()) * 1_000_000)
     }
 
     /// Get the worker ID of this snowflake. Due to it being 5 bits, it is
@@ -223,11 +227,14 @@ impl<'de, T: IdMarker> Deserialize<'de> for Id<T> {
     }
 }
 
-impl<T: IdMarker> From<OffsetDateTime> for Id<T> {
-    fn from(value: OffsetDateTime) -> Self {
-        let millis = (value.unix_timestamp() * 1000) + i64::from(value.millisecond());
+impl<T: IdMarker> From<jiff::Timestamp> for Id<T> {
+    /// # Panics
+    /// Panics if the provided timestamp is negative (before unix epoch).
+    fn from(value: jiff::Timestamp) -> Self {
+        let millis = value.as_millisecond();
         // We assume that the millis will not be negative
-        let millis = millis.cast_unsigned() - FLUXER_EPOCH;
+        let millis = (u64::try_from(millis).expect("expected the timestamp to not be negative"))
+            - FLUXER_EPOCH;
         Self {
             // We assume that the millis will not be too large to fit in the snowflake.
             value: millis << 22,

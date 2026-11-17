@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use bon::Builder;
 use reqwest::{
     Error, Method, Response,
@@ -16,7 +14,7 @@ pub struct Request {
     pub path: String,
     #[builder(default = true)]
     pub use_authorization_token: bool,
-    pub params: Option<HashMap<String, String>>,
+    pub params: Option<String>,
     pub audit_log_reason: Option<String>,
 }
 
@@ -37,7 +35,13 @@ impl Request {
     ) -> Result<Response, Error> {
         let mut request = client_info.reqwest_client.request(
             self.method,
-            format!("{}{}", client_info.base_url, self.path),
+            format!(
+                "{}{}{}{}",
+                client_info.base_url,
+                self.path,
+                if self.params.is_some() { "?" } else { "" },
+                self.params.unwrap_or(String::new())
+            ),
         );
         if let Some(user_agent) = client_info.user_agent {
             request = request.header("User-Agent", user_agent);
@@ -61,11 +65,6 @@ impl Request {
         }
         if let Some(audit_log_reason) = self.audit_log_reason {
             request = request.header("X-Audit-Log-Reason", audit_log_reason);
-        }
-        if let Some(params) = self.params
-            && !params.is_empty()
-        {
-            request = request.query(&params);
         }
 
         request.send().await

@@ -1,4 +1,3 @@
-use neptunium_model::time::timestamp::{Timestamp, representations::Iso8601};
 use reqwest::Method;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -14,8 +13,10 @@ pub struct StartEmailChangeResponse {
     pub require_original: bool,
     pub original_email: Option<String>,
     pub original_proof: Option<String>,
-    pub original_code_expires_at: Option<Timestamp<Iso8601>>,
-    pub resend_available_at: Option<Timestamp<Iso8601>>,
+    // ISO8601
+    pub original_code_expires_at: Option<jiff::Timestamp>,
+    // ISO8601
+    pub resend_available_at: Option<jiff::Timestamp>,
 }
 
 impl Endpoint for StartEmailChange {

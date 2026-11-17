@@ -6,7 +6,6 @@ use crate::{
         Id,
         marker::{EmojiMarker, GuildMarker},
     },
-    time::timestamp::{Timestamp, representations::Iso8601},
     user::PartialUser,
 };
 
@@ -35,9 +34,10 @@ pub struct CustomStatus {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(into)]
     pub emoji_name: Option<String>,
+    // ISO8601
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(into)]
-    pub expires_at: Option<Timestamp<Iso8601>>,
+    pub expires_at: Option<jiff::Timestamp>,
 }
 
 /// Represents a user's presence (online status and activity).

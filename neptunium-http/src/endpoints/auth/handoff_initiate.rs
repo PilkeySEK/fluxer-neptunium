@@ -1,5 +1,4 @@
 use neptunium_model::{
-    time::timestamp::{Timestamp, representations::Iso8601},
     user::auth::handoff::HandoffCode,
 };
 use reqwest::Method;
@@ -14,7 +13,8 @@ pub struct HandoffInitiate;
 pub struct HandoffInitiateResponse {
     /// Handoff code to share with the recieving device.
     pub code: HandoffCode,
-    pub expires_at: Timestamp<Iso8601>,
+    // ISO8601
+    pub expires_at: jiff::Timestamp,
 }
 
 impl Endpoint for HandoffInitiate {

@@ -10,6 +10,7 @@ tokio = { version = "1.54.1", features = ["full"] }
 fluxer-neptunium = { path = "../fluxer-neptunium", features = ["user_api"] }
 tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
 tracing = "0.1.44"
+jiff = "1.0.0"
 
 [[example]]
 name = "replying-to-ping"
