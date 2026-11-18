@@ -69,6 +69,8 @@ pub enum UserConnectionType {
     #[serde(rename = "bsky")]
     Bluesky,
     Domain,
+    /// An account at an OAuth 2.0 or OpenID Connect provider the instance set up.
+    Oauth,
 }
 
 bitflags! {
@@ -84,16 +86,22 @@ serde_bitflags!(UserConnectionVisibilityFlags, u32);
 
 #[derive(Deserialize, Clone, Debug, Serialize, PartialEq, Eq)]
 pub struct UserConnection {
-    /// The unique identifier for this connection.
+    /// The ID of the connection, unique within its type.
     pub id: String,
     #[serde(rename = "type")]
     pub r#type: UserConnectionType,
-    /// The display name of the connection (handle or domain).
+    /// The domain, Bluesky handle or account name at the provider.
     pub name: String,
-    /// Whether the connection has been verified.
+    /// Whether the connection is verified.
     pub verified: bool,
     pub visibility_flags: UserConnectionVisibilityFlags,
+    /// The display order, `0`-`2147483647`.
     pub sort_order: u32,
+    // TODO: Enforce this using the type system probably.
+    /// For type `Oauth`, the provider's id. `None` for other types, and while the instance has removed or turned off the provider.
+    pub provider_id: Option<String>,
+    /// Link to the account or domain, or `None` when there is none.
+    pub url: Option<String>,
 }
 
 #[derive(Deserialize_repr, Serialize_repr, Copy, Clone, Debug, PartialEq, Eq)]
