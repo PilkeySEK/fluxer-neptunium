@@ -101,6 +101,7 @@ pub enum LimitKey {
     MaxWebhooksPerGuild,
     /// Maximum sticker upload size in bytes, up to 104857600 (guild).
     StickerMaxSize,
+    #[serde(untagged)]
     Other(String),
 }
 
