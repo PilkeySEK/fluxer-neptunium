@@ -15,6 +15,7 @@ use crate::{endpoints::Endpoint, request::Request};
 
 #[derive(Builder, serde::Serialize, serde::Deserialize, Copy, Clone, Debug, Default)]
 pub struct GetUserProfileParams {
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub guild_id: Option<Id<GuildMarker>>,
     #[builder(default = false)]
     pub with_mutual_friends: bool,

@@ -9,11 +9,15 @@ use crate::{endpoints::Endpoint, request::Request};
 
 #[derive(Builder, serde::Serialize, serde::Deserialize, Copy, Clone, Debug)]
 pub struct ListCurrentUserGuildsParams {
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub before: Option<Id<GuildMarker>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub after: Option<Id<GuildMarker>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     /// 1-200.
     pub limit: Option<usize>,
     /// Include approximate member and presence counts.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub with_counts: Option<bool>,
 }
 
