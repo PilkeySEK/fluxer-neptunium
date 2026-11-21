@@ -163,7 +163,11 @@ impl Context {
     /// User tokens have the following format: `flx_<token>` (no user ID present).
     #[must_use]
     pub fn get_user_id_from_token(&self) -> Option<Id<UserMarker>> {
-        let (id_str, _) = self.http_client.token.split_once('.')?;
+        let Some(token) = &self.http_client.token else {
+            tracing::warn!("No token in http_client");
+            return None;
+        };
+        let (id_str, _) = token.split_once('.')?;
         Id::try_from(id_str).ok()
     }
 

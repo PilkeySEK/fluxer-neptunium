@@ -31,7 +31,7 @@ pub enum TokenType {
 #[derive(Clone, Debug, Builder, PartialEq, Eq)]
 pub struct HttpClientConfig {
     #[builder(into)]
-    pub token: String,
+    pub token: Option<String>,
     #[builder(default = 3)]
     pub max_request_retries: usize,
     #[builder(default)]
@@ -53,7 +53,7 @@ impl HttpClientConfig {
 #[derive(Debug)]
 pub struct HttpClient {
     pub api_base_url: String,
-    pub token: zeroize::Zeroizing<String>,
+    pub token: Option<zeroize::Zeroizing<String>>,
     pub token_type: TokenType,
     pub(crate) reqwest_client: reqwest::Client,
     // /// The user agent of the bot that should be sent (e.g.: `ReactionRolesBot/1.2.5 (+user#1234)`).
@@ -94,7 +94,9 @@ impl HttpClient {
             &self.rate_limiter,
             self.retry_times,
             &self.reqwest_client,
-            Some((&self.token, self.token_type)),
+            self.token
+                .as_ref()
+                .map(|token| (token.as_str(), self.token_type)),
             self.user_agent.as_deref(),
         )
         .await
@@ -130,7 +132,7 @@ impl HttpClient {
     pub fn new_with_api_base_url(config: HttpClientConfig, api_base_url: String) -> Self {
         Self {
             api_base_url,
-            token: Zeroizing::new(config.token),
+            token: config.token.map(|token| Zeroizing::new(token)),
             token_type: config.token_type,
             reqwest_client: reqwest::Client::new(),
             rate_limiter: RateLimiter::new(Self::DEFAULT_GLOBAL_RATE_LIMIT),
@@ -172,7 +174,7 @@ impl HttpClient {
         Ok((
             Self {
                 api_base_url: res.endpoints.api_public.clone(),
-                token: Zeroizing::new(config.token),
+                token: config.token.map(|token| Zeroizing::new(token)),
                 token_type: config.token_type,
                 reqwest_client: client,
                 rate_limiter,
@@ -194,6 +196,11 @@ async fn try_request<Res: ResponseBody>(
     token_info: Option<(&str, TokenType)>,
     user_agent: Option<&str>,
 ) -> Result<Res, ExecuteEndpointRequestError> {
+    if req.use_authorization_token && token_info.is_none() {
+        tracing::warn!(
+            "No token provided but the request requires authorization. Trying anyway without providing a token."
+        );
+    }
     let mut current_try = 0;
     loop {
         let request = req.clone();
