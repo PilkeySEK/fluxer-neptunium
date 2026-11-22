@@ -10,4 +10,5 @@ pub(crate) mod serde_utils;
 pub mod time;
 pub mod user;
 
+pub use jiff;
 pub use serde_bool;

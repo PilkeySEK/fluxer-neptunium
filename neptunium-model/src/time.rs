@@ -1,8 +1,6 @@
 pub mod duration;
 // pub mod timestamp;
 
-pub use jiff::Timestamp;
-
 #[expect(clippy::doc_paragraphs_missing_punctuation)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum TimestampDisplayType {
