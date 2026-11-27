@@ -6,7 +6,7 @@ use serde::{
     de::{Unexpected, Visitor},
 };
 
-use crate::id::marker::IdMarker;
+use crate::id::marker::{IdMarker, UserMarker};
 
 mod atomic;
 pub mod composite;
@@ -134,6 +134,14 @@ impl<T: IdMarker> Id<T> {
     }
 }
 
+impl Id<UserMarker> {
+    /// The Fluxer system user has the id `0`.
+    #[must_use]
+    pub fn is_system_user(self) -> bool {
+        self == 0
+    }
+}
+
 impl<T: IdMarker> From<u64> for Id<T> {
     fn from(value: u64) -> Self {
         Self::new(value)
@@ -254,5 +262,11 @@ impl<T: IdMarker> TryFrom<&str> for Id<T> {
     type Error = ParseIntError;
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         Ok(Self::new(value.parse()?))
+    }
+}
+
+impl<T: IdMarker> PartialEq<u64> for Id<T> {
+    fn eq(&self, other: &u64) -> bool {
+        self.into_inner().eq(other)
     }
 }

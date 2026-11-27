@@ -59,7 +59,7 @@ pub struct WebhookSourceChannel {
 }
 
 /// A webhook as represented in the audit log.
-#[derive(Deserialize, Serialize, Clone, Debug)]
+#[derive(Deserialize, Serialize, Clone, Debug, PartialEq, Eq)]
 pub struct AuditLogWebhook {
     pub id: Id<WebhookMarker>,
     #[serde(rename = "type")]

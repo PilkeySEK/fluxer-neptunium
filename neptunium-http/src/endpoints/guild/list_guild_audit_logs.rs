@@ -1,10 +1,15 @@
 use bon::Builder;
 use neptunium_model::{
-    guild::audit_log::{GuildAuditLogs, event_type::AuditLogActionType},
+    channel::thread::ThreadChannel,
+    guild::{
+        audit_log::{AuditLogActionType, GuildAuditLogEntry},
+        webhook::AuditLogWebhook,
+    },
     id::{
         Id,
         marker::{AuditLogEntryMarker, GuildMarker, UserMarker},
     },
+    user::PartialUser,
 };
 use reqwest::Method;
 
@@ -12,10 +17,15 @@ use crate::{endpoints::Endpoint, request::Request};
 
 #[derive(Builder, serde::Serialize, serde::Deserialize, Default, Copy, Clone, Debug)]
 pub struct ListGuildAuditLogsParams {
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub limit: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub before: Option<Id<AuditLogEntryMarker>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub after: Option<Id<AuditLogEntryMarker>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub user_id: Option<Id<UserMarker>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub action_type: Option<AuditLogActionType>,
 }
 
@@ -23,6 +33,15 @@ pub struct ListGuildAuditLogsParams {
 pub struct ListGuildAuditLogs {
     pub guild_id: Id<GuildMarker>,
     pub params: ListGuildAuditLogsParams,
+}
+
+#[derive(serde::Serialize, serde::Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct GuildAuditLogs {
+    pub audit_log_entries: Vec<GuildAuditLogEntry>,
+    pub users: Vec<PartialUser>,
+    pub webhooks: Vec<AuditLogWebhook>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub threads: Option<Vec<ThreadChannel>>,
 }
 
 impl Endpoint for ListGuildAuditLogs {

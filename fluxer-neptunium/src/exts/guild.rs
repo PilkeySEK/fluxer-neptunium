@@ -10,10 +10,10 @@ use neptunium_http::endpoints::{
         BulkCreateGuildStickersResponse, CreateGuildChannel, CreateGuildRole, CreateGuildRoleBody,
         CreateGuildSticker, CreateGuildStickerBody, DeleteGuildRole, DeleteGuildSticker,
         GetCurrentUserGuildMember, GetGuildBan, GetGuildInformation, GetGuildMember,
-        GetGuildVanityUrl, GetGuildVanityUrlResponse, GuildChannelCreateRequest, KickGuildMember,
-        LeaveGuild, ListGuildAuditLogs, ListGuildAuditLogsParams, ListGuildBans, ListGuildChannels,
-        ListGuildMembers, ListGuildMembersParams, ListGuildRoles, ListGuildStickers,
-        ModifyGuildRole, ModifyGuildRoleBody, RemoveRoleFromGuildMember,
+        GetGuildVanityUrl, GetGuildVanityUrlResponse, GuildAuditLogs, GuildChannelCreateRequest,
+        KickGuildMember, LeaveGuild, ListGuildAuditLogs, ListGuildAuditLogsParams, ListGuildBans,
+        ListGuildChannels, ListGuildMembers, ListGuildMembersParams, ListGuildRoles,
+        ListGuildStickers, ModifyGuildRole, ModifyGuildRoleBody, RemoveRoleFromGuildMember,
         ResetGuildRoleHoistPositions, SearchGuildMembersMemberResponse, ToggleDetachedBanner,
         ToggleGuildTextChannelFlexibleNames, UnbanGuildMember, UpdateGuildChannelPositions,
         UpdateGuildChannelPositionsEntry, UpdateGuildMember, UpdateGuildMemberBody,
@@ -28,7 +28,7 @@ use neptunium_http::endpoints::{
 #[cfg(feature = "user_api")]
 use neptunium_model::user::{auth::SudoVerification, settings::UserGuildSettings};
 use neptunium_model::{
-    guild::{Guild, audit_log::GuildAuditLogs, properties::GuildSticker, webhook::Webhook},
+    guild::{Guild, properties::GuildSticker, webhook::Webhook},
     id::{
         Id,
         marker::{RoleMarker, StickerMarker, UserMarker},
