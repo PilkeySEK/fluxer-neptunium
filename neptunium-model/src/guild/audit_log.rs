@@ -18,7 +18,8 @@ pub struct GuildAuditLogEntry {
     /// The user that did the action.
     #[serde(rename = "user_id")]
     pub user: AuditLogEntryUser,
-    pub target_id: Option<Id<GenericMarker>>,
+    /// Usually `Id`. The invite code for `InviteCreate` and `InviteDelete`, and `Some(None)` for `MessageBulkDelete`.
+    pub target_id: Option<Option<either::Either<Id<GenericMarker>, String>>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub reason: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
