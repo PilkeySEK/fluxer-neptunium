@@ -34,6 +34,7 @@ use neptunium_model::{
         marker::{RoleMarker, StickerMarker, UserMarker},
     },
     invites::InviteWithMetadata,
+    misc::MissingOrNull,
 };
 
 use crate::{
@@ -1191,7 +1192,7 @@ impl<T: GuildTrait> GuildExt for T {
                 roles: None,
                 mute: None,
                 deaf: None,
-                communication_disabled_until: Some(Some(until)),
+                communication_disabled_until: MissingOrNull::Some(until),
                 timeout_reason: None,
                 voice_channel_id: None,
                 voice_connection_id: None,
@@ -1215,7 +1216,7 @@ impl<T: GuildTrait> GuildExt for T {
                 roles: None,
                 mute: None,
                 deaf: None,
-                communication_disabled_until: Some(Some(until)),
+                communication_disabled_until: MissingOrNull::Some(until),
                 timeout_reason: Some(reason.into()),
                 voice_channel_id: None,
                 voice_connection_id: None,
@@ -1237,7 +1238,7 @@ impl<T: GuildTrait> GuildExt for T {
                 roles: None,
                 mute: None,
                 deaf: None,
-                communication_disabled_until: Some(None),
+                communication_disabled_until: MissingOrNull::Null,
                 timeout_reason: None,
                 voice_channel_id: None,
                 voice_connection_id: None,
@@ -1260,7 +1261,7 @@ impl<T: GuildTrait> GuildExt for T {
                 roles: None,
                 mute: None,
                 deaf: None,
-                communication_disabled_until: Some(None),
+                communication_disabled_until: MissingOrNull::Null,
                 timeout_reason: Some(reason.into()),
                 voice_channel_id: None,
                 voice_connection_id: None,

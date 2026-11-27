@@ -1,7 +1,7 @@
 use bon::Builder;
-use neptunium_model::gateway::payload::incoming::UserPrivateResponse;
 #[cfg(feature = "user_api")]
 use neptunium_model::user::auth::SudoVerification;
+use neptunium_model::{gateway::payload::incoming::UserPrivateResponse, misc::MissingOrNull};
 use reqwest::Method;
 use serde::Serialize;
 
@@ -15,32 +15,32 @@ pub struct UpdateCurrentUserProfile {
     #[builder(into)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub discriminator: Option<String>,
-    /// Set this to `Some(None)` to remove the global name.
+    /// Set this to `Null` to remove the global name.
     #[builder(into)]
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub global_name: Option<Option<String>>,
+    #[serde(default, skip_serializing_if = "MissingOrNull::is_missing")]
+    pub global_name: MissingOrNull<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub email: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub new_password: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none", flatten)]
     pub auth: Option<SudoVerification>,
-    /// Base64-encoded avatar image. Set this to `Some(None)` to remove the avatar.
+    /// Base64-encoded avatar image. Set this to `Null` to remove the avatar.
     #[builder(into)]
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub avatar: Option<Option<String>>,
-    /// Base64-encoded banner image. Set this to `Some(None)` to remove the banner.
+    #[serde(default, skip_serializing_if = "MissingOrNull::is_missing")]
+    pub avatar: MissingOrNull<String>,
+    /// Base64-encoded banner image. Set this to `Null` to remove the banner.
     #[builder(into)]
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub banner: Option<Option<String>>,
-    /// Maximum 320 characters. Set this to `Some(None)` to remove the bio.
+    #[serde(default, skip_serializing_if = "MissingOrNull::is_missing")]
+    pub banner: MissingOrNull<String>,
+    /// Maximum 320 characters. Set this to `Null` to remove the bio.
     #[builder(into)]
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub bio: Option<Option<String>>,
-    /// Maximum 40 characters. Set this to `Some(None)` to remove the pronouns.
+    #[serde(default, skip_serializing_if = "MissingOrNull::is_missing")]
+    pub bio: MissingOrNull<String>,
+    /// Maximum 40 characters. Set this to `Null` to remove the pronouns.
     #[builder(into)]
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub pronouns: Option<Option<String>>,
+    #[serde(default, skip_serializing_if = "MissingOrNull::is_missing")]
+    pub pronouns: MissingOrNull<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub premium_badge_hidden: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]

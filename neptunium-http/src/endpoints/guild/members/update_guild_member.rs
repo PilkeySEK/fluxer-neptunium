@@ -5,6 +5,7 @@ use neptunium_model::{
         Id,
         marker::{ChannelMarker, GuildMarker, RoleMarker, UserMarker},
     },
+    misc::MissingOrNull,
 };
 use reqwest::Method;
 use serde::Serialize;
@@ -23,9 +24,9 @@ pub struct UpdateGuildMemberBody {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub deaf: Option<bool>,
     // ISO8601
-    /// Set this to `Some(None)` to remove the user's timeout.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub communication_disabled_until: Option<Option<jiff::Timestamp>>,
+    /// Set this to `Null` to remove the user's timeout.
+    #[serde(default, skip_serializing_if = "MissingOrNull::is_missing")]
+    pub communication_disabled_until: MissingOrNull<jiff::Timestamp>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(into)]
     pub timeout_reason: Option<String>,

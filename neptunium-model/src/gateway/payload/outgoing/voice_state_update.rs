@@ -1,18 +1,21 @@
 use either::Either;
 
-use crate::id::{
-    Id,
-    marker::{ChannelMarker, GuildMarker},
+use crate::{
+    id::{
+        Id,
+        marker::{ChannelMarker, GuildMarker},
+    },
+    misc::MissingOrNull,
 };
 
 #[derive(serde::Serialize, serde::Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct VoiceStateUpdateOutgoing {
-    /// The guild with the voice channel, where `Some(None)` selects the DM and group DM call context.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub guild_id: Option<Option<Id<GuildMarker>>>,
+    /// The guild with the voice channel, where `Null` selects the DM and group DM call context.
+    #[serde(default, skip_serializing_if = "MissingOrNull::is_missing")]
+    pub guild_id: MissingOrNull<Id<GuildMarker>>,
     /// The channel to join or move to, where `Some(None)` leaves the membership.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub channel_id: Option<Option<Id<ChannelMarker>>>,
+    #[serde(default, skip_serializing_if = "MissingOrNull::is_missing")]
+    pub channel_id: MissingOrNull<Id<ChannelMarker>>,
     /// The existing voice connection this update applies to.
     /// A `channel_id` with no `connection_id` opens a new connection and one with it updates or moves that connection.
     ///
@@ -35,12 +38,12 @@ pub struct VoiceStateUpdateOutgoing {
     /// Whether this is a mobile voice client (default `false`).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub is_mobile: Option<bool>,
-    /// The stream keys this connection watches, where `None` keeps the list and `Some(None)` clears it.
+    /// The stream keys this connection watches, where `Missing` keeps the list and `Null` clears it.
     ///
     /// Each entry is a stream key matching this update’s scope, guild and channel, or the update is refused.
     /// An entry with no connection is also refused.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub viewer_stream_keys: Option<Option<Vec<String>>>,
+    #[serde(default, skip_serializing_if = "MissingOrNull::is_missing")]
+    pub viewer_stream_keys: MissingOrNull<Vec<String>>,
     /// The client latitude, used to pick a voice region.
     #[serde(
         skip_serializing_if = "Option::is_none",

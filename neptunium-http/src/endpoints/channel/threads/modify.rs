@@ -4,6 +4,7 @@ use neptunium_model::{
         Id,
         marker::{ChannelMarker, ForumTagMarker},
     },
+    misc::MissingOrNull,
     time::duration::{Duration, Seconds},
 };
 use reqwest::Method;
@@ -28,9 +29,9 @@ pub struct ModifyThreadBody {
     pub auto_archive_duration: Option<ThreadAutoArchiveDuration>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub locked: Option<bool>,
-    /// `Some(None)` sets `0`. `0`-`21600`.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub rate_limit_per_user: Option<Option<Duration<Seconds>>>,
+    /// `Null` sets `0`. `0`-`21600`.
+    #[serde(default, skip_serializing_if = "MissingOrNull::is_missing")]
+    pub rate_limit_per_user: MissingOrNull<Duration<Seconds>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub flags: Option<ThreadFlags>,
     /// The complete list of forum tag IDs (max. `5`).

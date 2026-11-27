@@ -5,6 +5,7 @@ use crate::{
         Id,
         marker::{AuditLogEntryMarker, ChannelMarker, GenericMarker, MessageMarker, UserMarker},
     },
+    misc::MissingOrNull,
     time::duration::{Duration, Seconds},
 };
 
@@ -19,7 +20,8 @@ pub struct GuildAuditLogEntry {
     #[serde(rename = "user_id")]
     pub user: AuditLogEntryUser,
     /// Usually `Id`. The invite code for `InviteCreate` and `InviteDelete`, and `Some(None)` for `MessageBulkDelete`.
-    pub target_id: Option<Option<either::Either<Id<GenericMarker>, String>>>,
+    #[serde(default, skip_serializing_if = "MissingOrNull::is_missing")]
+    pub target_id: MissingOrNull<either::Either<Id<GenericMarker>, String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub reason: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]

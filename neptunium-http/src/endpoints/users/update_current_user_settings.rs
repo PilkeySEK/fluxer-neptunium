@@ -2,6 +2,7 @@ use bon::Builder;
 use neptunium_model::{
     gateway::presence::{CustomStatus, PresenceStatus},
     id::{Id, marker::GuildMarker},
+    misc::MissingOrNull,
     time::duration::{Duration, Seconds},
     user::settings::{
         FriendSourceFlags, GroupDmAddPermissionFlags, GuildFoldersItem, IncomingCallFlags,
@@ -25,8 +26,8 @@ pub struct UpdateUserSettings {
     pub bot_default_guilds_restricted: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub bot_restricted_guilds: Option<Vec<Id<GuildMarker>>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub custom_status: Option<Option<CustomStatus>>,
+    #[serde(default, skip_serializing_if = "MissingOrNull::is_missing")]
+    pub custom_status: MissingOrNull<CustomStatus>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub default_guilds_restricted: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -64,9 +65,9 @@ pub struct UpdateUserSettings {
     // ISO8601
     #[serde(skip_serializing_if = "Option::is_none")]
     pub status_resets_at: Option<jiff::Timestamp>,
-    /// Set to `Some(None)` to reset this setting.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub status_resets_to: Option<Option<PresenceStatus>>,
+    /// Set to `Null` to reset this setting.
+    #[serde(default, skip_serializing_if = "MissingOrNull::is_missing")]
+    pub status_resets_to: MissingOrNull<PresenceStatus>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub theme: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]

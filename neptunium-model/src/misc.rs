@@ -87,3 +87,48 @@ macro_rules! serde_bitflags {
 }
 
 pub(crate) use serde_bitflags;
+
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Default)]
+pub enum MissingOrNull<T> {
+    #[default]
+    Missing,
+    Null,
+    Some(T),
+}
+
+impl<T> MissingOrNull<T> {
+    pub fn is_missing(&self) -> bool {
+        matches!(self, Self::Missing)
+    }
+}
+
+impl<T> From<MissingOrNull<T>> for Option<T> {
+    fn from(value: MissingOrNull<T>) -> Self {
+        match value {
+            MissingOrNull::Missing | MissingOrNull::Null => None,
+            MissingOrNull::Some(value) => Some(value),
+        }
+    }
+}
+
+impl<T: Serialize> Serialize for MissingOrNull<T> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        Option::from(self).serialize(serializer)
+    }
+}
+
+impl<'de, T: Deserialize<'de>> Deserialize<'de> for MissingOrNull<T> {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let option = Option::<T>::deserialize(deserializer)?;
+        Ok(match option {
+            Some(value) => Self::Some(value),
+            None => Self::Null,
+        })
+    }
+}
