@@ -70,6 +70,7 @@ pub enum UserConnectionType {
     Bluesky,
     Domain,
     /// An account at an OAuth 2.0 or OpenID Connect provider the instance set up.
+    #[expect(clippy::doc_markdown)]
     Oauth,
 }
 

@@ -132,7 +132,7 @@ impl HttpClient {
     pub fn new_with_api_base_url(config: HttpClientConfig, api_base_url: String) -> Self {
         Self {
             api_base_url,
-            token: config.token.map(|token| Zeroizing::new(token)),
+            token: config.token.map(Zeroizing::new),
             token_type: config.token_type,
             reqwest_client: reqwest::Client::new(),
             rate_limiter: RateLimiter::new(Self::DEFAULT_GLOBAL_RATE_LIMIT),
@@ -174,7 +174,7 @@ impl HttpClient {
         Ok((
             Self {
                 api_base_url: res.endpoints.api_public.clone(),
-                token: config.token.map(|token| Zeroizing::new(token)),
+                token: config.token.map(Zeroizing::new),
                 token_type: config.token_type,
                 reqwest_client: client,
                 rate_limiter,
